@@ -9,8 +9,8 @@ export default {
       colors: {
         primary: "#10b981", // Emerald Green
         secondary: "#f97316", // Orange 500
-        background: "#0f172a", // Slate 900
-        surface: "#1e293b", // Slate 800
+        background: "#000000", // True Black
+        surface: "#111111", // Very Deep Grey
         textPrimary: "#f8fafc",
         textSecondary: "#94a3b8" // Slate 400
       },
