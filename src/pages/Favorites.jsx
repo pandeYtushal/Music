@@ -9,7 +9,7 @@ const Favorites = () => {
   return (
     <div className="p-8 pb-32">
       <div className="flex items-end gap-6 mb-8 mt-10">
-        <div className="w-32 h-32 md:w-48 md:h-48 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.3)]">
+        <div className="w-32 h-32 md:w-48 md:h-48 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.3)]">
           <FiHeart size={64} className="text-white fill-current" />
         </div>
         <div className="flex-1">

@@ -7,10 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#8b5cf6", // Vibrant Violet
-        secondary: "#3b82f6", // Electric Blue
-        background: "#030014", // Deep space black
-        surface: "#0f0a29", // Dark violet tint
+        primary: "#22c55e", // Neon Green
+        secondary: "#f97316", // Fiery Orange
+        background: "#000000", // Pure black
+        surface: "#111111", // Dark gray
         textPrimary: "#FFFFFF",
         textSecondary: "#9ca3af" // Muted gray
       },

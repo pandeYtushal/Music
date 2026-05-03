@@ -22,7 +22,7 @@ const Navbar = () => {
 
   return (
     <header className="h-20 px-8 flex items-center justify-between sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
-      <form onSubmit={handleSearch} className="flex items-center bg-surface/50 border border-white/10 rounded-full px-4 py-2 w-1/3 min-w-[250px] focus-within:border-primary/50 focus-within:shadow-[0_0_15px_rgba(139,92,246,0.2)] transition-all duration-300">
+      <form onSubmit={handleSearch} className="flex items-center bg-surface/50 border border-white/10 rounded-full px-4 py-2 w-1/3 min-w-[250px] focus-within:border-primary/50 focus-within:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all duration-300">
         <button type="submit" className="text-textSecondary hover:text-primary transition-colors">
           <FiSearch className="mr-3" size={20} />
         </button>
@@ -44,7 +44,7 @@ const Navbar = () => {
         {user ? (
           <div className="flex items-center gap-4 cursor-pointer group relative">
             <img 
-              src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=8B5CF6&color=fff"} 
+              src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=22C55E&color=fff"} 
               alt="User" 
               className="w-10 h-10 rounded-full border-2 border-primary/20 object-cover transition-transform group-hover:scale-105"
             />
@@ -65,7 +65,7 @@ const Navbar = () => {
         ) : (
           <button 
             onClick={() => navigate('/login')}
-            className="bg-primary/10 text-primary font-semibold px-6 py-2 rounded-full border border-primary/20 hover:bg-primary hover:text-white hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all duration-300"
+            className="bg-primary/10 text-primary font-semibold px-6 py-2 rounded-full border border-primary/20 hover:bg-primary hover:text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300"
           >
             Log in
           </button>

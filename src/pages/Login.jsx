@@ -26,7 +26,7 @@ const Login = () => {
       uid: 'mock-' + Date.now(),
       displayName: mockName || "Guest User",
       email: mockEmail || "guest@example.com",
-      photoURL: "https://ui-avatars.com/api/?name=" + (mockName ? encodeURIComponent(mockName) : "Guest+User") + "&background=8B5CF6&color=fff"
+      photoURL: "https://ui-avatars.com/api/?name=" + (mockName ? encodeURIComponent(mockName) : "Guest+User") + "&background=22C55E&color=fff"
     });
     navigate('/');
   };
@@ -86,7 +86,7 @@ const Login = () => {
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
 
       <div className="relative z-10 w-full max-w-md p-8 glass rounded-3xl shadow-2xl text-center border border-white/10 mx-4 bg-surface/40 backdrop-blur-md">
-        <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.4)] transform hover:scale-110 transition-transform duration-300">
+        <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.4)] transform hover:scale-110 transition-transform duration-300">
           <FiMusic size={32} className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-textPrimary mb-2">
@@ -110,7 +110,7 @@ const Login = () => {
                 type="text" 
                 placeholder="Full Name" 
                 value={name} onChange={e => setName(e.target.value)}
-                className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)] outline-none transition-all"
+                className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] outline-none transition-all"
               />
             </div>
           )}
@@ -120,7 +120,7 @@ const Login = () => {
               type="email" 
               placeholder="Email Address" 
               value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)] outline-none transition-all"
+              className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] outline-none transition-all"
             />
           </div>
           {mode !== 'forgot' && (
@@ -130,7 +130,7 @@ const Login = () => {
                 type="password" 
                 placeholder="Password" 
                 value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)] outline-none transition-all"
+                className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] outline-none transition-all"
               />
             </div>
           )}
@@ -144,7 +144,7 @@ const Login = () => {
           <button 
             type="submit"
             disabled={isLoggingIn}
-            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3.5 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all disabled:opacity-70 flex items-center justify-center mt-2"
+            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3.5 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all disabled:opacity-70 flex items-center justify-center mt-2"
           >
             {isLoggingIn ? <FiLoader className="animate-spin" size={20} /> : mode === 'login' ? 'Log In' : mode === 'register' ? 'Sign Up' : 'Send Reset Link'}
           </button>

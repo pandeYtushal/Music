@@ -186,7 +186,7 @@ const Player = () => {
         <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 p-6 sm:p-8 max-w-6xl mx-auto w-full overflow-y-auto scrollbar-hide pb-20">
           
           {/* Large Album Art */}
-          <div className="w-full max-w-[280px] sm:max-w-sm md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.25)] border border-white/10 group flex-shrink-0">
+          <div className="w-full max-w-[280px] sm:max-w-sm md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(34,197,94,0.25)] border border-white/10 group flex-shrink-0">
              <img src={imageUrl} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           </div>
 
@@ -239,7 +239,7 @@ const Player = () => {
                 </button>
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(139,92,246,0.4)]"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(34,197,94,0.4)]"
                 >
                   {isPlaying ? <FiPause size={40} className="fill-current" /> : <FiPlay size={40} className="fill-current ml-2" />}
                 </button>

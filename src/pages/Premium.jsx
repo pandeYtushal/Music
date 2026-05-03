@@ -48,7 +48,7 @@ const Premium = () => {
           </div>
 
           {/* Premium Tier */}
-          <div className="bg-gradient-to-br from-surface to-surface/80 border border-primary/30 rounded-3xl p-8 relative overflow-hidden group hover:shadow-[0_0_50px_rgba(139,92,246,0.15)] transition-all duration-500">
+          <div className="bg-gradient-to-br from-surface to-surface/80 border border-primary/30 rounded-3xl p-8 relative overflow-hidden group hover:shadow-[0_0_50px_rgba(34,197,94,0.15)] transition-all duration-500">
             <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/30 transition-colors duration-500"></div>
             
             <div className="mb-8 relative z-10">
@@ -80,7 +80,7 @@ const Premium = () => {
               </li>
             </ul>
 
-            <button className="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-primary to-secondary text-white hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(139,92,246,0.4)] relative z-10">
+            <button className="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-primary to-secondary text-white hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(34,197,94,0.4)] relative z-10">
               Get Premium
             </button>
             <p className="text-xs text-textSecondary text-center mt-4 relative z-10">Terms and conditions apply. 1 month free not available for users who have already tried Premium.</p>
