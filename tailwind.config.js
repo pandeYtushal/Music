@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         primary: "#10b981", // Emerald Green
-        secondary: "#059669", // Darker Green
+        secondary: "#f97316", // Orange 500
         background: "#0f172a", // Slate 900
         surface: "#1e293b", // Slate 800
         textPrimary: "#f8fafc",
