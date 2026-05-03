@@ -7,6 +7,7 @@ const Navbar = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -21,17 +22,15 @@ const Navbar = () => {
   };
 
   return (
-    <header className="h-20 px-8 flex items-center justify-between sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
-      <form onSubmit={handleSearch} className="flex items-center bg-surface/50 border border-white/10 rounded-full px-4 py-2 w-1/3 min-w-[250px] focus-within:border-primary/50 focus-within:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all duration-300">
-        <button type="submit" className="text-textSecondary hover:text-primary transition-colors">
-          <FiSearch className="mr-3" size={20} />
-        </button>
+    <header className="h-20 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-white/5">
+      <form onSubmit={handleSearch} className="flex items-center bg-surface/50 border border-white/10 rounded-full px-4 py-2 w-full max-w-[160px] xs:max-w-[200px] sm:max-w-xs md:max-w-md transition-all duration-300 focus-within:border-primary/50">
+        <FiSearch className="text-textSecondary mr-2 shrink-0" size={18} />
         <input 
           type="text" 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for songs, artists, podcasts..." 
-          className="bg-transparent border-none outline-none text-textPrimary w-full text-sm placeholder-textSecondary"
+          placeholder="Search..." 
+          className="bg-transparent border-none outline-none text-textPrimary w-full text-sm placeholder:text-textSecondary/50"
         />
       </form>
 
@@ -42,18 +41,30 @@ const Navbar = () => {
         </button>
         
         {user ? (
-          <div className="flex items-center gap-4 cursor-pointer group relative">
-            <img 
-              src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=22C55E&color=fff"} 
-              alt="User" 
-              className="w-10 h-10 rounded-full border-2 border-primary/20 object-cover transition-transform group-hover:scale-105"
-            />
-            <div className="hidden md:block">
-              <p className="text-sm font-semibold text-textPrimary">{user.displayName || "User"}</p>
-              <p className="text-xs text-textSecondary">Premium Member</p>
+          <div className="relative">
+            <div 
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="flex items-center gap-4 cursor-pointer group"
+            >
+              <img 
+                src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=10b981&color=fff"} 
+                alt="User" 
+                className="w-10 h-10 rounded-full border-2 border-primary/20 object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="hidden md:block">
+                <p className="text-sm font-semibold text-textPrimary">{user.displayName || "User"}</p>
+                <p className="text-xs text-textSecondary">Premium Member</p>
+              </div>
             </div>
             
-            <div className="absolute top-full right-0 mt-2 w-48 bg-surface border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden py-2">
+            {/* Dropdown Menu */}
+            <div className={`absolute top-full right-0 mt-2 w-48 bg-surface border border-white/10 rounded-xl shadow-2xl transition-all duration-200 overflow-hidden py-2 z-[60] ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+              <button 
+                onClick={() => { navigate('/settings'); setIsProfileOpen(false); }}
+                className="w-full text-left px-4 py-2 text-sm text-textPrimary hover:bg-white/5 transition-colors"
+              >
+                Settings
+              </button>
               <button 
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors"
@@ -61,6 +72,14 @@ const Navbar = () => {
                 Log out
               </button>
             </div>
+            
+            {/* Overlay to close dropdown when clicking outside */}
+            {isProfileOpen && (
+              <div 
+                className="fixed inset-0 z-[-1]" 
+                onClick={() => setIsProfileOpen(false)}
+              ></div>
+            )}
           </div>
         ) : (
           <button 

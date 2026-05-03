@@ -7,12 +7,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#22c55e", // Neon Green
-        secondary: "#f97316", // Fiery Orange
-        background: "#000000", // Pure black
-        surface: "#111111", // Dark gray
-        textPrimary: "#FFFFFF",
-        textSecondary: "#9ca3af" // Muted gray
+        primary: "#10b981", // Emerald Green
+        secondary: "#059669", // Darker Green
+        background: "#0f172a", // Slate 900
+        surface: "#1e293b", // Slate 800
+        textPrimary: "#f8fafc",
+        textSecondary: "#94a3b8" // Slate 400
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

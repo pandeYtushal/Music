@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiPlay, FiPause, FiSkipBack, FiSkipForward, FiVolume2, FiHeart, FiRepeat, FiShuffle, FiChevronDown, FiMaximize2, FiDownload } from 'react-icons/fi';
+import { FiPlay, FiPause, FiSkipBack, FiSkipForward, FiVolume2, FiHeart, FiRepeat, FiShuffle, FiChevronDown, FiMaximize2, FiDownload, FiPlus } from 'react-icons/fi';
 
 const Player = () => {
-  const { currentVideo, isPlaying, setIsPlaying, playNext, playPrevious, playlist, favorites, toggleFavorite } = usePlayerStore();
+  const { currentVideo, isPlaying, setIsPlaying, playNext, playPrevious, playlist, favorites, toggleFavorite, autoplay, quality, openAddToPlaylistModal, setCurrentVideo, currentIndex } = usePlayerStore();
   const [played, setPlayed] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [duration, setDuration] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [isDraggingVolume, setIsDraggingVolume] = useState(false);
+  
   const audioRef = useRef(null);
+  const miniProgressRef = useRef(null);
+  const fullProgressRef = useRef(null);
+  const miniVolumeRef = useRef(null);
+  const fullVolumeRef = useRef(null);
+  const activeProgressBarRef = useRef(null);
+  const activeVolumeBarRef = useRef(null);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -22,7 +31,7 @@ const Player = () => {
   }, [isPlaying, currentVideo, volume]);
 
   const handleTimeUpdate = () => {
-    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+    if (audioRef.current && !isNaN(audioRef.current.duration) && !isSeeking) {
       setPlayed(audioRef.current.currentTime / audioRef.current.duration || 0);
     }
   };
@@ -33,20 +42,66 @@ const Player = () => {
     }
   };
 
-  const handleSeek = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
+  const updateSeekPosition = (clientX) => {
+    if (!activeProgressBarRef.current) return;
+    const rect = activeProgressBarRef.current.getBoundingClientRect();
+    let percent = (clientX - rect.left) / rect.width;
+    percent = Math.max(0, Math.min(1, percent));
     setPlayed(percent);
     if (audioRef.current && !isNaN(audioRef.current.duration)) {
       audioRef.current.currentTime = percent * audioRef.current.duration;
     }
   };
 
-  const handleVolumeChange = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const newVolume = (e.clientX - rect.left) / rect.width;
-    setVolume(Math.max(0, Math.min(1, newVolume)));
+  const handleSeekStart = (e, ref) => {
+    setIsSeeking(true);
+    activeProgressBarRef.current = ref.current;
+    updateSeekPosition(e.clientX || (e.touches && e.touches[0].clientX));
   };
+
+  const updateVolumePosition = (clientX) => {
+    if (!activeVolumeBarRef.current) return;
+    const rect = activeVolumeBarRef.current.getBoundingClientRect();
+    let newVolume = (clientX - rect.left) / rect.width;
+    newVolume = Math.max(0, Math.min(1, newVolume));
+    setVolume(newVolume);
+  };
+
+  const handleVolumeStart = (e, ref) => {
+    setIsDraggingVolume(true);
+    activeVolumeBarRef.current = ref.current;
+    updateVolumePosition(e.clientX || (e.touches && e.touches[0].clientX));
+  };
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (isSeeking) {
+        updateSeekPosition(e.clientX || (e.touches && e.touches[0].clientX));
+      }
+      if (isDraggingVolume) {
+        updateVolumePosition(e.clientX || (e.touches && e.touches[0].clientX));
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (isSeeking) setIsSeeking(false);
+      if (isDraggingVolume) setIsDraggingVolume(false);
+    };
+
+    if (isSeeking || isDraggingVolume) {
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+      window.addEventListener('touchmove', handleGlobalMouseMove, { passive: false });
+      window.addEventListener('touchend', handleGlobalMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('touchmove', handleGlobalMouseMove);
+      window.removeEventListener('touchend', handleGlobalMouseUp);
+    };
+  }, [isSeeking, isDraggingVolume]);
 
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -59,7 +114,9 @@ const Player = () => {
 
   const getAudioUrl = () => {
     if (!currentVideo?.downloadUrl?.length) return '';
-    return currentVideo.downloadUrl[currentVideo.downloadUrl.length - 1].link; // highest quality
+    // Find the link that matches the selected quality, or fall back to the highest available
+    const qualityLink = currentVideo.downloadUrl.find(d => d.quality === quality);
+    return qualityLink ? qualityLink.link : currentVideo.downloadUrl[currentVideo.downloadUrl.length - 1].link;
   };
   const audioUrl = getAudioUrl();
   const imageUrl = currentVideo?.image?.[2]?.link || currentVideo?.image?.[1]?.link || currentVideo?.image?.[0]?.link || '';
@@ -84,7 +141,7 @@ const Player = () => {
         src={audioUrl} 
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onEnded={playNext}
+        onEnded={() => autoplay && playNext()}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         autoPlay
@@ -93,22 +150,30 @@ const Player = () => {
       {/* MINI PLAYER (Visible when NOT expanded) */}
       <div 
         onClick={() => setIsExpanded(true)}
-        className={`fixed left-0 right-0 h-20 md:h-24 bg-surface/95 backdrop-blur-xl border-t border-white/5 flex items-center px-4 md:px-6 z-[100] transition-all duration-500 ease-out cursor-pointer hover:bg-surface/100 bottom-16 md:bottom-0 ${isExpanded ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-5xl h-20 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center px-4 md:px-6 z-[100] transition-all duration-500 ease-out cursor-pointer hover:bg-surface bottom-20 md:bottom-6 shadow-2xl shadow-black/50 ${isExpanded ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
       >
-        <div className="flex items-center w-full md:w-1/4 min-w-[150px] md:min-w-[200px] group">
-          <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-md overflow-hidden shadow-lg shadow-black/40 border border-white/5 mr-3 md:mr-4 bg-background flex-shrink-0">
+        <div className="flex items-center w-full md:w-[30%] min-w-[150px] gap-2 md:gap-4 group">
+          <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-md overflow-hidden shadow-lg shadow-black/40 border border-white/5 bg-background flex-shrink-0">
             <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
           </div>
           <div className="overflow-hidden flex-1">
             <h4 className="text-textPrimary font-semibold text-sm truncate" dangerouslySetInnerHTML={{ __html: title }}></h4>
-            <p className="text-textSecondary text-xs truncate mt-0.5 md:mt-1" dangerouslySetInnerHTML={{ __html: artist }}></p>
+            <p className="text-textSecondary text-[10px] md:text-xs truncate mt-0.5 md:mt-1" dangerouslySetInnerHTML={{ __html: artist }}></p>
           </div>
-          <button 
-            className={`ml-2 md:ml-4 transition-colors hidden sm:block hover:scale-110 active:scale-95 ${isFavorite ? 'text-primary' : 'text-textSecondary hover:text-primary'}`} 
-            onClick={(e) => { e.stopPropagation(); toggleFavorite(currentVideo); }}
-          >
-            <FiHeart size={20} className={isFavorite ? 'fill-current' : ''} />
-          </button>
+          <div className="flex items-center gap-1 md:gap-3">
+            <button 
+              className={`p-1.5 transition-colors hover:scale-110 active:scale-95 ${isFavorite ? 'text-primary' : 'text-textSecondary hover:text-primary'}`} 
+              onClick={(e) => { e.stopPropagation(); toggleFavorite(currentVideo); }}
+            >
+              <FiHeart size={18} className={isFavorite ? 'fill-current' : ''} />
+            </button>
+            <button 
+              className="p-1.5 text-textSecondary hover:text-primary transition-colors hover:scale-110 active:scale-95" 
+              onClick={(e) => { e.stopPropagation(); openAddToPlaylistModal(currentVideo); }}
+            >
+              <FiPlus size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Mini Controls */}
@@ -119,7 +184,7 @@ const Player = () => {
         </div>
 
         {/* Desktop Mini Controls */}
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center max-w-2xl px-8" onClick={(e) => e.stopPropagation()}>
+        <div className="hidden md:flex flex-[0.4] flex-col items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-6 mb-2">
             <button className="text-textSecondary hover:text-textPrimary transition-colors hover:scale-110 active:scale-95">
               <FiShuffle size={18} />
@@ -129,7 +194,7 @@ const Player = () => {
             </button>
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
-              className="w-10 h-10 rounded-full bg-textPrimary text-background flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+              className="w-10 h-10 rounded-full bg-textPrimary text-background flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"
             >
               {isPlaying ? <FiPause size={20} className="fill-current" /> : <FiPlay size={20} className="fill-current ml-1" />}
             </button>
@@ -140,24 +205,28 @@ const Player = () => {
               <FiRepeat size={18} />
             </button>
           </div>
-          <div className="w-full flex items-center gap-3 group">
-            <span className="text-xs text-textSecondary w-10 text-right">{formatTime(played * duration)}</span>
+          <div className="w-full flex items-center gap-3">
+            <span className="text-[10px] text-textSecondary w-8 text-right font-medium">{formatTime(played * duration)}</span>
             <div 
-              className="flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer relative overflow-hidden group-hover:h-2 transition-all"
-              onMouseDown={handleSeek}
+              ref={miniProgressRef}
+              className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer relative overflow-hidden group hover:h-1.5 transition-all"
+              onMouseDown={(e) => handleSeekStart(e, miniProgressRef)}
+              onTouchStart={(e) => handleSeekStart(e, miniProgressRef)}
             >
-              <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-secondary rounded-full" style={{ width: `${played * 100}%`, pointerEvents: 'none' }}></div>
+              <div className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-150" style={{ width: `${played * 100}%` }}></div>
             </div>
-            <span className="text-xs text-textSecondary w-10">{formatTime(duration)}</span>
+            <span className="text-[10px] text-textSecondary w-8 font-medium">{formatTime(duration)}</span>
           </div>
         </div>
 
         {/* Desktop Mini Volume & Expand */}
-        <div className="hidden md:flex items-center justify-end w-1/4 min-w-[200px] gap-4" onClick={(e) => e.stopPropagation()}>
+        <div className="hidden md:flex items-center justify-end w-[30%] gap-4" onClick={(e) => e.stopPropagation()}>
           <FiVolume2 className="text-textSecondary" size={20} />
           <div 
-            className="w-24 h-1.5 bg-white/10 rounded-full cursor-pointer overflow-hidden hover:h-2 transition-all group"
-            onMouseDown={handleVolumeChange}
+            ref={miniVolumeRef}
+            className="w-24 h-1 bg-white/10 rounded-full cursor-pointer overflow-hidden hover:h-1.5 transition-all group"
+            onMouseDown={(e) => handleVolumeStart(e, miniVolumeRef)}
+            onTouchStart={(e) => handleVolumeStart(e, miniVolumeRef)}
           >
             <div className="h-full bg-textPrimary group-hover:bg-primary rounded-full transition-colors pointer-events-none" style={{ width: `${volume * 100}%` }}></div>
           </div>
@@ -186,7 +255,7 @@ const Player = () => {
         <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 p-6 sm:p-8 max-w-6xl mx-auto w-full overflow-y-auto scrollbar-hide pb-20">
           
           {/* Large Album Art */}
-          <div className="w-full max-w-[280px] sm:max-w-sm md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(34,197,94,0.25)] border border-white/10 group flex-shrink-0">
+          <div className="w-full max-w-[280px] sm:max-w-sm md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.25)] border border-white/10 group flex-shrink-0">
              <img src={imageUrl} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           </div>
 
@@ -215,8 +284,10 @@ const Player = () => {
              {/* Progress Bar */}
              <div className="w-full flex flex-col gap-3 mb-10">
                 <div 
+                  ref={fullProgressRef}
                   className="w-full h-2.5 bg-white/10 rounded-full cursor-pointer relative overflow-hidden group"
-                  onMouseDown={handleSeek}
+                  onMouseDown={(e) => handleSeekStart(e, fullProgressRef)}
+                  onTouchStart={(e) => handleSeekStart(e, fullProgressRef)}
                 >
                   <div
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-secondary rounded-full"
@@ -239,7 +310,7 @@ const Player = () => {
                 </button>
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(34,197,94,0.4)]"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(16,185,129,0.4)]"
                 >
                   {isPlaying ? <FiPause size={40} className="fill-current" /> : <FiPlay size={40} className="fill-current ml-2" />}
                 </button>
@@ -252,17 +323,52 @@ const Player = () => {
              </div>
 
              {/* Full Screen Volume */}
-             <div className="flex items-center gap-4 w-full max-w-[280px] mx-auto">
-                <FiVolume2 className="text-textSecondary" size={24} />
+             <div className="flex items-center gap-4 w-full max-w-[280px] mx-auto mb-12">
+                <FiVolume2 className="text-textSecondary" size={20} />
                 <div 
-                  className="flex-1 h-2.5 bg-white/10 rounded-full cursor-pointer overflow-hidden group"
-                  onMouseDown={handleVolumeChange}
+                  ref={fullVolumeRef}
+                  className="flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer overflow-hidden group"
+                  onMouseDown={(e) => handleVolumeStart(e, fullVolumeRef)}
+                  onTouchStart={(e) => handleVolumeStart(e, fullVolumeRef)}
                 >
                   <div
                     className="h-full bg-textPrimary group-hover:bg-primary rounded-full transition-colors pointer-events-none"
                     style={{ width: `${volume * 100}%` }}
                   ></div>
                 </div>
+             </div>
+
+             {/* Up Next / Recommendations */}
+             <div className="w-full">
+               <div className="flex items-center justify-between mb-4 px-1">
+                 <h3 className="text-sm font-bold text-textPrimary uppercase tracking-wider">Up Next</h3>
+                 <span className="text-[10px] text-textSecondary">{playlist.slice(currentIndex + 1).length} songs remaining</span>
+               </div>
+               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+                 {playlist.slice(currentIndex + 1, currentIndex + 6).map((song, idx) => (
+                   <div 
+                    key={`${song.id}-${idx}`}
+                    onClick={() => setCurrentVideo(song, playlist)}
+                    className="flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
+                   >
+                     <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/5 relative">
+                       <img src={song.image?.[0]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                         <FiPlay size={16} className="text-white fill-current" />
+                       </div>
+                     </div>
+                     <div className="overflow-hidden flex-1">
+                       <p className="text-sm font-semibold text-textPrimary truncate" dangerouslySetInnerHTML={{ __html: song.name }}></p>
+                       <p className="text-xs text-textSecondary truncate" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
+                     </div>
+                   </div>
+                 ))}
+                 {playlist.slice(currentIndex + 1).length === 0 && (
+                   <div className="text-center py-8 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                     <p className="text-xs text-textSecondary">No more songs in queue</p>
+                   </div>
+                 )}
+               </div>
              </div>
           </div>
         </div>

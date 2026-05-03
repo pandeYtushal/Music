@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import VideoGrid from '../components/VideoGrid';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiPlay } from 'react-icons/fi';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState({
     quickPicks: [],
     jumpBackIn: [],
@@ -58,7 +60,7 @@ const Home = () => {
   }
 
   return (
-    <div className="p-8 pb-32 relative min-h-full">
+    <div className="p-4 sm:p-6 md:p-8 pb-32 relative min-h-full">
       {/* Dynamic Background Gradient (Spotify Style) */}
       <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-b from-primary/30 via-background to-background pointer-events-none -z-10 transition-colors duration-1000"></div>
 
@@ -102,9 +104,9 @@ const Home = () => {
       )}
 
       {/* Horizontal Carousels */}
-      <VideoGrid videos={categories.jumpBackIn} title="Top Bollywood Hits" horizontal />
-      <VideoGrid videos={categories.recommended} title="Punjabi Chartbusters" horizontal />
-      <VideoGrid videos={categories.trending} title="Desi Hip Hop & Trending" horizontal />
+      <VideoGrid videos={categories.jumpBackIn} title="Top Bollywood Hits" horizontal onShowAll={() => navigate('/search?q=bollywood hits')} />
+      <VideoGrid videos={categories.recommended} title="Punjabi Chartbusters" horizontal onShowAll={() => navigate('/search?q=latest punjabi')} />
+      <VideoGrid videos={categories.trending} title="Desi Hip Hop & Trending" horizontal onShowAll={() => navigate('/search?q=hip hop')} />
       
     </div>
   );

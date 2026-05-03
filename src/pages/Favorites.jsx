@@ -7,9 +7,9 @@ const Favorites = () => {
   const { favorites } = usePlayerStore();
 
   return (
-    <div className="p-8 pb-32">
-      <div className="flex items-end gap-6 mb-8 mt-10">
-        <div className="w-32 h-32 md:w-48 md:h-48 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+    <div className="p-4 sm:p-6 md:p-8 pb-32">
+      <div className="flex flex-col sm:flex-row items-center sm:items-end text-center sm:text-left gap-6 mb-8 mt-6 sm:mt-10">
+        <div className="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)]">
           <FiHeart size={64} className="text-white fill-current" />
         </div>
         <div className="flex-1">

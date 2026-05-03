@@ -1,11 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiHome, FiSearch, FiHeart, FiStar } from 'react-icons/fi';
+import { FiHome, FiSearch, FiHeart, FiStar, FiMusic } from 'react-icons/fi';
 
 const BottomNav = () => {
   const navItems = [
     { name: 'Home', path: '/', icon: <FiHome size={22} /> },
     { name: 'Search', path: '/search', icon: <FiSearch size={22} /> },
+    { name: 'Playlists', path: '/playlists', icon: <FiMusic size={22} /> },
     { name: 'Favorites', path: '/favorites', icon: <FiHeart size={22} /> },
     { name: 'Premium', path: '/premium', icon: <FiStar size={22} /> },
   ];

@@ -8,6 +8,10 @@ import Login from './pages/Login';
 import Search from './pages/Search';
 import Favorites from './pages/Favorites';
 import Premium from './pages/Premium';
+import Settings from './pages/Settings';
+import Playlists from './pages/Playlists';
+import PlaylistDetail from './pages/PlaylistDetail';
+import AddToPlaylistModal from './components/AddToPlaylistModal';
 import BottomNav from './components/BottomNav';
 import { useAuthStore } from './store/useAuthStore';
 import { auth } from './firebase';
@@ -106,6 +110,30 @@ function App() {
                 } 
               />
               <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/playlists" 
+                element={
+                  <ProtectedRoute>
+                    <Playlists />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/playlist/:id" 
+                element={
+                  <ProtectedRoute>
+                    <PlaylistDetail />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="*" 
                 element={
                   <ProtectedRoute>
@@ -123,6 +151,7 @@ function App() {
       
       {user && <BottomNav />}
       <Player />
+      <AddToPlaylistModal />
     </Router>
   );
 }

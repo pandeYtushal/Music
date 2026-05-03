@@ -10,6 +10,11 @@ export const usePlayerStore = create(
       currentIndex: -1,
       favorites: [],
       recentlyPlayed: [],
+      autoplay: true,
+      quality: '320kbps',
+      playlists: [],
+      isAddToPlaylistModalOpen: false,
+      pendingSong: null,
       
       setCurrentVideo: (video, contextPlaylist = null) => {
         const state = get();
@@ -62,11 +67,55 @@ export const usePlayerStore = create(
         } else {
           set({ favorites: [video, ...state.favorites] });
         }
-      }
+      },
+
+      toggleAutoplay: () => set((state) => ({ autoplay: !state.autoplay })),
+      setQuality: (quality) => set({ quality }),
+
+      createPlaylist: (name) => {
+        const id = 'playlist_' + Date.now();
+        const newPlaylist = { id, name, songs: [], image: null };
+        set((state) => ({ playlists: [...state.playlists, newPlaylist] }));
+        return id;
+      },
+
+      deletePlaylist: (id) => set((state) => ({ 
+        playlists: state.playlists.filter(p => p.id !== id) 
+      })),
+
+      renamePlaylist: (id, name) => set((state) => ({
+        playlists: state.playlists.map(p => p.id === id ? { ...p, name } : p)
+      })),
+
+      addToPlaylist: (playlistId, video) => set((state) => ({
+        playlists: state.playlists.map(p => {
+          if (p.id === playlistId) {
+            // Check if already exists
+            if (p.songs.some(s => s.id === video.id)) return p;
+            return { ...p, songs: [...p.songs, video] };
+          }
+          return p;
+        })
+      })),
+
+      removeFromPlaylist: (playlistId, videoId) => set((state) => ({
+        playlists: state.playlists.map(p => 
+          p.id === playlistId ? { ...p, songs: p.songs.filter(s => s.id !== videoId) } : p
+        )
+      })),
+
+      openAddToPlaylistModal: (song) => set({ isAddToPlaylistModalOpen: true, pendingSong: song }),
+      closeAddToPlaylistModal: () => set({ isAddToPlaylistModalOpen: false, pendingSong: null })
     }),
     {
       name: 'melody-player-storage',
-      partialize: (state) => ({ favorites: state.favorites, recentlyPlayed: state.recentlyPlayed }),
+      partialize: (state) => ({ 
+        favorites: state.favorites, 
+        recentlyPlayed: state.recentlyPlayed, 
+        autoplay: state.autoplay, 
+        quality: state.quality,
+        playlists: state.playlists 
+      }),
     }
   )
 );

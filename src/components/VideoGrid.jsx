@@ -1,17 +1,17 @@
 import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiPlay } from 'react-icons/fi';
+import { FiPlay, FiPlus } from 'react-icons/fi';
 
-const VideoGrid = ({ videos, title, horizontal = false }) => {
-  const { setCurrentVideo } = usePlayerStore();
+const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
+  const { setCurrentVideo, openAddToPlaylistModal } = usePlayerStore();
 
   if (!videos || videos.length === 0) return null;
 
   return (
     <div className="mb-12">
       <div className="flex items-end justify-between mb-6">
-        <h2 className="text-2xl font-bold text-textPrimary tracking-tight hover:underline cursor-pointer inline-block">{title}</h2>
-        {horizontal && <span className="text-xs font-bold text-textSecondary uppercase tracking-widest hover:text-textPrimary cursor-pointer transition-colors">Show all</span>}
+        <h2 onClick={onShowAll} className={`text-2xl font-bold text-textPrimary tracking-tight ${onShowAll ? 'hover:underline cursor-pointer' : ''} inline-block`}>{title}</h2>
+        {horizontal && onShowAll && <span onClick={onShowAll} className="text-xs font-bold text-textSecondary uppercase tracking-widest hover:text-textPrimary cursor-pointer transition-colors">Show all</span>}
       </div>
       
       <div className={horizontal 
@@ -32,11 +32,14 @@ const VideoGrid = ({ videos, title, horizontal = false }) => {
               />
               {/* Play Button Overlay (Spotify Style: slides up) */}
               <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out z-10">
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-[0_8px_15px_rgba(0,0,0,0.5)] hover:scale-105 hover:bg-primary/90 transition-transform">
-                  <FiPlay size={20} className="text-black ml-1 fill-current" />
-                </div>
-              </div>
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setCurrentVideo(video, videos); }}
+                className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-black shadow-xl hover:scale-110 active:scale-95 transition-all"
+              >
+                <FiPlay size={24} className="fill-current ml-1" />
+              </button>
+            </div>
             </div>
             <div>
               <h3 className="text-textPrimary font-semibold text-sm line-clamp-1 group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h3>
