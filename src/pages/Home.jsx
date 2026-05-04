@@ -18,10 +18,10 @@ const Home = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "GM bestie ✨";
-    if (hour < 17) return "Vibe check 🎧";
-    if (hour < 21) return "Main character energy 💅";
-    return "Late night feels 🌙";
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+    return "Late Night Listening";
   };
 
   useEffect(() => {
@@ -76,8 +76,7 @@ const Home = () => {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 pb-40 md:pb-32 relative min-h-full">
-      {/* Dynamic Background Gradient (Spotify Style) */}
-      <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-b from-primary/30 via-background to-background pointer-events-none -z-10 transition-colors duration-1000"></div>
+      {/* Removed Background Gradient */}
 
       <h1 className="text-3xl md:text-4xl font-bold text-textPrimary mb-6 tracking-tight drop-shadow-md">{getGreeting()}</h1>
 
@@ -98,7 +97,7 @@ const Home = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-2 line-clamp-1 drop-shadow-lg" dangerouslySetInnerHTML={{ __html: categories.quickPicks[0].name }}></h2>
             <p className="text-textSecondary text-sm sm:text-base line-clamp-1 max-w-lg drop-shadow-md" dangerouslySetInnerHTML={{ __html: categories.quickPicks[0].primaryArtists }}></p>
             <div className="mt-6 flex items-center gap-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
-              <button className="bg-primary text-black font-bold px-8 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+              <button className="bg-white text-black font-bold px-8 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2">
                 <FiPlay className="fill-current" /> Play Now
               </button>
             </div>
@@ -127,11 +126,11 @@ const Home = () => {
               </div>
               <div className="p-3 sm:p-4 flex-1 overflow-hidden flex items-center justify-between">
                 <div>
-                  <h3 className="text-textPrimary font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h3>
+                  <h3 className="text-textPrimary font-bold text-sm line-clamp-1 group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h3>
                   <p className="text-textSecondary text-[10px] sm:text-xs line-clamp-1 mt-1" dangerouslySetInnerHTML={{ __html: video.primaryArtists }}></p>
                 </div>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
-                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors">
                      <FiPlay size={16} className="ml-1 fill-current" />
                    </div>
                 </div>
@@ -164,7 +163,7 @@ const Home = () => {
                 onClick={() => setCurrentVideo(video, categories.trending)}
                 className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-surface/40 transition-colors cursor-pointer border border-transparent hover:border-white/5"
               >
-                <span className="text-textSecondary font-bold text-sm w-4 text-right group-hover:text-primary">{idx + 1}</span>
+                <span className="text-textSecondary font-bold text-sm w-4 text-right group-hover:text-white">{idx + 1}</span>
                 <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-md">
                   <img src={video.image?.[1]?.link || ''} alt="" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -172,7 +171,7 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <h4 className="text-textPrimary font-semibold text-sm truncate group-hover:text-primary transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h4>
+                  <h4 className="text-textPrimary font-semibold text-sm truncate group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h4>
                   <p className="text-textSecondary text-xs truncate" dangerouslySetInnerHTML={{ __html: video.primaryArtists }}></p>
                 </div>
                 <div className="hidden sm:block text-textSecondary text-xs">

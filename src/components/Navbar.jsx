@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiSearch, FiBell } from 'react-icons/fi';
 import { useAuthStore } from '../store/useAuthStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Sync input with URL — clears when user navigates away from /search
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q');
+    if (location.pathname === '/search' && q) {
+      setSearchQuery(q);
+    } else {
+      setSearchQuery('');
+    }
+  }, [location]);
 
   const handleLogout = () => {
     logout();
@@ -35,9 +47,9 @@ const Navbar = () => {
       </form>
 
       <div className="flex items-center gap-6">
-        <button className="text-textSecondary hover:text-textPrimary transition-colors relative">
+        <button className="text-textSecondary hover:text-white transition-colors relative">
           <FiBell size={24} />
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></span>
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-white rounded-full border-2 border-background"></span>
         </button>
         
         {user ? (
@@ -49,7 +61,7 @@ const Navbar = () => {
               <img 
                 src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=10b981&color=fff"} 
                 alt="User" 
-                className="w-10 h-10 rounded-full border-2 border-primary/20 object-cover transition-transform group-hover:scale-105"
+                className="w-10 h-10 rounded-full border border-white/20 object-cover transition-transform group-hover:scale-105"
               />
               <div className="hidden md:block">
                 <p className="text-sm font-semibold text-textPrimary">{user.displayName || "User"}</p>
@@ -84,7 +96,7 @@ const Navbar = () => {
         ) : (
           <button 
             onClick={() => navigate('/login')}
-            className="bg-primary/10 text-primary font-semibold px-6 py-2 rounded-full border border-primary/20 hover:bg-primary hover:text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300"
+            className="bg-white/10 text-white font-semibold px-6 py-2 rounded-full border border-white/20 hover:bg-white hover:text-black transition-all duration-300"
           >
             Log in
           </button>

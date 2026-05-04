@@ -222,7 +222,7 @@ const Player = () => {
         onTouchStart={handleSwipeStart}
         onTouchMove={handleSwipeMove}
         onTouchEnd={handleSwipeEnd}
-        className={`fixed left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-5xl h-20 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center px-4 md:px-6 z-[100] transition-all duration-500 ease-out cursor-pointer hover:bg-surface bottom-20 md:bottom-6 shadow-2xl shadow-black/50 ${isExpanded ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-5xl h-20 bg-[#1c1c1e]/95 backdrop-blur-xl border border-white/5 rounded-2xl flex items-center px-4 md:px-6 z-[100] transition-all duration-500 ease-out cursor-pointer hover:bg-[#2c2c2e]/95 bottom-20 md:bottom-6 shadow-2xl shadow-black/70 ${isExpanded ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
       >
         <div className="flex items-center w-full md:w-[30%] min-w-[150px] gap-2 md:gap-4 group">
           <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-md overflow-hidden shadow-lg shadow-black/40 border border-white/5 bg-background flex-shrink-0">
@@ -234,7 +234,7 @@ const Player = () => {
           </div>
           <div className="flex items-center gap-1 md:gap-3">
             <button 
-              className={`p-1.5 transition-colors hover:scale-110 active:scale-95 ${isFavorite ? 'text-primary' : 'text-textSecondary hover:text-primary'}`} 
+              className={`p-1.5 transition-colors hover:scale-110 active:scale-95 ${isFavorite ? 'text-white' : 'text-white/40 hover:text-white'}`} 
               onClick={(e) => { e.stopPropagation(); toggleFavorite(currentVideo); }}
             >
               <FiHeart size={18} className={isFavorite ? 'fill-current' : ''} />
@@ -266,7 +266,7 @@ const Player = () => {
             </button>
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
-              className="w-10 h-10 rounded-full bg-textPrimary text-background flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+              className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
             >
               {isPlaying ? <FiPause size={20} className="fill-current" /> : <FiPlay size={20} className="fill-current ml-1" />}
             </button>
@@ -285,7 +285,7 @@ const Player = () => {
               onMouseDown={(e) => handleSeekStart(e, miniProgressRef)}
               onTouchStart={(e) => handleSeekStart(e, miniProgressRef)}
             >
-              <div className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-150" style={{ width: `${played * 100}%` }}></div>
+              <div className="absolute top-0 left-0 h-full bg-white rounded-full transition-all duration-150" style={{ width: `${played * 100}%` }}></div>
             </div>
             <span className="text-[10px] text-textSecondary w-8 font-medium">{formatTime(duration)}</span>
           </div>
@@ -309,7 +309,7 @@ const Player = () => {
       </div>
 
       {/* FULL SCREEN PLAYER (Visible when expanded) */}
-      <div className={`fixed inset-0 z-[200] bg-background/95 backdrop-blur-3xl flex flex-col transition-all duration-500 ease-in-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+      <div className={`fixed inset-0 z-[200] bg-black flex flex-col transition-all duration-500 ease-in-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-6 border-b border-white/5">
@@ -328,7 +328,7 @@ const Player = () => {
           
           {/* Large Album Art */}
           <div 
-            className="w-full max-w-[220px] sm:max-w-[280px] md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.25)] border border-white/10 group flex-shrink-0 mt-4 md:mt-0"
+            className="w-full max-w-[220px] sm:max-w-[280px] md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-2xl shadow-black/60 group flex-shrink-0 mt-4 md:mt-0"
             onTouchStart={handleSwipeStart}
             onTouchMove={handleSwipeMove}
             onTouchEnd={handleSwipeEnd}
@@ -343,7 +343,7 @@ const Player = () => {
              <div className="flex items-start justify-between mb-8">
                <div className="overflow-hidden pr-4 flex-1">
                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-textPrimary mb-2 truncate" dangerouslySetInnerHTML={{ __html: title }}></h1>
-                 <p className="text-base sm:text-lg text-primary truncate" dangerouslySetInnerHTML={{ __html: artist }}></p>
+                 <p className="text-base sm:text-lg text-white/60 truncate" dangerouslySetInnerHTML={{ __html: artist }}></p>
                </div>
                <div className="flex items-center gap-4 mt-1">
                  <button onClick={handleDownload} className="text-textSecondary hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
@@ -351,7 +351,7 @@ const Player = () => {
                  </button>
                  <button 
                    onClick={() => toggleFavorite(currentVideo)} 
-                   className={`transition-colors p-2 hover:bg-white/10 rounded-full ${isFavorite ? 'text-primary' : 'text-textSecondary hover:text-primary'}`}
+                   className={`transition-colors p-2 hover:bg-white/10 rounded-full ${isFavorite ? 'text-white' : 'text-white/50 hover:text-white'}`}
                  >
                    <FiHeart size={28} className={isFavorite ? 'fill-current' : ''} />
                  </button>
@@ -367,7 +367,7 @@ const Player = () => {
                   onTouchStart={(e) => handleSeekStart(e, fullProgressRef)}
                 >
                   <div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-secondary rounded-full"
+                     className="absolute top-0 left-0 h-full bg-white rounded-full"
                     style={{ width: `${played * 100}%`, pointerEvents: 'none' }}
                   ></div>
                 </div>
@@ -379,22 +379,22 @@ const Player = () => {
 
              {/* Massive Play Controls */}
              <div className="flex items-center justify-between mb-12 sm:mb-14 px-2">
-                <button className="text-textSecondary hover:text-textPrimary transition-colors">
+                <button className="text-white/40 hover:text-white transition-colors">
                   <FiShuffle size={24} />
                 </button>
-                <button onClick={playPrevious} className="text-textPrimary hover:text-primary transition-colors active:scale-90">
+                <button onClick={playPrevious} className="text-white hover:text-white/70 transition-colors active:scale-90">
                   <FiSkipBack className="w-7 h-7 sm:w-9 sm:h-9" />
                 </button>
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(16,185,129,0.4)]"
+                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
                 >
                   {isPlaying ? <FiPause className="w-8 h-8 sm:w-10 sm:h-10 fill-current" /> : <FiPlay className="w-8 h-8 sm:w-10 sm:h-10 fill-current ml-1 sm:ml-2" />}
                 </button>
-                <button onClick={handleNext} className="text-textPrimary hover:text-primary transition-colors active:scale-90">
+                <button onClick={handleNext} className="text-white hover:text-white/70 transition-colors active:scale-90">
                   <FiSkipForward className="w-7 h-7 sm:w-9 sm:h-9" />
                 </button>
-                <button className="text-textSecondary hover:text-textPrimary transition-colors">
+                <button className="text-white/40 hover:text-white transition-colors">
                   <FiRepeat size={24} />
                 </button>
              </div>
@@ -409,7 +409,7 @@ const Player = () => {
                   onTouchStart={(e) => handleVolumeStart(e, fullVolumeRef)}
                 >
                   <div
-                    className="h-full bg-textPrimary group-hover:bg-primary rounded-full transition-colors pointer-events-none"
+                    className="h-full bg-white rounded-full pointer-events-none"
                     style={{ width: `${volume * 100}%` }}
                   ></div>
                 </div>

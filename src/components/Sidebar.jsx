@@ -16,11 +16,11 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 h-screen bg-surface/50 backdrop-blur-lg border-r border-white/5 flex flex-col p-6 hidden md:flex">
-      <div className="flex items-center gap-3 mb-10 text-primary cursor-pointer hover:scale-105 transition-transform duration-300">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+      <div className="flex items-center gap-3 mb-10 cursor-pointer hover:scale-105 transition-transform duration-300">
+        <div className="w-10 h-10 rounded-[10px] bg-[#1c1c1e] border border-white/10 flex items-center justify-center">
           <FiCompass className="text-white" size={20} />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-textPrimary">Melody</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white">Melody</h1>
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -29,10 +29,10 @@ const Sidebar = () => {
             key={link.name}
             to={link.path}
             className={({ isActive }) =>
-              `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
+              `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
                 isActive 
-                  ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]' 
-                  : 'text-textSecondary hover:bg-white/5 hover:text-textPrimary hover:translate-x-1'
+                  ? 'bg-white/10 text-white' 
+                  : 'text-white/50 hover:bg-white/5 hover:text-white'
               }`
             }
           >
@@ -43,13 +43,12 @@ const Sidebar = () => {
       </nav>
 
       <div className="mt-auto pt-6">
-        <div className="bg-gradient-to-br from-primary/10 to-secondary/5 rounded-3xl p-6 border border-white/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-primary/30 transition-colors duration-500"></div>
-          <h3 className="font-bold text-textPrimary mb-1 relative z-10">Go Premium</h3>
-          <p className="text-xs text-textSecondary mb-4 relative z-10">High quality audio & ad-free listening.</p>
+        <div className="bg-[#1c1c1e] rounded-2xl p-5 border border-white/5">
+          <h3 className="font-semibold text-white mb-1">Go Premium</h3>
+          <p className="text-xs text-white/50 mb-4">High quality audio & ad-free listening.</p>
           <button 
             onClick={() => navigate('/premium')}
-            className="bg-gradient-to-r from-primary to-secondary text-white text-sm font-semibold py-2.5 px-4 rounded-xl w-full transition-all duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:scale-[1.02] active:scale-[0.98] relative z-10"
+            className="bg-white text-black text-sm font-semibold py-2.5 px-4 rounded-full w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             Upgrade Now
           </button>

@@ -81,13 +81,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
-
-      <div className="relative z-10 w-full max-w-md p-8 glass rounded-3xl shadow-2xl text-center border border-white/10 mx-4 bg-surface/40 backdrop-blur-md">
-        <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.4)] transform hover:scale-110 transition-transform duration-300">
-          <FiMusic size={32} className="text-white" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black">
+      <div className="relative z-10 w-full max-w-md p-8 rounded-[32px] text-center mx-4">
+        <div className="w-20 h-20 bg-[#1c1c1e] border border-white/10 rounded-[20px] mx-auto mb-6 flex items-center justify-center shadow-sm">
+          <FiMusic size={40} className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-textPrimary mb-2">
           {mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : 'Reset Password'}
@@ -105,46 +102,46 @@ const Login = () => {
         <form onSubmit={handleEmailAuth} className="space-y-4 mb-6 text-left">
           {mode === 'register' && (
             <div className="relative">
-              <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary" />
+              <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
               <input 
                 type="text" 
                 placeholder="Full Name" 
                 value={name} onChange={e => setName(e.target.value)}
-                className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] outline-none transition-all"
+                className="w-full bg-[#1c1c1e] border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:border-white/20 focus:bg-[#2c2c2e] outline-none transition-all"
               />
             </div>
           )}
           <div className="relative">
-            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary" />
+            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
             <input 
               type="email" 
               placeholder="Email Address" 
               value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] outline-none transition-all"
+              className="w-full bg-[#1c1c1e] border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:border-white/20 focus:bg-[#2c2c2e] outline-none transition-all"
             />
           </div>
           {mode !== 'forgot' && (
             <div className="relative">
-              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary" />
+              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
               <input 
                 type="password" 
                 placeholder="Password" 
                 value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-surface/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-textSecondary focus:border-primary/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.1)] outline-none transition-all"
+                className="w-full bg-[#1c1c1e] border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:border-white/20 focus:bg-[#2c2c2e] outline-none transition-all"
               />
             </div>
           )}
           
           {mode === 'login' && (
             <div className="text-right">
-              <button type="button" onClick={() => setMode('forgot')} className="text-xs text-textSecondary hover:text-primary transition-colors">Forgot Password?</button>
+              <button type="button" onClick={() => setMode('forgot')} className="text-sm text-white/50 hover:text-white transition-colors">Forgot Password?</button>
             </div>
           )}
 
           <button 
             type="submit"
             disabled={isLoggingIn}
-            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3.5 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all disabled:opacity-70 flex items-center justify-center mt-2"
+            className="w-full bg-white text-black font-semibold py-4 px-4 rounded-full hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center mt-2"
           >
             {isLoggingIn ? <FiLoader className="animate-spin" size={20} /> : mode === 'login' ? 'Log In' : mode === 'register' ? 'Sign Up' : 'Send Reset Link'}
           </button>
@@ -162,18 +159,18 @@ const Login = () => {
               onClick={handleGoogleLogin}
               type="button"
               disabled={isLoggingIn}
-              className="w-full flex items-center justify-center gap-3 bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-100 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-70"
+              className="w-full flex items-center justify-center gap-3 bg-[#1c1c1e] text-white border border-white/10 font-semibold py-4 px-4 rounded-full hover:bg-white/5 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
             >
               <FcGoogle size={24} /> Continue with Google
             </button>
           </>
         )}
 
-        <div className="mt-8 text-sm text-textSecondary">
+        <div className="mt-8 text-sm text-white/60">
           {mode === 'login' ? (
-            <p>Don't have an account? <button onClick={() => setMode('register')} className="text-primary font-semibold hover:underline">Sign Up</button></p>
+            <p>Don't have an account? <button onClick={() => setMode('register')} className="text-white font-semibold hover:underline">Sign Up</button></p>
           ) : (
-            <p>Back to <button onClick={() => setMode('login')} className="text-primary font-semibold hover:underline">Log In</button></p>
+            <p>Back to <button onClick={() => setMode('login')} className="text-white font-semibold hover:underline">Log In</button></p>
           )}
         </div>
 

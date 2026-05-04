@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Player from './components/Player';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Welcome from './pages/Welcome';
 import Search from './pages/Search';
 import Favorites from './pages/Favorites';
 import Premium from './pages/Premium';
@@ -31,7 +32,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/welcome" replace />;
   }
   return children;
 };
@@ -71,14 +72,12 @@ function App() {
       <div className="flex h-screen bg-background text-textPrimary overflow-hidden selection:bg-primary/30">
         {user && <Sidebar />}
         
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-          {/* Abstract Background */}
-          <div className="hidden md:block absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] pointer-events-none"></div>
-          <div className="hidden md:block absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[150px] pointer-events-none"></div>
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-black">
           
           <div className="flex-1 overflow-y-auto relative z-10 scrollbar-hide">
             {user && <Navbar />}
             <Routes>
+              <Route path="/welcome" element={<Welcome />} />
               <Route path="/login" element={<Login />} />
               <Route 
                 path="/" 
