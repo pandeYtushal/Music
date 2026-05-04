@@ -19,7 +19,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 pb-32 max-w-4xl">
+    <div className="p-4 sm:p-6 md:p-8 pb-40 md:pb-32 max-w-4xl">
       <h1 className="text-3xl font-bold text-textPrimary mb-8">Settings</h1>
 
       <div className="space-y-8">

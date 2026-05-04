@@ -54,7 +54,7 @@ const Search = () => {
   }, [query]);
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 pb-32">
+    <div className="p-4 sm:p-6 md:p-8 pb-40 md:pb-32">
       <h1 className="text-3xl font-bold text-textPrimary mb-6">Search</h1>
 
       {!query ? (

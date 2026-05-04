@@ -47,7 +47,7 @@ const PlaylistDetail = () => {
   const shareUrl = window.location.href;
 
   return (
-    <div className="pb-32">
+    <div className="pb-40 md:pb-32">
       {/* Header */}
       <div className="relative h-64 md:h-80 flex items-end p-6 md:p-8 overflow-hidden">
         <div className="absolute inset-0 z-0">

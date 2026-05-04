@@ -3,7 +3,7 @@ import { FiCheck, FiMusic, FiDownload, FiHeadphones } from 'react-icons/fi';
 
 const Premium = () => {
   return (
-    <div className="min-h-screen bg-background text-textPrimary pb-32">
+    <div className="min-h-screen bg-background text-textPrimary pb-40 md:pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Listen without limits.</h1>

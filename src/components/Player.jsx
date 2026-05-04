@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlay, FiPause, FiSkipBack, FiSkipForward, FiVolume2, FiHeart, FiRepeat, FiShuffle, FiChevronDown, FiMaximize2, FiDownload, FiPlus } from 'react-icons/fi';
+import axios from 'axios';
 
 const Player = () => {
   const { currentVideo, isPlaying, setIsPlaying, playNext, playPrevious, playlist, favorites, toggleFavorite, autoplay, quality, openAddToPlaylistModal, setCurrentVideo, currentIndex } = usePlayerStore();
@@ -10,6 +11,46 @@ const Player = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
+  const [recommendedSongs, setRecommendedSongs] = useState([]);
+  
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const isSwiping = useRef(false);
+
+  const handleSwipeStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    isSwiping.current = false;
+  };
+
+  const handleSwipeMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+    if (touchStart) {
+      const distance = touchStart - e.targetTouches[0].clientX;
+      if (Math.abs(distance) > 10) {
+        isSwiping.current = true;
+      }
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < playlist.length - 1) {
+      playNext();
+    } else if (recommendedSongs.length > 0) {
+      setCurrentVideo(recommendedSongs[0], [...playlist, ...recommendedSongs]);
+    }
+  };
+
+  const handleSwipeEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+    if (distance > minSwipeDistance) {
+      handleNext();
+    } else if (distance < -minSwipeDistance) {
+      playPrevious();
+    }
+  };
   
   const audioRef = useRef(null);
   const miniProgressRef = useRef(null);
@@ -29,6 +70,24 @@ const Player = () => {
       }
     }
   }, [isPlaying, currentVideo, volume]);
+
+  useEffect(() => {
+    if (currentVideo && currentVideo.primaryArtists) {
+      const fetchRecommendations = async () => {
+        try {
+          const artist = currentVideo.primaryArtists.split(',')[0].trim();
+          const res = await axios.get('https://jiosaavn-api-privatecvc2.vercel.app/search/songs', {
+            params: { query: artist + ' songs', limit: 15 }
+          });
+          if (res.data?.data?.results) {
+            const recs = res.data.data.results.filter(v => v.id !== currentVideo.id && !playlist.some(p => p.id === v.id));
+            setRecommendedSongs(recs);
+          }
+        } catch(e) { console.error("Error fetching recommendations:", e); }
+      };
+      fetchRecommendations();
+    }
+  }, [currentVideo]);
 
   const handleTimeUpdate = () => {
     if (audioRef.current && !isNaN(audioRef.current.duration) && !isSeeking) {
@@ -141,7 +200,11 @@ const Player = () => {
         src={audioUrl} 
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => autoplay && playNext()}
+        onEnded={() => {
+          if (autoplay) {
+            handleNext();
+          }
+        }}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         autoPlay
@@ -149,7 +212,16 @@ const Player = () => {
 
       {/* MINI PLAYER (Visible when NOT expanded) */}
       <div 
-        onClick={() => setIsExpanded(true)}
+        onClick={() => {
+          if (isSwiping.current) {
+            isSwiping.current = false;
+            return;
+          }
+          setIsExpanded(true);
+        }}
+        onTouchStart={handleSwipeStart}
+        onTouchMove={handleSwipeMove}
+        onTouchEnd={handleSwipeEnd}
         className={`fixed left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-5xl h-20 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center px-4 md:px-6 z-[100] transition-all duration-500 ease-out cursor-pointer hover:bg-surface bottom-20 md:bottom-6 shadow-2xl shadow-black/50 ${isExpanded ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
       >
         <div className="flex items-center w-full md:w-[30%] min-w-[150px] gap-2 md:gap-4 group">
@@ -198,7 +270,7 @@ const Player = () => {
             >
               {isPlaying ? <FiPause size={20} className="fill-current" /> : <FiPlay size={20} className="fill-current ml-1" />}
             </button>
-            <button onClick={playNext} className="text-textPrimary hover:text-primary transition-colors hover:scale-110 active:scale-95">
+            <button onClick={handleNext} className="text-textPrimary hover:text-primary transition-colors hover:scale-110 active:scale-95">
               <FiSkipForward size={24} />
             </button>
             <button className="text-textSecondary hover:text-textPrimary transition-colors hover:scale-110 active:scale-95">
@@ -252,10 +324,15 @@ const Player = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 p-6 sm:p-8 max-w-6xl mx-auto w-full overflow-y-auto scrollbar-hide pb-20">
+        <div className="flex-1 flex flex-col md:flex-row items-center justify-start md:justify-center gap-8 md:gap-20 p-6 sm:p-8 max-w-6xl mx-auto w-full overflow-y-auto scrollbar-hide pb-32">
           
           {/* Large Album Art */}
-          <div className="w-full max-w-[280px] sm:max-w-sm md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.25)] border border-white/10 group flex-shrink-0">
+          <div 
+            className="w-full max-w-[220px] sm:max-w-[280px] md:max-w-md aspect-square rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.25)] border border-white/10 group flex-shrink-0 mt-4 md:mt-0"
+            onTouchStart={handleSwipeStart}
+            onTouchMove={handleSwipeMove}
+            onTouchEnd={handleSwipeEnd}
+          >
              <img src={imageUrl} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           </div>
 
@@ -306,16 +383,16 @@ const Player = () => {
                   <FiShuffle size={24} />
                 </button>
                 <button onClick={playPrevious} className="text-textPrimary hover:text-primary transition-colors active:scale-90">
-                  <FiSkipBack size={36} />
+                  <FiSkipBack className="w-7 h-7 sm:w-9 sm:h-9" />
                 </button>
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(16,185,129,0.4)]"
+                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_35px_rgba(16,185,129,0.4)]"
                 >
-                  {isPlaying ? <FiPause size={40} className="fill-current" /> : <FiPlay size={40} className="fill-current ml-2" />}
+                  {isPlaying ? <FiPause className="w-8 h-8 sm:w-10 sm:h-10 fill-current" /> : <FiPlay className="w-8 h-8 sm:w-10 sm:h-10 fill-current ml-1 sm:ml-2" />}
                 </button>
-                <button onClick={playNext} className="text-textPrimary hover:text-primary transition-colors active:scale-90">
-                  <FiSkipForward size={36} />
+                <button onClick={handleNext} className="text-textPrimary hover:text-primary transition-colors active:scale-90">
+                  <FiSkipForward className="w-7 h-7 sm:w-9 sm:h-9" />
                 </button>
                 <button className="text-textSecondary hover:text-textPrimary transition-colors">
                   <FiRepeat size={24} />
@@ -363,9 +440,32 @@ const Player = () => {
                      </div>
                    </div>
                  ))}
-                 {playlist.slice(currentIndex + 1).length === 0 && (
+                 {playlist.slice(currentIndex + 1).length === 0 && recommendedSongs.length === 0 && (
                    <div className="text-center py-8 bg-white/5 rounded-2xl border border-dashed border-white/10">
                      <p className="text-xs text-textSecondary">No more songs in queue</p>
+                   </div>
+                 )}
+                 {recommendedSongs.length > 0 && (
+                   <div className="mt-4 pt-2">
+                     <h3 className="text-xs font-bold text-textSecondary uppercase tracking-wider mb-3 px-1">Autoplay • Recommended</h3>
+                     {recommendedSongs.slice(0, 10).map((song, idx) => (
+                       <div 
+                        key={`rec-${song.id}-${idx}`}
+                        onClick={() => setCurrentVideo(song, [...playlist, ...recommendedSongs])}
+                        className="flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
+                       >
+                         <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/5 relative">
+                           <img src={song.image?.[0]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                             <FiPlay size={16} className="text-white fill-current" />
+                           </div>
+                         </div>
+                         <div className="overflow-hidden flex-1">
+                           <p className="text-sm font-semibold text-textPrimary truncate" dangerouslySetInnerHTML={{ __html: song.name }}></p>
+                           <p className="text-xs text-textSecondary truncate" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
+                         </div>
+                       </div>
+                     ))}
                    </div>
                  )}
                </div>

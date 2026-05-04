@@ -21,7 +21,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
         {videos.map((video, idx) => (
           <div 
             key={idx} 
-            className={`group bg-surface/20 hover:bg-surface/60 rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-lg shadow-black/5 hover:shadow-black/20 ${horizontal ? 'min-w-[180px] max-w-[180px] sm:min-w-[200px] sm:max-w-[200px] snap-start' : ''}`}
+            className={`group bg-surface/20 hover:bg-surface/60 rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-lg shadow-black/5 hover:shadow-black/20 ${horizontal ? 'min-w-[140px] max-w-[140px] sm:min-w-[180px] sm:max-w-[180px] snap-start' : ''}`}
             onClick={() => setCurrentVideo(video, videos)}
           >
             <div className={`relative overflow-hidden rounded-md mb-3 shadow-lg shadow-black/30 ${horizontal ? 'aspect-square' : 'aspect-video'}`}>
@@ -35,15 +35,15 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <button 
                 onClick={(e) => { e.stopPropagation(); setCurrentVideo(video, videos); }}
-                className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-black shadow-xl hover:scale-110 active:scale-95 transition-all"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary flex items-center justify-center text-black shadow-xl hover:scale-110 active:scale-95 transition-all"
               >
-                <FiPlay size={24} className="fill-current ml-1" />
+                <FiPlay className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5 sm:ml-1" />
               </button>
             </div>
             </div>
             <div>
-              <h3 className="text-textPrimary font-semibold text-sm line-clamp-1 group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h3>
-              <p className="text-textSecondary text-xs mt-1.5 line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: video.primaryArtists || video.label }}></p>
+              <h3 className="text-textPrimary font-semibold text-xs sm:text-sm line-clamp-1 group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h3>
+              <p className="text-textSecondary text-[10px] sm:text-xs mt-1.5 line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: video.primaryArtists || video.label }}></p>
             </div>
           </div>
         ))}
