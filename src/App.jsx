@@ -14,6 +14,7 @@ import PlaylistDetail from './pages/PlaylistDetail';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
 import BottomNav from './components/BottomNav';
 import { useAuthStore } from './store/useAuthStore';
+import { usePlayerStore } from './store/usePlayerStore';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect } from 'react';
@@ -49,6 +50,8 @@ function App() {
         });
       } else {
         setUser(null);
+        usePlayerStore.getState().setCurrentVideo(null, []);
+        usePlayerStore.getState().setIsPlaying(false);
       }
       setIsLoading(false);
     });
@@ -150,8 +153,8 @@ function App() {
       </div>
       
       {user && <BottomNav />}
-      <Player />
-      <AddToPlaylistModal />
+      {user && <Player />}
+      {user && <AddToPlaylistModal />}
     </Router>
   );
 }
