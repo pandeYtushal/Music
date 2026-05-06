@@ -4,6 +4,7 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiPlay } from 'react-icons/fi';
+import AdSense from '../components/AdSense';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const Home = () => {
     const fetchHomeData = async () => {
       try {
         const fetchCategory = async (query, limit) => {
-          const res = await axios.get('https://jiosaavn-api-privatecvc2.vercel.app/search/songs', {
+          const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', {
             params: { query, limit }
           });
           return res.data?.data?.results || [];
@@ -139,6 +140,9 @@ const Home = () => {
           ))}
         </div>
       )}
+
+      {/* AdSense Unit */}
+      <AdSense adSlot="1234567890" className="mb-14" />
 
       {/* Recently Played */}
       {recentlyPlayed && recentlyPlayed.length > 0 && (

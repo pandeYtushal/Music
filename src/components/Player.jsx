@@ -76,7 +76,7 @@ const Player = () => {
       const fetchRecommendations = async () => {
         try {
           const artist = currentVideo.primaryArtists.split(',')[0].trim();
-          const res = await axios.get('https://jiosaavn-api-privatecvc2.vercel.app/search/songs', {
+          const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', {
             params: { query: artist + ' songs', limit: 15 }
           });
           if (res.data?.data?.results) {

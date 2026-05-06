@@ -37,7 +37,7 @@ const Search = () => {
       setError(null);
       
       try {
-        const response = await axios.get('https://jiosaavn-api-privatecvc2.vercel.app/search/songs', {
+        const response = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', {
           params: { query, limit: 24 }
         });
         

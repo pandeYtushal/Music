@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { FiHome, FiSearch, FiCompass, FiHeart, FiSettings, FiStar, FiMusic } from 'react-icons/fi';
+import AdSense from './AdSense';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -42,7 +43,10 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="mt-auto pt-6">
+      <div className="mt-auto space-y-6 pt-6">
+        {/* AdSense Sidebar Unit */}
+        <AdSense adSlot="1234567890" adFormat="rectangle" className="opacity-80 grayscale hover:grayscale-0 transition-all" />
+
         <div className="bg-[#1c1c1e] rounded-2xl p-5 border border-white/5">
           <h3 className="font-semibold text-white mb-1">Go Premium</h3>
           <p className="text-xs text-white/50 mb-4">High quality audio & ad-free listening.</p>
