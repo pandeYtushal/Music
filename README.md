@@ -1,23 +1,22 @@
-# 🎵 Melody - Premium Music Streaming
+# Melody - Premium Music Streaming
 
 Melody is a modern, high-performance music streaming web application built with **React 19**, **Vite**, and **Tailwind CSS**. It provides a seamless, Spotify-like experience with high-quality audio, personalized recommendations, and a beautiful glassmorphic UI.
 
-![Melody Preview](https://ui-avatars.com/api/?name=Melody&background=22C55E&color=fff&size=512)
 
-## ✨ Features
+## Features
 
-- **🚀 Lightning Fast**: Built with Vite 8 for near-instant load times.
-- **🎧 High Quality Streaming**: Powered by a private JioSaavn API for 320kbps audio.
-- **📱 Mobile Optimized**: Fully responsive design with touch-friendly gestures and a dedicated mobile playlist view.
-- **🔥 Personalized Home**: Dynamic greetings and recommendations based on your listening history.
-- **📂 Library Management**: Create, rename, and manage custom playlists.
-- **💖 Favorites**: Save your favorite tracks with a single tap.
-- **🔗 Smart Sharing**: Share playlists instantly via generated QR codes.
-- **🔒 Secure Auth**: Firebase Authentication with Google Login support.
-- **📈 Monetization Ready**: Integrated AdSense components for React-friendly ad delivery.
-- **📦 PWA Ready**: Installable on mobile and desktop for an app-like experience.
+- ** Lightning Fast**: Built with Vite 8 for near-instant load times.
+- ** High Quality Streaming**: Powered by a private JioSaavn API for 320kbps audio.
+- ** Mobile Optimized**: Fully responsive design with touch-friendly gestures and a dedicated mobile playlist view.
+- ** Personalized Home**: Dynamic greetings and recommendations based on your listening history.
+- ** Library Management**: Create, rename, and manage custom playlists.
+- ** Favorites**: Save your favorite tracks with a single tap.
+- ** Smart Sharing**: Share playlists instantly via generated QR codes.
+- ** Secure Auth**: Firebase Authentication with Google Login support.
+- ** Monetization Ready**: Integrated AdSense components for React-friendly ad delivery.
+- ** PWA Ready**: Installable on mobile and desktop for an app-like experience.
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Frontend**: React 19, Tailwind CSS 4
 - **State Management**: Zustand
@@ -27,7 +26,7 @@ Melody is a modern, high-performance music streaming web application built with 
 - **Icons**: React Icons (Lucide/Feather)
 - **Utilities**: QRcode.react, PostCSS
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -63,18 +62,11 @@ Melody is a modern, high-performance music streaming web application built with 
    npm run dev
    ```
 
-## 📱 Mobile Preview
+## Mobile Preview
 
 Melody uses a responsive "Glass" UI that looks stunning on mobile devices. The player supports swipe gestures to skip tracks and an expanded view for immersive listening.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-## 📄 License
-
-This project is private. All rights reserved.
-
----
-
-Built with 💚 by [Tushal Pandey](https://github.com/pandeYtushal)
