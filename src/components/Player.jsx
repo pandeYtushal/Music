@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiPlay, FiPause, FiSkipBack, FiSkipForward, FiVolume2, FiHeart, FiRepeat, FiShuffle, FiChevronDown, FiMaximize2, FiDownload, FiPlus } from 'react-icons/fi';
+import { FiPlay, FiPause, FiSkipBack, FiSkipForward, FiVolume2, FiHeart, FiRepeat, FiShuffle, FiChevronDown, FiMaximize2, FiPlus } from 'react-icons/fi';
 import axios from 'axios';
 
 const Player = () => {
@@ -183,16 +183,6 @@ const Player = () => {
   const artist = currentVideo?.primaryArtists || currentVideo?.label || 'Unknown Artist';
   const isFavorite = favorites.some(v => v.id === currentVideo.id);
 
-  const handleDownload = () => {
-    if (!audioUrl) return;
-    const a = document.createElement('a');
-    a.href = audioUrl;
-    a.download = `${title}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   return (
     <>
       <audio 
@@ -312,15 +302,17 @@ const Player = () => {
       <div className={`fixed inset-0 z-[200] bg-black flex flex-col transition-all duration-500 ease-in-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-white/5">
-          <button onClick={() => setIsExpanded(false)} className="text-textSecondary hover:text-textPrimary p-2 hover:bg-white/10 rounded-full transition-colors">
-            <FiChevronDown size={32} />
-          </button>
-          <div className="text-center">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-10 sm:pt-6 pb-4 sm:pb-6 border-b border-white/5">
+          <div className="flex-1 flex justify-start">
+            <button onClick={() => setIsExpanded(false)} className="text-textSecondary hover:text-textPrimary p-2 hover:bg-white/10 rounded-full transition-colors -ml-2">
+              <FiChevronDown size={32} />
+            </button>
+          </div>
+          <div className="text-center shrink-0">
             <p className="text-[10px] sm:text-xs text-textSecondary tracking-widest uppercase font-semibold">Now Playing</p>
             <p className="text-sm text-textPrimary font-medium mt-0.5">Top Playlist</p>
           </div>
-          <div className="w-12"></div> {/* Spacer for centering */}
+          <div className="flex-1"></div> {/* Spacer for perfect centering */}
         </div>
 
         {/* Main Content */}
@@ -346,9 +338,6 @@ const Player = () => {
                  <p className="text-base sm:text-lg text-white/60 truncate" dangerouslySetInnerHTML={{ __html: artist }}></p>
                </div>
                <div className="flex items-center gap-4 mt-1">
-                 <button onClick={handleDownload} className="text-textSecondary hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
-                   <FiDownload size={24} />
-                 </button>
                  <button 
                    onClick={() => toggleFavorite(currentVideo)} 
                    className={`transition-colors p-2 hover:bg-white/10 rounded-full ${isFavorite ? 'text-white' : 'text-white/50 hover:text-white'}`}
@@ -416,56 +405,62 @@ const Player = () => {
              </div>
 
              {/* Up Next / Recommendations */}
-             <div className="w-full">
-               <div className="flex items-center justify-between mb-4 px-1">
+             {/* Up Next / Recommendations */}
+             <div className="w-full glass rounded-3xl p-5 sm:p-6 shadow-xl border border-white/5">
+               <div className="flex items-center justify-between mb-5">
                  <h3 className="text-sm font-bold text-textPrimary uppercase tracking-wider">Up Next</h3>
-                 <span className="text-[10px] text-textSecondary">{playlist.slice(currentIndex + 1).length} songs remaining</span>
+                 <span className="text-[10px] sm:text-xs font-medium text-textSecondary bg-surface/50 px-3 py-1 rounded-full">{playlist.slice(currentIndex + 1).length} songs remaining</span>
                </div>
-               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+               <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 scrollbar-hide">
                  {playlist.slice(currentIndex + 1, currentIndex + 6).map((song, idx) => (
                    <div 
                     key={`${song.id}-${idx}`}
                     onClick={() => setCurrentVideo(song, playlist)}
-                    className="flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
+                    className="flex items-center gap-4 p-2 sm:p-3 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group border border-transparent hover:border-white/5"
                    >
-                     <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/5 relative">
-                       <img src={song.image?.[0]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                         <FiPlay size={16} className="text-white fill-current" />
+                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 border border-white/5 relative shadow-md">
+                       <img src={song.image?.[1]?.link || song.image?.[0]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                         <FiPlay size={18} className="text-white fill-current shadow-lg" />
                        </div>
                      </div>
                      <div className="overflow-hidden flex-1">
-                       <p className="text-sm font-semibold text-textPrimary truncate" dangerouslySetInnerHTML={{ __html: song.name }}></p>
-                       <p className="text-xs text-textSecondary truncate" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
+                       <p className="text-sm font-bold text-textPrimary truncate group-hover:text-primary transition-colors duration-300" dangerouslySetInnerHTML={{ __html: song.name }}></p>
+                       <p className="text-xs text-textSecondary truncate mt-0.5" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
                      </div>
                    </div>
                  ))}
                  {playlist.slice(currentIndex + 1).length === 0 && recommendedSongs.length === 0 && (
-                   <div className="text-center py-8 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                   <div className="text-center py-10 bg-white/5 rounded-2xl border border-dashed border-white/10">
                      <p className="text-xs text-textSecondary">No more songs in queue</p>
                    </div>
                  )}
                  {recommendedSongs.length > 0 && (
-                   <div className="mt-4 pt-2">
-                     <h3 className="text-xs font-bold text-textSecondary uppercase tracking-wider mb-3 px-1">Autoplay • Recommended</h3>
-                     {recommendedSongs.slice(0, 10).map((song, idx) => (
-                       <div 
-                        key={`rec-${song.id}-${idx}`}
-                        onClick={() => setCurrentVideo(song, [...playlist, ...recommendedSongs])}
-                        className="flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
-                       >
-                         <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/5 relative">
-                           <img src={song.image?.[0]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                             <FiPlay size={16} className="text-white fill-current" />
+                   <div className="mt-6 pt-4 border-t border-white/5">
+                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider mb-4 px-1 flex items-center gap-2">
+                       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                       Autoplay • Recommended
+                     </h3>
+                     <div className="space-y-2">
+                       {recommendedSongs.slice(0, 10).map((song, idx) => (
+                         <div 
+                          key={`rec-${song.id}-${idx}`}
+                          onClick={() => setCurrentVideo(song, [...playlist, ...recommendedSongs])}
+                          className="flex items-center gap-4 p-2 sm:p-3 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group border border-transparent hover:border-white/5"
+                         >
+                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 border border-white/5 relative shadow-md">
+                             <img src={song.image?.[1]?.link || song.image?.[0]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                               <FiPlay size={18} className="text-white fill-current shadow-lg" />
+                             </div>
+                           </div>
+                           <div className="overflow-hidden flex-1">
+                             <p className="text-sm font-bold text-textPrimary truncate group-hover:text-primary transition-colors duration-300" dangerouslySetInnerHTML={{ __html: song.name }}></p>
+                             <p className="text-xs text-textSecondary truncate mt-0.5" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
                            </div>
                          </div>
-                         <div className="overflow-hidden flex-1">
-                           <p className="text-sm font-semibold text-textPrimary truncate" dangerouslySetInnerHTML={{ __html: song.name }}></p>
-                           <p className="text-xs text-textSecondary truncate" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
-                         </div>
-                       </div>
-                     ))}
+                       ))}
+                     </div>
                    </div>
                  )}
                </div>

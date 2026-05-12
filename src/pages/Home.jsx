@@ -38,15 +38,15 @@ const Home = () => {
         // Use recently played to personalize
         let recommendedQuery = 'arijit singh';
         let jumpBackInQuery = 'bollywood hits';
-        
+
         if (recentlyPlayed && recentlyPlayed.length > 0) {
-           const lastPlayed = recentlyPlayed[0];
-           if (lastPlayed.primaryArtists) {
-              recommendedQuery = lastPlayed.primaryArtists.split(',')[0].trim() + ' songs';
-           }
-           if (recentlyPlayed.length > 1 && recentlyPlayed[1].primaryArtists) {
-              jumpBackInQuery = recentlyPlayed[1].primaryArtists.split(',')[0].trim();
-           }
+          const lastPlayed = recentlyPlayed[0];
+          if (lastPlayed.primaryArtists) {
+            recommendedQuery = lastPlayed.primaryArtists.split(',')[0].trim() + ' songs';
+          }
+          if (recentlyPlayed.length > 1 && recentlyPlayed[1].primaryArtists) {
+            jumpBackInQuery = recentlyPlayed[1].primaryArtists.split(',')[0].trim();
+          }
         }
 
         const [quickPicks, jumpBackIn, recommended, trending] = await Promise.all([
@@ -83,12 +83,12 @@ const Home = () => {
 
       {/* Hero Banner */}
       {categories.quickPicks.length > 0 && (
-        <div 
+        <div
           onClick={() => setCurrentVideo(categories.quickPicks[0], categories.quickPicks)}
           className="relative w-full h-64 sm:h-72 md:h-80 rounded-3xl overflow-hidden mb-10 cursor-pointer group shadow-2xl shadow-primary/10 border border-white/5"
         >
-          <img 
-            src={categories.quickPicks[0].image?.[2]?.link || categories.quickPicks[0].image?.[1]?.link || ''} 
+          <img
+            src={categories.quickPicks[0].image?.[2]?.link || categories.quickPicks[0].image?.[1]?.link || ''}
             alt={categories.quickPicks[0].name}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
@@ -110,15 +110,15 @@ const Home = () => {
       {categories.quickPicks.slice(1, 7).length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
           {categories.quickPicks.slice(1, 7).map((video, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="group flex items-center bg-surface/30 backdrop-blur-md hover:bg-surface/60 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer border border-white/5 hover:border-white/20 hover:-translate-y-1 shadow-lg shadow-black/10"
               onClick={() => setCurrentVideo(video, categories.quickPicks)}
             >
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 min-w-[4rem] sm:min-w-[5rem] flex-shrink-0 m-2 rounded-xl overflow-hidden shadow-md">
-                <img 
-                  src={video.image?.[1]?.link || video.image?.[0]?.link || ''} 
-                  alt={video.name} 
+                <img
+                  src={video.image?.[1]?.link || video.image?.[0]?.link || ''}
+                  alt={video.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -131,9 +131,9 @@ const Home = () => {
                   <p className="text-textSecondary text-[10px] sm:text-xs line-clamp-1 mt-1" dangerouslySetInnerHTML={{ __html: video.primaryArtists }}></p>
                 </div>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
-                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors">
-                     <FiPlay size={16} className="ml-1 fill-current" />
-                   </div>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors">
+                    <FiPlay size={16} className="ml-1 fill-current" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -142,7 +142,7 @@ const Home = () => {
       )}
 
       {/* AdSense Unit */}
-      <AdSense adSlot="1234567890" className="mb-14" />
+      <AdSense adSlot="7792854986" className="mb-14" />
 
       {/* Recently Played */}
       {recentlyPlayed && recentlyPlayed.length > 0 && (
@@ -152,7 +152,7 @@ const Home = () => {
       {/* Horizontal Carousels */}
       <VideoGrid videos={categories.jumpBackIn} title="Jump Back In" horizontal onShowAll={() => navigate(`/search?q=${categories.jumpBackInQuery || 'bollywood hits'}`)} />
       <VideoGrid videos={categories.recommended} title="Made For You" horizontal onShowAll={() => navigate(`/search?q=${categories.recommendedQuery || 'arijit singh'}`)} />
-      
+
       {/* Trending List View */}
       {categories.trending.length > 0 && (
         <div className="mb-12">
@@ -162,7 +162,7 @@ const Home = () => {
           </div>
           <div className="flex flex-col gap-3">
             {categories.trending.slice(0, 5).map((video, idx) => (
-              <div 
+              <div
                 key={idx}
                 onClick={() => setCurrentVideo(video, categories.trending)}
                 className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-surface/40 transition-colors cursor-pointer border border-transparent hover:border-white/5"
@@ -186,7 +186,7 @@ const Home = () => {
           </div>
         </div>
       )}
-      
+
     </div>
   );
 };

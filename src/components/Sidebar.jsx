@@ -45,7 +45,7 @@ const Sidebar = () => {
 
       <div className="mt-auto space-y-6 pt-6">
         {/* AdSense Sidebar Unit */}
-        <AdSense adSlot="1234567890" adFormat="rectangle" className="opacity-80 grayscale hover:grayscale-0 transition-all" />
+        <AdSense adSlot="7792854986" adFormat="rectangle" className="opacity-80 grayscale hover:grayscale-0 transition-all" />
 
         <div className="bg-[#1c1c1e] rounded-2xl p-5 border border-white/5">
           <h3 className="font-semibold text-white mb-1">Go Premium</h3>

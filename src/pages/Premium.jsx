@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCheck, FiMusic, FiDownload, FiHeadphones } from 'react-icons/fi';
+import { FiCheck, FiMusic, FiHeadphones } from 'react-icons/fi';
 
 const Premium = () => {
   return (
@@ -34,10 +34,6 @@ const Premium = () => {
               </li>
               <li className="flex items-start gap-3 opacity-50">
                 <FiCheck className="text-transparent mt-1 flex-shrink-0" size={18} />
-                <span className="text-textSecondary line-through">Download to listen offline</span>
-              </li>
-              <li className="flex items-start gap-3 opacity-50">
-                <FiCheck className="text-transparent mt-1 flex-shrink-0" size={18} />
                 <span className="text-textSecondary line-through">Highest audio quality (320kbps)</span>
               </li>
             </ul>
@@ -68,10 +64,6 @@ const Premium = () => {
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className="text-primary mt-1 flex-shrink-0" size={18} />
-                <span><strong className="text-white">Download</strong> to listen offline</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <FiCheck className="text-primary mt-1 flex-shrink-0" size={18} />
                 <span><strong className="text-white">Highest audio quality</strong> (320kbps)</span>
               </li>
               <li className="flex items-start gap-3">
@@ -90,14 +82,7 @@ const Premium = () => {
         {/* Features grid */}
         <div className="mt-32">
           <h2 className="text-2xl font-bold text-center mb-12">Why upgrade to Premium?</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto bg-surface rounded-full flex items-center justify-center mb-6 shadow-lg shadow-black/20">
-                <FiDownload size={40} className="text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Download music.</h3>
-              <p className="text-textSecondary">Listen anywhere, even offline.</p>
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
               <div className="w-24 h-24 mx-auto bg-surface rounded-full flex items-center justify-center mb-6 shadow-lg shadow-black/20">
                 <FiMusic size={40} className="text-secondary" />

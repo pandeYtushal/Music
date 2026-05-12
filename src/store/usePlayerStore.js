@@ -17,6 +17,16 @@ export const usePlayerStore = create(
       pendingSong: null,
       
       setCurrentVideo: (video, contextPlaylist = null) => {
+        if (!video) {
+          set({
+            currentVideo: null,
+            isPlaying: false,
+            playlist: contextPlaylist || [],
+            currentIndex: -1
+          });
+          return;
+        }
+
         const state = get();
         let newPlaylist = contextPlaylist || state.playlist;
         
