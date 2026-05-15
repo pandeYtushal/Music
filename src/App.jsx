@@ -8,7 +8,6 @@ import Login from './pages/Login';
 import Welcome from './pages/Welcome';
 import Search from './pages/Search';
 import Favorites from './pages/Favorites';
-import Premium from './pages/Premium';
 import Settings from './pages/Settings';
 import Playlists from './pages/Playlists';
 import PlaylistDetail from './pages/PlaylistDetail';
@@ -27,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <FiLoader className="animate-spin text-primary" size={40} />
+        <FiLoader className="animate-spin text-white" size={40} />
       </div>
     );
   }
@@ -61,18 +60,18 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-background flex items-center justify-center">
-        <FiLoader className="animate-spin text-primary" size={50} />
+      <div className="h-screen bg-black flex items-center justify-center">
+        <FiLoader className="animate-spin text-white" size={50} />
       </div>
     );
   }
 
   return (
     <Router>
-      <div className="flex h-screen bg-background text-textPrimary overflow-hidden selection:bg-primary/30">
+      <div className="flex h-screen bg-black text-white overflow-hidden selection:bg-white/20">
         {user && <Sidebar />}
         
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-black">
+        <div className={`flex-1 flex flex-col h-full overflow-hidden relative bg-[#080808] ${user ? 'md:ml-64' : ''}`}>
           
           <div className="flex-1 overflow-y-auto relative z-10 scrollbar-hide">
             {user && <Navbar />}
@@ -100,14 +99,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Favorites />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/premium" 
-                element={
-                  <ProtectedRoute>
-                    <Premium />
                   </ProtectedRoute>
                 } 
               />

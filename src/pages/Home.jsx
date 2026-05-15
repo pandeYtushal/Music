@@ -3,190 +3,223 @@ import VideoGrid from '../components/VideoGrid';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiPlay } from 'react-icons/fi';
+import { FiPlay, FiTrendingUp } from 'react-icons/fi';
 import AdSense from '../components/AdSense';
 
 const Home = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState({
-    quickPicks: [],
-    jumpBackIn: [],
-    recommended: [],
-    trending: []
+    quickPicks: [], jumpBackIn: [], recommended: [], trending: []
   });
   const [loading, setLoading] = useState(true);
   const { setCurrentVideo, recentlyPlayed } = usePlayerStore();
 
   const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    if (hour < 21) return "Good Evening";
-    return "Late Night Listening";
+    const h = new Date().getHours();
+    if (h < 12) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
+    if (h < 21) return 'Good Evening';
+    return 'Late Night';
   };
 
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
-        const fetchCategory = async (query, limit) => {
-          const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', {
-            params: { query, limit }
-          });
+        const hour = new Date().getHours();
+        let qpQuery = 'latest punjabi';
+        if (hour >= 5 && hour < 12) qpQuery = 'morning energy hits';
+        else if (hour >= 12 && hour < 17) qpQuery = 'afternoon chill bollywood';
+        else if (hour >= 17 && hour < 21) qpQuery = 'evening party hits';
+        else qpQuery = 'late night lofi';
+
+        const fetch = async (query, limit) => {
+          const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', { params: { query, limit } });
           return res.data?.data?.results || [];
         };
-
-        // Use recently played to personalize
-        let recommendedQuery = 'arijit singh';
-        let jumpBackInQuery = 'bollywood hits';
-
-        if (recentlyPlayed && recentlyPlayed.length > 0) {
-          const lastPlayed = recentlyPlayed[0];
-          if (lastPlayed.primaryArtists) {
-            recommendedQuery = lastPlayed.primaryArtists.split(',')[0].trim() + ' songs';
-          }
-          if (recentlyPlayed.length > 1 && recentlyPlayed[1].primaryArtists) {
-            jumpBackInQuery = recentlyPlayed[1].primaryArtists.split(',')[0].trim();
-          }
+        let recQ = 'arijit singh', jbiQ = 'bollywood hits';
+        if (recentlyPlayed?.length > 0) {
+          if (recentlyPlayed[0]?.primaryArtists)
+            recQ = recentlyPlayed[0].primaryArtists.split(',')[0].trim() + ' songs';
+          if (recentlyPlayed[1]?.primaryArtists)
+            jbiQ = recentlyPlayed[1].primaryArtists.split(',')[0].trim();
         }
-
         const [quickPicks, jumpBackIn, recommended, trending] = await Promise.all([
-          fetchCategory('latest punjabi', 6),
-          fetchCategory(jumpBackInQuery, 6),
-          fetchCategory(recommendedQuery, 6),
-          fetchCategory('hip hop', 6)
+          fetch(qpQuery, 10),
+          fetch(jbiQ, 8),
+          fetch(recQ, 8),
+          fetch('trending india', 10),
         ]);
-
-        setCategories({ quickPicks, jumpBackIn, recommended, trending, recommendedQuery, jumpBackInQuery });
-      } catch (error) {
-        console.error("Error fetching home data:", error);
-      } finally {
-        setLoading(false);
-      }
+        setCategories({ quickPicks, jumpBackIn, recommended, trending, recommendedQuery: recQ, jumpBackInQuery: jbiQ });
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     };
-
     fetchHomeData();
-  }, []);
+    const interval = setInterval(fetchHomeData, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [recentlyPlayed]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white animate-spin" />
       </div>
     );
   }
 
+  const featured = categories.quickPicks[0];
+
   return (
-    <div className="p-4 sm:p-6 md:p-8 pb-40 md:pb-32 relative min-h-full">
-      {/* Removed Background Gradient */}
+    <div className="min-h-screen bg-[#050505] text-white overflow-hidden pb-32 relative">
+      {/* Ambient Background - Sharp & Subtle */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-5%] w-[350px] h-[350px] bg-purple-500/5 blur-[80px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[350px] h-[350px] bg-pink-500/5 blur-[80px] rounded-full" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.01),transparent_25%)]" />
+      </div>
 
-      <h1 className="text-3xl md:text-4xl font-bold text-textPrimary mb-6 tracking-tight drop-shadow-md">{getGreeting()}</h1>
+      <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-6 md:pt-12">
+        {/* COMPACT HEADER */}
+        <header className="mb-8 md:mb-10">
+          <p className="text-[8px] uppercase tracking-[0.25em] text-white/10 font-bold mb-1.5">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+          </p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white/80">
+            {getGreeting()}
+          </h1>
+        </header>
 
-      {/* Hero Banner */}
-      {categories.quickPicks.length > 0 && (
-        <div
-          onClick={() => setCurrentVideo(categories.quickPicks[0], categories.quickPicks)}
-          className="relative w-full h-64 sm:h-72 md:h-80 rounded-3xl overflow-hidden mb-10 cursor-pointer group shadow-2xl shadow-primary/10 border border-white/5"
-        >
-          <img
-            src={categories.quickPicks[0].image?.[2]?.link || categories.quickPicks[0].image?.[1]?.link || ''}
-            alt={categories.quickPicks[0].name}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-90"></div>
-          <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-end">
-            <span className="text-primary font-bold tracking-widest uppercase text-xs sm:text-sm mb-2 drop-shadow-md">Featured Mix</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-2 line-clamp-1 drop-shadow-lg" dangerouslySetInnerHTML={{ __html: categories.quickPicks[0].name }}></h2>
-            <p className="text-textSecondary text-sm sm:text-base line-clamp-1 max-w-lg drop-shadow-md" dangerouslySetInnerHTML={{ __html: categories.quickPicks[0].primaryArtists }}></p>
-            <div className="mt-6 flex items-center gap-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
-              <button className="bg-white text-black font-bold px-8 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2">
-                <FiPlay className="fill-current" /> Play Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Redesigned Quick Picks */}
-      {categories.quickPicks.slice(1, 7).length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
-          {categories.quickPicks.slice(1, 7).map((video, idx) => (
-            <div
-              key={idx}
-              className="group flex items-center bg-surface/30 backdrop-blur-md hover:bg-surface/60 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer border border-white/5 hover:border-white/20 hover:-translate-y-1 shadow-lg shadow-black/10"
-              onClick={() => setCurrentVideo(video, categories.quickPicks)}
-            >
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 min-w-[4rem] sm:min-w-[5rem] flex-shrink-0 m-2 rounded-xl overflow-hidden shadow-md">
-                <img
-                  src={video.image?.[1]?.link || video.image?.[0]?.link || ''}
-                  alt={video.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <FiPlay className="text-white drop-shadow-lg" size={20} />
-                </div>
+        {/* COMPACT HERO STRIP */}
+        {featured && (
+          <div
+            onClick={() => setCurrentVideo(featured, categories.quickPicks)}
+            className="relative w-full overflow-hidden rounded-[24px] md:rounded-[32px] mb-10 md:mb-12 group border border-white/5 bg-white/[0.02] shadow-[0_12px_40px_rgba(0,0,0,0.5)] cursor-pointer"
+            style={{ height: 'clamp(200px, 28vw, 400px)' }}
+          >
+            <img
+              src={featured.image?.[2]?.link || featured.image?.[1]?.link || ''}
+              alt={featured.name}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            
+            <div className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end items-start gap-2 md:gap-3">
+              <div className="px-2.5 py-0.5 rounded-md bg-white/10 backdrop-blur-xl border border-white/10 text-[7px] uppercase tracking-widest text-white/50 font-bold">
+                Featured
               </div>
-              <div className="p-3 sm:p-4 flex-1 overflow-hidden flex items-center justify-between">
-                <div>
-                  <h3 className="text-textPrimary font-bold text-sm line-clamp-1 group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h3>
-                  <p className="text-textSecondary text-[10px] sm:text-xs line-clamp-1 mt-1" dangerouslySetInnerHTML={{ __html: video.primaryArtists }}></p>
-                </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors">
-                    <FiPlay size={16} className="ml-1 fill-current" />
-                  </div>
-                </div>
+              <h2
+                className="text-xl md:text-4xl font-bold tracking-tight leading-tight max-w-2xl"
+                dangerouslySetInnerHTML={{ __html: featured.name }}
+              />
+              <p
+                className="text-white/30 text-[11px] md:text-sm font-medium max-w-xl line-clamp-1"
+                dangerouslySetInnerHTML={{ __html: featured.primaryArtists }}
+              />
+              <div className="flex items-center gap-3 mt-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setCurrentVideo(featured, categories.quickPicks); }}
+                  className="h-9 md:h-10 px-6 rounded-full bg-white text-black font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg text-[12px] md:text-xs"
+                >
+                  <FiPlay size={14} className="fill-current" />
+                  Play Now
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* AdSense Unit */}
-      <AdSense adSlot="7792854986" className="mb-14" />
-
-      {/* Recently Played */}
-      {recentlyPlayed && recentlyPlayed.length > 0 && (
-        <VideoGrid videos={recentlyPlayed} title="Recently Played" horizontal />
-      )}
-
-      {/* Horizontal Carousels */}
-      <VideoGrid videos={categories.jumpBackIn} title="Jump Back In" horizontal onShowAll={() => navigate(`/search?q=${categories.jumpBackInQuery || 'bollywood hits'}`)} />
-      <VideoGrid videos={categories.recommended} title="Made For You" horizontal onShowAll={() => navigate(`/search?q=${categories.recommendedQuery || 'arijit singh'}`)} />
-
-      {/* Trending List View */}
-      {categories.trending.length > 0 && (
-        <div className="mb-12">
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="text-2xl font-bold text-textPrimary tracking-tight">Trending Now</h2>
-            <span onClick={() => navigate('/search?q=hip hop')} className="text-xs font-bold text-textSecondary uppercase tracking-widest hover:text-textPrimary cursor-pointer transition-colors">See All</span>
           </div>
-          <div className="flex flex-col gap-3">
-            {categories.trending.slice(0, 5).map((video, idx) => (
-              <div
+        )}
+
+        {/* QUICK PICKS - HIGHER DENSITY */}
+        <section className="mb-10 md:mb-12">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg md:text-xl font-bold tracking-tight">Quick Picks</h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {categories.quickPicks.slice(1, 7).map((video, idx) => (
+              <button
                 key={idx}
-                onClick={() => setCurrentVideo(video, categories.trending)}
-                className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-surface/40 transition-colors cursor-pointer border border-transparent hover:border-white/5"
+                onClick={() => setCurrentVideo(video, categories.quickPicks)}
+                className="relative overflow-hidden rounded-[18px] bg-white/[0.015] border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-300 p-2.5 flex items-center gap-3.5 text-left group"
               >
-                <span className="text-textSecondary font-bold text-sm w-4 text-right group-hover:text-white">{idx + 1}</span>
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-md">
-                  <img src={video.image?.[1]?.link || ''} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <FiPlay className="text-white fill-current" size={16} />
+                <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-[12px] overflow-hidden shrink-0 shadow-sm">
+                  <img src={video.image?.[2]?.link || video.image?.[1]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <FiPlay className="text-white fill-current" size={14} />
                   </div>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <h4 className="text-textPrimary font-semibold text-sm truncate group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: video.name }}></h4>
-                  <p className="text-textSecondary text-xs truncate" dangerouslySetInnerHTML={{ __html: video.primaryArtists }}></p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-white font-bold text-[13px] truncate mb-0.5" dangerouslySetInnerHTML={{ __html: video.name }} />
+                  <p className="text-white/25 text-[10px] font-medium truncate" dangerouslySetInnerHTML={{ __html: video.primaryArtists }} />
                 </div>
-                <div className="hidden sm:block text-textSecondary text-xs">
-                  {video.playCount ? `${(parseInt(video.playCount) / 1000000).toFixed(1)}M plays` : ''}
-                </div>
-              </div>
+              </button>
             ))}
           </div>
-        </div>
-      )}
+        </section>
 
+        {/* SECTIONS - REDUCED GAP */}
+        <div className="space-y-12 md:space-y-14">
+          {recentlyPlayed?.length > 0 && (
+            <VideoGrid videos={recentlyPlayed} title="Recent" horizontal />
+          )}
+
+          <VideoGrid
+            videos={categories.jumpBackIn}
+            title="Discovery"
+            horizontal
+            onShowAll={() => navigate(`/search?q=${categories.jumpBackInQuery || 'bollywood hits'}`)}
+          />
+
+          {/* TRENDING NOW - TIGHTER LIST */}
+          <section className="pb-16">
+            <div className="flex items-end justify-between mb-6">
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight">Trending Now</h2>
+              <button
+                onClick={() => navigate('/search?q=trending india')}
+                className="text-[9px] font-bold text-white/20 hover:text-white transition-colors uppercase tracking-widest"
+              >
+                Full Chart
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {categories.trending.slice(0, 10).map((video, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setCurrentVideo(video, categories.trending)}
+                  className="relative overflow-hidden rounded-[18px] bg-white/[0.015] border border-white/5 hover:border-purple-500/10 transition-all duration-300 p-2.5 flex items-center gap-3 cursor-pointer group"
+                >
+                  <span className="text-xl md:text-2xl font-bold text-white/[0.02] w-6 md:w-8 text-center group-hover:text-white/5 transition-colors">
+                    {idx + 1}
+                  </span>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-[10px] overflow-hidden shrink-0 shadow-sm">
+                    <img src={video.image?.[2]?.link || video.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-white font-bold text-[13px] truncate" dangerouslySetInnerHTML={{ __html: video.name }} />
+                      <div className="flex items-center gap-1 px-1 py-0.5 rounded-sm bg-purple-500/10 border border-purple-500/20 shrink-0">
+                        <span className="w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+                        <span className="text-[7px] font-bold text-purple-400 uppercase tracking-wider">Live</span>
+                      </div>
+                    </div>
+                    <p className="text-white/25 text-[10px] font-medium truncate" dangerouslySetInnerHTML={{ __html: video.primaryArtists }} />
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5 pr-2">
+                    <div className="opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      <FiTrendingUp className="text-purple-400/60" size={14} />
+                    </div>
+                    <p className="text-[8px] font-bold text-white/5 uppercase tracking-tighter tabular-nums">{(Math.random() * 50 + 10).toFixed(1)}k</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* ADS - COMPACT */}
+        <div className="mt-10 py-8 border-t border-white/5 opacity-10">
+          <AdSense adSlot="7792854986" />
+        </div>
+      </div>
     </div>
   );
 };

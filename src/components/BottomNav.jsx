@@ -1,32 +1,64 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiHome, FiSearch, FiHeart, FiStar, FiMusic } from 'react-icons/fi';
+import { FiHome, FiSearch, FiMusic, FiHeart } from 'react-icons/fi';
+
+const navItems = [
+  { name: 'Home',      path: '/',          icon: FiHome,  end: true },
+  { name: 'Search',    path: '/search',    icon: FiSearch            },
+  { name: 'Library',   path: '/playlists', icon: FiMusic             },
+  { name: 'Favorites', path: '/favorites', icon: FiHeart             },
+];
 
 const BottomNav = () => {
-  const navItems = [
-    { name: 'Home', path: '/', icon: <FiHome size={22} /> },
-    { name: 'Search', path: '/search', icon: <FiSearch size={22} /> },
-    { name: 'Playlists', path: '/playlists', icon: <FiMusic size={22} /> },
-    { name: 'Favorites', path: '/favorites', icon: <FiHeart size={22} /> },
-    { name: 'Premium', path: '/premium', icon: <FiStar size={22} /> },
-  ];
-
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-white/5 z-[90] flex items-center justify-around px-2 pb-safe">
-      {navItems.map((item) => (
-        <NavLink
-          key={item.name}
-          to={item.path}
-          className={({ isActive }) =>
-            `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-white' : 'text-white/50 hover:text-white'
-            }`
-          }
-        >
-          {item.icon}
-          <span className="text-[10px] font-medium">{item.name}</span>
-        </NavLink>
-      ))}
-    </div>
+    <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[90]">
+      <div
+        className="flex items-center px-2 py-2 gap-1"
+        style={{
+          background: 'rgba(18,18,18,0.96)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 999,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
+        }}
+      >
+        {navItems.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.path}
+            end={item.end}
+            className="flex items-center justify-center transition-all duration-200 relative"
+            style={{ borderRadius: 999 }}
+          >
+            {({ isActive }) => (
+              <div
+                className="flex items-center gap-2 transition-all duration-200"
+                style={{
+                  padding: isActive ? '8px 14px' : '8px 12px',
+                  background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  borderRadius: 999,
+                }}
+              >
+                <item.icon
+                  size={18}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                  color={isActive ? '#ffffff' : 'rgba(255,255,255,0.4)'}
+                />
+                {isActive && (
+                  <span
+                    className="text-white font-semibold whitespace-nowrap"
+                    style={{ fontSize: 13, letterSpacing: '-0.01em' }}
+                  >
+                    {item.name}
+                  </span>
+                )}
+              </div>
+            )}
+          </NavLink>
+        ))}
+      </div>
+    </nav>
   );
 };
 

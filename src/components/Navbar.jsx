@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiBell } from 'react-icons/fi';
+import { FiSearch, FiBell, FiX, FiSettings } from 'react-icons/fi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -9,14 +9,14 @@ const Navbar = () => {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  // Sync input with URL — clears when user navigates away from /search
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const q = params.get('q');
     if (location.pathname === '/search' && q) {
       setSearchQuery(q);
-    } else {
+    } else if (location.pathname !== '/search') {
       setSearchQuery('');
     }
   }, [location]);
@@ -33,73 +33,84 @@ const Navbar = () => {
     }
   };
 
-  return (
-    <header className="h-20 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-white/5">
-      <form onSubmit={handleSearch} className="flex items-center bg-surface/50 border border-white/10 rounded-full px-4 py-2 w-full max-w-[160px] xs:max-w-[200px] sm:max-w-xs md:max-w-md transition-all duration-300 focus-within:border-primary/50">
-        <FiSearch className="text-textSecondary mr-2 shrink-0" size={18} />
-        <input 
-          type="text" 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search..." 
-          className="bg-transparent border-none outline-none text-textPrimary w-full text-sm placeholder:text-textSecondary/50"
-        />
-      </form>
+  const clearSearch = () => {
+    setSearchQuery('');
+    navigate('/search');
+  };
 
-      <div className="flex items-center gap-6">
-        <button className="text-textSecondary hover:text-white transition-colors relative">
-          <FiBell size={24} />
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-white rounded-full border-2 border-background"></span>
-        </button>
-        
-        {user ? (
+  return (
+    <header
+      className="sticky top-0 z-40 h-16 px-6 md:px-10 flex items-center justify-between gap-6"
+      style={{
+        background: 'rgba(5,5,5,0.7)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+      }}
+    >
+      {/* Search — Centered and clean */}
+      <div className="flex-1 flex justify-center">
+        <form
+          onSubmit={handleSearch}
+          className="flex items-center gap-3 w-full max-w-lg rounded-full px-5 py-2.5 transition-all duration-300 group"
+          style={{
+            background: isFocused ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <FiSearch size={16} className={`transition-colors ${isFocused ? 'text-white' : 'text-white/30'}`} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="Search for songs, artists etc..."
+            className="bg-transparent border-none outline-none text-white w-full text-[14px] font-medium placeholder:text-white/20"
+          />
+          {searchQuery && (
+            <button type="button" onClick={clearSearch} className="text-white/20 hover:text-white/60 transition-colors">
+              <FiX size={14} />
+            </button>
+          )}
+        </form>
+      </div>
+
+      {/* Right Actions */}
+      <div className="flex items-center gap-5">
+        {user && (
           <div className="relative">
-            <div 
+            <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-4 cursor-pointer group"
+              className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/10 hover:border-white/30 transition-all shadow-xl"
             >
-              <img 
-                src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=10b981&color=fff"} 
-                alt="User" 
-                className="w-10 h-10 rounded-full border border-white/20 object-cover transition-transform group-hover:scale-105"
+              <img
+                src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=222&color=fff&bold=true`}
+                alt="User"
+                className="w-full h-full object-cover"
               />
-              <div className="hidden md:block">
-                <p className="text-sm font-semibold text-textPrimary">{user.displayName || "User"}</p>
-                <p className="text-xs text-textSecondary">Premium Member</p>
+            </button>
+
+            {/* Profile Dropdown */}
+            <div
+              className={`absolute top-full right-0 mt-3 w-56 rounded-[24px] py-2 z-[60] transition-all duration-300 origin-top-right ${isProfileOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+                }`}
+              style={{
+                background: '#121212',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 32px 64px rgba(0,0,0,0.8)',
+              }}
+            >
+              <div className="px-5 py-4 border-b border-white/5 mb-2">
+                <p className="text-[14px] font-bold text-white truncate">{user.displayName || 'User'}</p>
+                <p className="text-[11px] text-white/40 truncate mt-0.5">{user.email || ''}</p>
               </div>
+              <button onClick={() => { navigate('/settings'); setIsProfileOpen(false); }} className="w-full text-left px-5 py-3 text-[13px] font-semibold text-white/50 hover:text-white hover:bg-white/5 transition-all">Settings</button>
+              <div className="h-[1px] bg-white/5 my-2 mx-5" />
+              <button onClick={handleLogout} className="w-full text-left px-5 py-3 text-[13px] font-semibold text-red-400/60 hover:text-red-400 hover:bg-red-400/5 transition-all">Sign Out</button>
             </div>
-            
-            {/* Dropdown Menu */}
-            <div className={`absolute top-full right-0 mt-2 w-48 bg-surface border border-white/10 rounded-xl shadow-2xl transition-all duration-200 overflow-hidden py-2 z-[60] ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
-              <button 
-                onClick={() => { navigate('/settings'); setIsProfileOpen(false); }}
-                className="w-full text-left px-4 py-2 text-sm text-textPrimary hover:bg-white/5 transition-colors"
-              >
-                Settings
-              </button>
-              <button 
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors"
-              >
-                Log out
-              </button>
-            </div>
-            
-            {/* Overlay to close dropdown when clicking outside */}
-            {isProfileOpen && (
-              <div 
-                className="fixed inset-0 z-[-1]" 
-                onClick={() => setIsProfileOpen(false)}
-              ></div>
-            )}
+
+            {isProfileOpen && <div className="fixed inset-0 z-[55]" onClick={() => setIsProfileOpen(false)} />}
           </div>
-        ) : (
-          <button 
-            onClick={() => navigate('/login')}
-            className="bg-white/10 text-white font-semibold px-6 py-2 rounded-full border border-white/20 hover:bg-white hover:text-black transition-all duration-300"
-          >
-            Log in
-          </button>
         )}
       </div>
     </header>
