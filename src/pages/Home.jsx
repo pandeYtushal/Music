@@ -3,8 +3,24 @@ import VideoGrid from '../components/VideoGrid';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiPlay, FiTrendingUp } from 'react-icons/fi';
+import { FiPlay, FiPlus, FiSkipForward, FiTrendingUp } from 'react-icons/fi';
 import AdSense from '../components/AdSense';
+import { cleanText } from '../utils/text';
+
+const formatDuration = (seconds) => {
+  if (!seconds || Number.isNaN(Number(seconds))) return '';
+  const total = Number(seconds);
+  const minutes = Math.floor(total / 60);
+  const remaining = Math.floor(total % 60).toString().padStart(2, '0');
+  return `${minutes}:${remaining}`;
+};
+
+const getSignal = (video, idx) => {
+  const seed = `${video?.id || video?.name || idx}`.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const plays = ((seed % 48) + 12).toFixed(1);
+  const direction = idx < 3 ? 'Rising' : seed % 2 === 0 ? 'Steady' : 'New';
+  return { plays, direction };
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -12,7 +28,7 @@ const Home = () => {
     quickPicks: [], jumpBackIn: [], recommended: [], trending: []
   });
   const [loading, setLoading] = useState(true);
-  const { setCurrentVideo, recentlyPlayed } = usePlayerStore();
+  const { setCurrentVideo, recentlyPlayed, addToQueue, playNextInQueue } = usePlayerStore();
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -70,11 +86,9 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white overflow-hidden pb-32 relative">
-      {/* Ambient Background - Sharp & Subtle */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[350px] h-[350px] bg-purple-500/5 blur-[80px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[350px] h-[350px] bg-pink-500/5 blur-[80px] rounded-full" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.01),transparent_25%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0)_240px)]" />
+        <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.35)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.35)_1px,transparent_1px)] [background-size:48px_48px]" />
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-6 md:pt-12">
@@ -104,23 +118,23 @@ const Home = () => {
             
             <div className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end items-start gap-2 md:gap-3">
               <div className="px-2.5 py-0.5 rounded-md bg-white/10 backdrop-blur-xl border border-white/10 text-[7px] uppercase tracking-widest text-white/50 font-bold">
-                Featured
+            On Rotation
               </div>
               <h2
                 className="text-xl md:text-4xl font-bold tracking-tight leading-tight max-w-2xl"
-                dangerouslySetInnerHTML={{ __html: featured.name }}
-              />
-              <p
-                className="text-white/30 text-[11px] md:text-sm font-medium max-w-xl line-clamp-1"
-                dangerouslySetInnerHTML={{ __html: featured.primaryArtists }}
-              />
+              >
+                {cleanText(featured.name, 'Featured Song')}
+              </h2>
+              <p className="text-white/30 text-[11px] md:text-sm font-medium max-w-xl line-clamp-1">
+                {cleanText(featured.primaryArtists, 'Unknown Artist')}
+              </p>
               <div className="flex items-center gap-3 mt-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); setCurrentVideo(featured, categories.quickPicks); }}
                   className="h-9 md:h-10 px-6 rounded-full bg-white text-black font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg text-[12px] md:text-xs"
                 >
                   <FiPlay size={14} className="fill-current" />
-                  Play Now
+                  Play
                 </button>
               </div>
             </div>
@@ -130,12 +144,15 @@ const Home = () => {
         {/* QUICK PICKS - HIGHER DENSITY */}
         <section className="mb-10 md:mb-12">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg md:text-xl font-bold tracking-tight">Quick Picks</h2>
+            <div>
+              <p className="section-overline mb-1">Made for now</p>
+              <h2 className="text-lg md:text-xl font-bold tracking-tight">Quick Picks</h2>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {categories.quickPicks.slice(1, 7).map((video, idx) => (
-              <button
+              <div
                 key={idx}
                 onClick={() => setCurrentVideo(video, categories.quickPicks)}
                 className="relative overflow-hidden rounded-[18px] bg-white/[0.015] border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-300 p-2.5 flex items-center gap-3.5 text-left group"
@@ -147,10 +164,26 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-white font-bold text-[13px] truncate mb-0.5" dangerouslySetInnerHTML={{ __html: video.name }} />
-                  <p className="text-white/25 text-[10px] font-medium truncate" dangerouslySetInnerHTML={{ __html: video.primaryArtists }} />
+                  <p className="text-white font-bold text-[13px] truncate mb-0.5">{cleanText(video.name, 'Unknown Song')}</p>
+                  <p className="text-white/25 text-[10px] font-medium truncate">{cleanText(video.primaryArtists, 'Unknown Artist')}</p>
                 </div>
-              </button>
+                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    title="Play next"
+                    onClick={() => playNextInQueue(video)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
+                  >
+                    <FiSkipForward size={15} />
+                  </button>
+                  <button
+                    title="Add to queue"
+                    onClick={() => addToQueue(video)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
+                  >
+                    <FiPlus size={15} />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </section>
@@ -163,7 +196,7 @@ const Home = () => {
 
           <VideoGrid
             videos={categories.jumpBackIn}
-            title="Discovery"
+            title="Based on Your Listening"
             horizontal
             onShowAll={() => navigate(`/search?q=${categories.jumpBackInQuery || 'bollywood hits'}`)}
           />
@@ -185,29 +218,48 @@ const Home = () => {
                 <div
                   key={idx}
                   onClick={() => setCurrentVideo(video, categories.trending)}
-                  className="relative overflow-hidden rounded-[18px] bg-white/[0.015] border border-white/5 hover:border-purple-500/10 transition-all duration-300 p-2.5 flex items-center gap-3 cursor-pointer group"
+                  className="relative overflow-hidden rounded-xl bg-white/[0.015] border border-white/5 hover:border-white/10 hover:bg-white/[0.035] transition-all duration-300 p-2.5 flex items-center gap-3 cursor-pointer group"
                 >
                   <span className="text-xl md:text-2xl font-bold text-white/[0.02] w-6 md:w-8 text-center group-hover:text-white/5 transition-colors">
                     {idx + 1}
                   </span>
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-[10px] overflow-hidden shrink-0 shadow-sm">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden shrink-0 shadow-sm">
                     <img src={video.image?.[2]?.link || video.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-white font-bold text-[13px] truncate" dangerouslySetInnerHTML={{ __html: video.name }} />
-                      <div className="flex items-center gap-1 px-1 py-0.5 rounded-sm bg-purple-500/10 border border-purple-500/20 shrink-0">
-                        <span className="w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-                        <span className="text-[7px] font-bold text-purple-400 uppercase tracking-wider">Live</span>
+                      <p className="text-white font-bold text-[13px] truncate">{cleanText(video.name, 'Unknown Song')}</p>
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] shrink-0">
+                        <FiTrendingUp className="text-white/35" size={9} />
+                        <span className="text-[7px] font-bold text-white/35 uppercase tracking-wider">{getSignal(video, idx).direction}</span>
                       </div>
                     </div>
-                    <p className="text-white/25 text-[10px] font-medium truncate" dangerouslySetInnerHTML={{ __html: video.primaryArtists }} />
+                    <p className="text-white/25 text-[10px] font-medium truncate">
+                      <span>{cleanText(video.primaryArtists, 'Unknown Artist')}</span>
+                      {video.duration ? <span className="text-white/15"> / {formatDuration(video.duration)}</span> : null}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-0.5 pr-2">
                     <div className="opacity-0 md:group-hover:opacity-100 transition-opacity">
-                      <FiTrendingUp className="text-purple-400/60" size={14} />
+                      <FiTrendingUp className="text-white/40" size={14} />
                     </div>
-                    <p className="text-[8px] font-bold text-white/5 uppercase tracking-tighter tabular-nums">{(Math.random() * 50 + 10).toFixed(1)}k</p>
+                    <p className="text-[8px] font-bold text-white/10 uppercase tracking-tighter tabular-nums">{getSignal(video, idx).plays}k</p>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      title="Play next"
+                      onClick={() => playNextInQueue(video)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
+                    >
+                      <FiSkipForward size={15} />
+                    </button>
+                    <button
+                      title="Add to queue"
+                      onClick={() => addToQueue(video)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
+                    >
+                      <FiPlus size={15} />
+                    </button>
                   </div>
                 </div>
               ))}

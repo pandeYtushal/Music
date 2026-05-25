@@ -11,16 +11,15 @@ const navItems = [
 
 const BottomNav = () => {
   return (
-    <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[90]">
+    <nav className="md:hidden fixed left-0 right-0 bottom-0 z-[90] pb-[env(safe-area-inset-bottom)]">
       <div
-        className="flex items-center px-2 py-2 gap-1"
+        className="mx-auto max-w-[460px] flex items-center justify-between px-3 pt-2 pb-3 gap-1"
         style={{
-          background: 'rgba(18,18,18,0.96)',
-          backdropFilter: 'blur(28px)',
-          WebkitBackdropFilter: 'blur(28px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 999,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
+          background: 'linear-gradient(180deg, rgba(12,12,12,0.82), rgba(8,8,8,0.98))',
+          backdropFilter: 'blur(34px)',
+          WebkitBackdropFilter: 'blur(34px)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 -18px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.035)',
         }}
       >
         {navItems.map((item) => (
@@ -28,31 +27,24 @@ const BottomNav = () => {
             key={item.name}
             to={item.path}
             end={item.end}
-            className="flex items-center justify-center transition-all duration-200 relative"
-            style={{ borderRadius: 999 }}
+            className="flex-1 flex items-center justify-center transition-all duration-200 relative"
           >
             {({ isActive }) => (
               <div
-                className="flex items-center gap-2 transition-all duration-200"
-                style={{
-                  padding: isActive ? '8px 14px' : '8px 12px',
-                  background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                  borderRadius: 999,
-                }}
+                className={`w-full min-h-[50px] flex flex-col items-center justify-center gap-1 transition-all duration-200 rounded-xl ${isActive ? 'bg-white/[0.075]' : 'active:bg-white/[0.04]'}`}
               >
+                <span className={`absolute top-1.5 h-[3px] rounded-full transition-all duration-200 ${isActive ? 'w-5 bg-white' : 'w-0 bg-transparent'}`} />
                 <item.icon
-                  size={18}
+                  size={19}
                   strokeWidth={isActive ? 2.5 : 1.8}
-                  color={isActive ? '#ffffff' : 'rgba(255,255,255,0.4)'}
+                  color={isActive ? '#ffffff' : 'rgba(255,255,255,0.38)'}
                 />
-                {isActive && (
-                  <span
-                    className="text-white font-semibold whitespace-nowrap"
-                    style={{ fontSize: 13, letterSpacing: '-0.01em' }}
-                  >
-                    {item.name}
-                  </span>
-                )}
+                <span
+                  className={`font-semibold whitespace-nowrap transition-colors ${isActive ? 'text-white' : 'text-white/35'}`}
+                  style={{ fontSize: 10.5, letterSpacing: 0 }}
+                >
+                  {item.name}
+                </span>
               </div>
             )}
           </NavLink>

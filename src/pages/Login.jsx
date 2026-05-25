@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiMusic, FiLoader, FiMail, FiLock, FiUser, FiArrowRight } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import { auth, provider } from '../firebase';
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 const Login = () => {
   const { user, setUser } = useAuthStore();
@@ -30,10 +30,13 @@ const Login = () => {
 
   const handleError = (err, fallback) => {
     if (
-      err.code === 'auth/invalid-api-key' ||
-      err.message?.includes('dummy_api_key') ||
-      err.code === 'auth/configuration-not-found' ||
-      err.code === 'auth/operation-not-allowed'
+      import.meta.env.DEV &&
+      (
+        err.code === 'auth/invalid-api-key' ||
+        err.message?.includes('dummy_api_key') ||
+        err.code === 'auth/configuration-not-found' ||
+        err.code === 'auth/operation-not-allowed'
+      )
     ) {
       fallback();
     } else {
@@ -60,7 +63,7 @@ const Login = () => {
       } else if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await new Promise(r => setTimeout(r, 1000));
+        await sendPasswordResetEmail(auth, email);
         setError('If this email exists, a reset link has been sent.');
         setIsLoggingIn(false);
         return;

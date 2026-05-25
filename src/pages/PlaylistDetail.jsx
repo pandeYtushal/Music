@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiPlay, FiShare2, FiEdit2, FiTrash2, FiX, FiCheck, FiCopy, FiMusic } from 'react-icons/fi';
-import { QRCodeSVG } from 'qrcode.react';
+import { FiPlay, FiEdit2, FiTrash2, FiCheck, FiMusic, FiHeart, FiShuffle, FiSkipBack, FiSkipForward, FiRepeat, FiPlus } from 'react-icons/fi';
+import { cleanText } from '../utils/text';
 
 const PlaylistDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { playlists, renamePlaylist, deletePlaylist, removeFromPlaylist, setCurrentVideo } = usePlayerStore();
+  const { playlists, renamePlaylist, deletePlaylist, removeFromPlaylist, setCurrentVideo, addToQueue, playNextInQueue } = usePlayerStore();
   
   const playlist = playlists.find(p => p.id === id);
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(playlist?.name || '');
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   if (!playlist) {
     return (
@@ -37,14 +35,6 @@ const PlaylistDetail = () => {
       navigate('/playlists');
     }
   };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const shareUrl = window.location.href;
 
   return (
     <div className="min-h-screen bg-[#080808] text-white p-6 md:p-12 pb-40">
@@ -130,9 +120,6 @@ const PlaylistDetail = () => {
               <button className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all">
                 <FiHeart size={20} />
               </button>
-              <button onClick={() => setShowShareModal(true)} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all">
-                <FiShare2 size={20} />
-              </button>
               <button onClick={handleDelete} className="ml-auto text-white/20 hover:text-red-400 transition-all">
                 <FiTrash2 size={20} />
               </button>
@@ -155,8 +142,8 @@ const PlaylistDetail = () => {
                       <img src={song.image?.[1]?.link} className="w-full h-full object-cover" alt="" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-white text-[15px] truncate" dangerouslySetInnerHTML={{ __html: song.name }}></p>
-                      <p className="text-[12px] font-medium text-white/30 truncate mt-0.5" dangerouslySetInnerHTML={{ __html: song.primaryArtists }}></p>
+                      <p className="font-bold text-white text-[15px] truncate">{cleanText(song.name, 'Unknown Song')}</p>
+                      <p className="text-[12px] font-medium text-white/30 truncate mt-0.5">{cleanText(song.primaryArtists, 'Unknown Artist')}</p>
                     </div>
                   </div>
 
@@ -169,8 +156,22 @@ const PlaylistDetail = () => {
                   </div>
 
                   {/* Actions (visible on hover) */}
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
-                     <button 
+                  <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity ml-4">
+                    <button
+                      title="Play next"
+                      onClick={(e) => { e.stopPropagation(); playNextInQueue(song); }}
+                      className="p-2 text-white/30 hover:text-white rounded-lg transition-all"
+                    >
+                      <FiSkipForward size={16} />
+                    </button>
+                    <button
+                      title="Add to queue"
+                      onClick={(e) => { e.stopPropagation(); addToQueue(song); }}
+                      className="p-2 text-white/30 hover:text-white rounded-lg transition-all"
+                    >
+                      <FiPlus size={16} />
+                    </button>
+                    <button 
                       onClick={(e) => { e.stopPropagation(); removeFromPlaylist(id, song.id); }}
                       className="p-2 text-white/30 hover:text-red-400 rounded-lg transition-all"
                     >
@@ -197,40 +198,6 @@ const PlaylistDetail = () => {
         </div>
       </div>
 
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-          <div className="bg-[#1c1c1e] border border-[#2c2c2e] rounded-3xl p-10 w-full max-w-md shadow-2xl relative">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Share Playlist</h2>
-              <button onClick={() => setShowShareModal(false)} className="p-2 hover:bg-white/10 text-[#8e8e93] hover:text-white transition-all"><FiX size={24} /></button>
-            </div>
-            
-            <div className="flex flex-col items-center mb-10">
-              <div className="bg-white p-6 rounded-2xl mb-6 shadow-2xl">
-                <QRCodeSVG value={shareUrl} size={160} fgColor="#000" bgColor="#fff" />
-              </div>
-              <p className="text-[11px] font-bold text-[#8e8e93] uppercase tracking-[0.2em]">Scan to listen</p>
-            </div>
-
-            <div className="flex items-center gap-3 p-2 bg-black border border-[#2c2c2e] rounded-xl">
-              <input 
-                type="text" 
-                readOnly 
-                value={shareUrl}
-                className="flex-1 bg-transparent text-[11px] text-[#8e8e93] font-bold outline-none truncate px-4"
-              />
-              <button 
-                onClick={copyToClipboard}
-                className="bg-white text-black font-bold text-[11px] uppercase tracking-widest px-5 py-2.5 rounded-lg shrink-0 flex items-center gap-2 hover:bg-gray-200 transition-all shadow-xl"
-              >
-                {copied ? <FiCheck /> : <FiCopy />}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
 
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiX, FiMusic, FiPlus } from 'react-icons/fi';
+import { cleanText } from '../utils/text';
 
 const AddToPlaylistModal = () => {
   const { 
@@ -39,8 +40,8 @@ const AddToPlaylistModal = () => {
         <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl mb-6">
           <img src={pendingSong.image?.[0]?.link} className="w-12 h-12 rounded shadow-md" alt={pendingSong.name} />
           <div className="overflow-hidden">
-            <p className="font-semibold text-textPrimary truncate" dangerouslySetInnerHTML={{ __html: pendingSong.name }}></p>
-            <p className="text-xs text-textSecondary truncate" dangerouslySetInnerHTML={{ __html: pendingSong.primaryArtists }}></p>
+            <p className="font-semibold text-textPrimary truncate">{cleanText(pendingSong.name, 'Unknown Song')}</p>
+            <p className="text-xs text-textSecondary truncate">{cleanText(pendingSong.primaryArtists, 'Unknown Artist')}</p>
           </div>
         </div>
 

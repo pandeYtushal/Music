@@ -1,9 +1,18 @@
 import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiPlay } from 'react-icons/fi';
+import { FiPlay, FiPlus, FiSkipForward } from 'react-icons/fi';
+import { cleanText } from '../utils/text';
+
+const formatDuration = (seconds) => {
+  if (!seconds || Number.isNaN(Number(seconds))) return '';
+  const total = Number(seconds);
+  const minutes = Math.floor(total / 60);
+  const remaining = Math.floor(total % 60).toString().padStart(2, '0');
+  return `${minutes}:${remaining}`;
+};
 
 const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
-  const { setCurrentVideo } = usePlayerStore();
+  const { setCurrentVideo, addToQueue, playNextInQueue } = usePlayerStore();
 
   if (!videos || videos.length === 0) return null;
 
@@ -44,11 +53,11 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
           >
             {/* Thumbnail */}
             <div
-              className="relative aspect-square rounded-[20px] md:rounded-[28px] overflow-hidden mb-3 md:mb-3.5 transition-all duration-500 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/5 bg-[#121212]"
+              className="relative aspect-square rounded-xl overflow-hidden mb-3 md:mb-3.5 transition-all duration-500 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/5 bg-[#121212]"
             >
               <img
                 src={video.image?.[2]?.link || video.image?.[1]?.link || video.image?.[0]?.link || ''}
-                alt={video.name}
+                alt={cleanText(video.name, 'Song cover')}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               {/* Play overlay */}
@@ -57,18 +66,54 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
                   <FiPlay className="fill-current" size={18} style={{ marginLeft: 2 }} />
                 </div>
               </div>
+              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  title="Play next"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playNextInQueue(video);
+                  }}
+                  className="w-8 h-8 rounded-full bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+                >
+                  <FiSkipForward size={14} />
+                </button>
+                <button
+                  type="button"
+                  title="Add to queue"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToQueue(video);
+                  }}
+                  className="w-8 h-8 rounded-full bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+                >
+                  <FiPlus size={15} />
+                </button>
+              </div>
+              {video.duration && (
+                <span className="absolute right-2 bottom-2 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white/80">
+                  {formatDuration(video.duration)}
+                </span>
+              )}
             </div>
 
             {/* Meta */}
             <div className="px-1">
               <h3
                 className="text-white font-bold text-[14px] md:text-[15px] truncate leading-tight mb-0.5 md:mb-1 group-hover:text-white/90 transition-colors"
-                dangerouslySetInnerHTML={{ __html: video.name }}
-              />
+              >
+                {cleanText(video.name, 'Unknown Song')}
+              </h3>
               <p
                 className="text-white/30 text-[11px] md:text-[13px] font-medium truncate"
-                dangerouslySetInnerHTML={{ __html: video.primaryArtists || video.label }}
-              />
+              >
+                {cleanText(video.primaryArtists || video.label, 'Unknown Artist')}
+              </p>
+              {video.album?.name && (
+                <p className="text-white/18 text-[10px] md:text-[11px] font-medium truncate mt-1">
+                  {cleanText(video.album.name)}
+                </p>
+              )}
             </div>
           </div>
         ))}

@@ -13,6 +13,7 @@ import Playlists from './pages/Playlists';
 import PlaylistDetail from './pages/PlaylistDetail';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
 import BottomNav from './components/BottomNav';
+import LibrarySync from './components/LibrarySync';
 import { useAuthStore } from './store/useAuthStore';
 import { usePlayerStore } from './store/usePlayerStore';
 import { auth } from './firebase';
@@ -145,6 +146,7 @@ function App() {
       {user && <BottomNav />}
       {user && <Player />}
       {user && <AddToPlaylistModal />}
+      {user && <LibrarySync />}
     </Router>
   );
 }
