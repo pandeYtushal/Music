@@ -277,7 +277,7 @@ const Player = () => {
               )}
               <p className="text-white font-bold text-[13px] truncate leading-tight">{title}</p>
             </div>
-            <p className="text-white/38 text-[11px] font-medium truncate mt-0.5">{artist}</p>
+            <p className="text-white text-[11px] font-medium truncate mt-0.5">{artist}</p>
           </div>
           <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
             <button onClick={() => { pulse(); toggleFavorite(currentVideo); }} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isFav ? 'text-white bg-white/[0.07]' : 'text-white/24'}`}>
