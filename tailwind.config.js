@@ -7,11 +7,31 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary:   { DEFAULT: '#ffffff', dark: '#e5e5e5' },
-        secondary: { DEFAULT: '#000000', light: '#1a1a1a' },
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        ring: "var(--ring)",
+        input: "var(--input)",
+        primary:   { DEFAULT: '#ffffff', dark: '#e5e5e5', foreground: "var(--primary-foreground)" },
+        secondary: { DEFAULT: '#000000', light: '#1a1a1a', foreground: "var(--secondary-foreground)" },
         surface:   { DEFAULT: '#111111', raised: '#1a1a1a', high: '#242424' },
-        border:    { subtle: 'rgba(255,255,255,0.06)', mid: 'rgba(255,255,255,0.10)', strong: 'rgba(255,255,255,0.18)' },
-        muted:     '#5e5e5e',
+        border:    { DEFAULT: "var(--border)", subtle: 'rgba(255,255,255,0.06)', mid: 'rgba(255,255,255,0.10)', strong: 'rgba(255,255,255,0.18)' },
+        muted:     { DEFAULT: '#5e5e5e', foreground: "var(--muted-foreground)" },
       },
       fontFamily: {
         sans: ['Inter', 'Outfit', 'sans-serif'],

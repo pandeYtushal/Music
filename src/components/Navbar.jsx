@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { renderAvatar } from '../utils/avatar';
 
 const Navbar = () => {
   const { user, logout } = useAuthStore();
@@ -37,8 +38,6 @@ const Navbar = () => {
     setSearchQuery('');
     navigate('/search');
   };
-
-  const avatar = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'User')}&background=222&color=fff&bold=true`;
 
   return (
     <header
@@ -82,9 +81,9 @@ const Navbar = () => {
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(value => !value)}
-              className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border border-white/12 hover:border-white/30 transition-all shadow-xl"
+              className="w-10 h-10 md:w-11 md:h-11 rounded-xl overflow-hidden border border-white/12 hover:border-white/30 transition-all shadow-xl flex items-center justify-center shrink-0"
             >
-              <img src={avatar} alt="User" className="w-full h-full object-cover" />
+              {renderAvatar(user?.photoURL, user?.displayName, user?.email, "w-full h-full")}
             </button>
 
             <div
@@ -96,7 +95,12 @@ const Navbar = () => {
               }}
             >
               <div className="px-5 py-4 border-b border-white/5 mb-2">
-                <p className="text-[14px] font-bold text-white truncate">{user.displayName || 'User'}</p>
+                <p className="text-[14px] font-bold text-white truncate">
+                  {(() => {
+                    const name = user.displayName || (user.email ? user.email.split('@')[0] : 'Listener');
+                    return name.charAt(0).toUpperCase() + name.slice(1);
+                  })()}
+                </p>
                 <p className="text-[11px] text-white/40 truncate mt-0.5">{user.email || ''}</p>
               </div>
               <button onClick={() => { navigate('/settings'); setIsProfileOpen(false); }} className="w-full text-left px-5 py-3 text-[13px] font-semibold text-white/50 hover:text-white hover:bg-white/5 transition-all">Settings</button>

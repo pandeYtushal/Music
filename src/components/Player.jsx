@@ -48,25 +48,29 @@ const Player = () => {
     addToQueue, playNextInQueue, removeFromQueue, clearQueue
   } = usePlayerStore();
 
-  const [played, setPlayed]     = useState(0);
-  const [volume, setVolume]     = useState(0.8);
+  const [played, setPlayed] = useState(0);
+  const [volume, setVolume] = useState(0.8);
   const [duration, setDuration] = useState(0);
-  const [isExpanded, setIsExpanded]         = useState(false);
-  const [isSeeking, setIsSeeking]           = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
-  const [isMuted, setIsMuted]   = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [recommendedSongs, setRecommendedSongs] = useState([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd,   setTouchEnd]   = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [miniTouchStart, setMiniTouchStart] = useState(null);
+  const [miniFeedback, setMiniFeedback] = useState('');
   const isSwiping = useRef(false);
 
-  const audioRef          = useRef(null);
-  const seekRef           = useRef(null);
-  const fullSeekRef       = useRef(null);
-  const barVolumeRef      = useRef(null);
-  const fullVolumeRef     = useRef(null);
+  const audioRef = useRef(null);
+  const seekRef = useRef(null);
+  const fullSeekRef = useRef(null);
+  const barVolumeRef = useRef(null);
+  const fullVolumeRef = useRef(null);
   const activeProgressRef = useRef(null);
-  const activeVolumeRef   = useRef(null);
+  const activeVolumeRef = useRef(null);
+  const miniGestureRef = useRef(false);
 
   const fmt = s => {
     if (!s || isNaN(s)) return '0:00';
@@ -97,9 +101,43 @@ const Player = () => {
     else setIsPlaying(false);
   };
 
+  const pulse = (type = 'tap') => {
+    setMiniFeedback(type);
+    window.setTimeout(() => setMiniFeedback(''), 180);
+    if (navigator.vibrate) navigator.vibrate(type === 'swipe' ? 18 : 8);
+  };
+
   const handleSwipeStart = e => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); isSwiping.current = false; };
-  const handleSwipeMove  = e => { setTouchEnd(e.targetTouches[0].clientX); if (touchStart && Math.abs(touchStart - e.targetTouches[0].clientX) > 10) isSwiping.current = true; };
-  const handleSwipeEnd   = () => { if (!touchStart || !touchEnd) return; const d = touchStart - touchEnd; if (d > 50) handleNext(); else if (d < -50) playPrevious(); };
+  const handleSwipeMove = e => { setTouchEnd(e.targetTouches[0].clientX); if (touchStart && Math.abs(touchStart - e.targetTouches[0].clientX) > 10) isSwiping.current = true; };
+  const handleSwipeEnd = () => { if (!touchStart || !touchEnd) return; const d = touchStart - touchEnd; if (d > 50) handleNext(); else if (d < -50) playPrevious(); };
+
+  const handleMiniTouchStart = (e) => {
+    const touch = e.targetTouches[0];
+    setMiniTouchStart({ x: touch.clientX, y: touch.clientY });
+    setTouchEnd(null);
+  };
+
+  const handleMiniTouchEnd = (e) => {
+    if (!miniTouchStart) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - miniTouchStart.x;
+    const dy = touch.clientY - miniTouchStart.y;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (absY > 42 && absY > absX && dy < 0) {
+      miniGestureRef.current = true;
+      pulse('swipe');
+      setIsExpanded(true);
+    } else if (absX > 52 && absX > absY) {
+      miniGestureRef.current = true;
+      pulse('swipe');
+      if (dx < 0) handleNext();
+      else playPrevious();
+    }
+
+    setMiniTouchStart(null);
+  };
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -122,6 +160,7 @@ const Player = () => {
       const queueIds = new Set([currentVideo?.id, ...playlist.map(song => song.id)].filter(Boolean));
 
       try {
+        setIsLoadingRecommendations(true);
         const responses = await Promise.allSettled(
           queries.map(query => axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', {
             params: { query, limit: 10 }
@@ -144,6 +183,8 @@ const Player = () => {
         if (!cancelled) setRecommendedSongs(merged.slice(0, 12));
       } catch {
         if (!cancelled) setRecommendedSongs([]);
+      } finally {
+        if (!cancelled) setIsLoadingRecommendations(false);
       }
     };
 
@@ -157,7 +198,7 @@ const Player = () => {
   const updateSeek = clientX => {
     if (!activeProgressRef.current) return;
     const rect = activeProgressRef.current.getBoundingClientRect();
-    const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setPlayed(pct);
     if (audioRef.current && !isNaN(audioRef.current.duration))
       audioRef.current.currentTime = pct * audioRef.current.duration;
@@ -173,18 +214,18 @@ const Player = () => {
 
   useEffect(() => {
     const onMove = e => { const x = e.clientX ?? e.touches?.[0]?.clientX; if (isSeeking) updateSeek(x); if (isDraggingVolume) updateVol(x); };
-    const onUp   = () => { setIsSeeking(false); setIsDraggingVolume(false); };
+    const onUp = () => { setIsSeeking(false); setIsDraggingVolume(false); };
     if (isSeeking || isDraggingVolume) { window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp); }
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
   }, [isSeeking, isDraggingVolume]);
 
   if (!currentVideo) return null;
 
-  const audioUrl  = (!currentVideo?.downloadUrl?.length) ? '' : (currentVideo.downloadUrl.find(d => d.quality === quality) || currentVideo.downloadUrl[currentVideo.downloadUrl.length - 1]).link;
-  const imageUrl  = currentVideo?.image?.[2]?.link || currentVideo?.image?.[1]?.link || currentVideo?.image?.[0]?.link || '';
-  const title     = cleanText(currentVideo?.name, 'Unknown');
-  const artist    = cleanText(currentVideo?.primaryArtists || currentVideo?.label, 'Unknown Artist');
-  const isFav     = favorites.some(v => v.id === currentVideo.id);
+  const audioUrl = (!currentVideo?.downloadUrl?.length) ? '' : (currentVideo.downloadUrl.find(d => d.quality === quality) || currentVideo.downloadUrl[currentVideo.downloadUrl.length - 1]).link;
+  const imageUrl = currentVideo?.image?.[2]?.link || currentVideo?.image?.[1]?.link || currentVideo?.image?.[0]?.link || '';
+  const title = cleanText(currentVideo?.name, 'Unknown');
+  const artist = cleanText(currentVideo?.primaryArtists || currentVideo?.label, 'Unknown Artist');
+  const isFav = favorites.some(v => v.id === currentVideo.id);
   const seekBound = (e, ref) => handleSeekStart(e, ref);
 
   return (
@@ -199,10 +240,19 @@ const Player = () => {
 
       {/* Mobile mini player */}
       <div
-        className={`md:hidden fixed left-0 right-0 z-[100] transition-all duration-500 ease-out ${isExpanded ? 'bottom-0 opacity-0 pointer-events-none' : 'bottom-[75px] opacity-100'}`}
-        onClick={() => setIsExpanded(true)}
+        className={`md:hidden fixed left-0 right-0 z-[100] transition-all duration-500 ease-out ${isExpanded ? 'bottom-0 opacity-0 pointer-events-none' : 'bottom-[75px] opacity-100'} ${miniFeedback ? 'scale-[0.985]' : 'scale-100'}`}
+        onClick={() => {
+          if (miniGestureRef.current) {
+            miniGestureRef.current = false;
+            return;
+          }
+          pulse();
+          setIsExpanded(true);
+        }}
+        onTouchStart={handleMiniTouchStart}
+        onTouchEnd={handleMiniTouchEnd}
       >
-        <div 
+        <div
           className="relative mx-auto max-w-[460px] min-h-[70px] flex items-center px-4 gap-3 shadow-[0_-8px_34px_rgba(0,0,0,0.45)]"
           style={{
             background: 'linear-gradient(180deg, rgba(18,18,18,0.98), rgba(10,10,10,0.96))',
@@ -210,6 +260,7 @@ const Player = () => {
             WebkitBackdropFilter: 'blur(34px)',
             borderTop: '1px solid rgba(255,255,255,0.08)',
             borderBottom: '1px solid rgba(255,255,255,0.035)',
+            touchAction: 'pan-y',
           }}
         >
           <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/5">
@@ -229,16 +280,19 @@ const Player = () => {
             <p className="text-white/38 text-[11px] font-medium truncate mt-0.5">{artist}</p>
           </div>
           <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-            <button onClick={() => toggleFavorite(currentVideo)} className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${isFav ? 'text-white bg-white/[0.07]' : 'text-white/24'}`}>
+            <button onClick={() => { pulse(); toggleFavorite(currentVideo); }} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isFav ? 'text-white bg-white/[0.07]' : 'text-white/24'}`}>
               <FiHeart size={18} className={isFav ? 'fill-current' : ''} />
             </button>
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+              onClick={() => {
+                pulse();
+                setIsPlaying(!isPlaying);
+              }}
+              className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg active:scale-90 transition-transform"
             >
               {isPlaying ? <FiPause size={20} className="fill-current" /> : <FiPlay size={20} className="fill-current ml-0.5" />}
             </button>
-            <button onClick={handleNext} className="hidden min-[390px]:flex w-9 h-9 rounded-full items-center justify-center text-white/35 active:scale-90 transition-all">
+            <button onClick={() => { pulse('swipe'); handleNext(); }} className="hidden min-[390px]:flex w-10 h-10 rounded-full items-center justify-center text-white/35 active:scale-90 transition-all">
               <FiSkipForward size={18} />
             </button>
           </div>
@@ -263,19 +317,19 @@ const Player = () => {
         <div className="grid grid-cols-[minmax(210px,1fr)_minmax(340px,1.3fr)_minmax(170px,1fr)] lg:grid-cols-[minmax(260px,1fr)_minmax(420px,1.35fr)_minmax(240px,1fr)] items-center h-full px-5 lg:px-7 gap-4 lg:gap-6 max-w-[1800px] mx-auto">
           {/* Left: Track Info */}
           <div className="flex items-center gap-3 lg:gap-4 min-w-0">
-            <div 
+            <div
               className="w-[52px] h-[52px] rounded-xl overflow-hidden shrink-0 shadow-2xl border border-white/5 cursor-pointer"
               onClick={() => setIsExpanded(true)}
             >
               <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-white font-bold text-[14px] truncate leading-tight cursor-pointer hover:underline" 
+              <p className="text-white font-bold text-[14px] truncate leading-tight cursor-pointer hover:underline"
                 onClick={() => setIsExpanded(true)}
               >
                 {title}
               </p>
-              <p className="text-white/40 text-[12px] font-medium truncate mt-0.5" 
+              <p className="text-white/40 text-[12px] font-medium truncate mt-0.5"
               >
                 {artist}
               </p>
@@ -290,19 +344,19 @@ const Player = () => {
           {/* Center: Progress & Controls */}
           <div className="min-w-0 flex flex-col items-center gap-1.5 px-2">
             <div className="flex items-center gap-6 lg:gap-8 mb-0.5">
-               <ControlButton active={shuffle} onClick={toggleShuffle}><FiShuffle size={16} /></ControlButton>
-               <button onClick={playPrevious} className="text-white/60 hover:text-white transition-colors active:scale-90"><FiSkipBack size={20} /></button>
-               <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
-                >
-                  {isPlaying ? <FiPause size={18} className="fill-current" /> : <FiPlay size={18} className="fill-current ml-0.5" />}
-               </button>
-               <button onClick={handleNext} className="text-white/60 hover:text-white transition-colors active:scale-90"><FiSkipForward size={20} /></button>
-               <ControlButton active={repeatMode !== 'off'} onClick={cycleRepeatMode}>
-                 <FiRepeat size={16} />
-                 {repeatMode === 'one' && <span className="absolute -right-1 -top-1 text-[8px] font-black leading-none">1</span>}
-               </ControlButton>
+              <ControlButton active={shuffle} onClick={toggleShuffle}><FiShuffle size={16} /></ControlButton>
+              <button onClick={playPrevious} className="text-white/60 hover:text-white transition-colors active:scale-90"><FiSkipBack size={20} /></button>
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+              >
+                {isPlaying ? <FiPause size={18} className="fill-current" /> : <FiPlay size={18} className="fill-current ml-0.5" />}
+              </button>
+              <button onClick={handleNext} className="text-white/60 hover:text-white transition-colors active:scale-90"><FiSkipForward size={20} /></button>
+              <ControlButton active={repeatMode !== 'off'} onClick={cycleRepeatMode}>
+                <FiRepeat size={16} />
+                {repeatMode === 'one' && <span className="absolute -right-1 -top-1 text-[8px] font-black leading-none">1</span>}
+              </ControlButton>
             </div>
             <div className="flex items-center gap-3 lg:gap-4 w-full max-w-2xl">
               <span className="text-[10px] font-bold text-white/25 tabular-nums w-8 text-right">{fmt(played * duration)}</span>
@@ -313,30 +367,30 @@ const Player = () => {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 lg:gap-3 justify-end min-w-0">
-             <button onClick={() => toggleFavorite(currentVideo)} className={`lg:hidden p-2.5 rounded-xl transition-colors ${isFav ? 'text-white bg-white/[0.06]' : 'text-white/25 hover:text-white/60'}`}>
-                <FiHeart size={17} className={isFav ? 'fill-current' : ''} />
-             </button>
-             <button
-               onClick={() => setIsExpanded(true)}
-               className="p-2.5 text-white/30 hover:text-white hover:bg-white/5 rounded-xl transition-all"
-               title="Open full screen player"
-             >
-                <FiMaximize2 size={18} />
-             </button>
-             <div className="flex items-center gap-3 group relative">
-                <button onClick={() => setIsMuted(!isMuted)} className="p-2.5 text-white/30 hover:text-white transition-all">
-                  {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
-                </button>
-                <div 
-                  ref={barVolumeRef}
-                  className="w-20 xl:w-24 h-1 rounded-full cursor-pointer relative hidden lg:block"
-                  style={{ background: 'rgba(255,255,255,0.1)' }}
-                  onMouseDown={e => handleVolStart(e, barVolumeRef)}
-                  onTouchStart={e => handleVolStart(e, barVolumeRef)}
-                >
-                  <div className="absolute top-0 left-0 h-full rounded-full bg-white/80" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
-                </div>
-             </div>
+            <button onClick={() => toggleFavorite(currentVideo)} className={`lg:hidden p-2.5 rounded-xl transition-colors ${isFav ? 'text-white bg-white/[0.06]' : 'text-white/25 hover:text-white/60'}`}>
+              <FiHeart size={17} className={isFav ? 'fill-current' : ''} />
+            </button>
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="p-2.5 text-white/30 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+              title="Open full screen player"
+            >
+              <FiMaximize2 size={18} />
+            </button>
+            <div className="flex items-center gap-3 group relative">
+              <button onClick={() => setIsMuted(!isMuted)} className="p-2.5 text-white/30 hover:text-white transition-all">
+                {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
+              </button>
+              <div
+                ref={barVolumeRef}
+                className="w-20 xl:w-24 h-1 rounded-full cursor-pointer relative hidden lg:block"
+                style={{ background: 'rgba(255,255,255,0.1)' }}
+                onMouseDown={e => handleVolStart(e, barVolumeRef)}
+                onTouchStart={e => handleVolStart(e, barVolumeRef)}
+              >
+                <div className="absolute top-0 left-0 h-full rounded-full bg-white/80" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -354,11 +408,11 @@ const Player = () => {
 
         {/* Header */}
         <div className="relative z-10 flex items-center justify-between px-6 pt-6 md:pt-8 pb-3 shrink-0">
-          <button onClick={() => setIsExpanded(false)} className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] transition-all">
+          <button onClick={() => setIsExpanded(false)} className="w-12 h-12 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
             <FiChevronDown size={26} />
           </button>
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/25">Now Playing</p>
-          <button onClick={() => openAddToPlaylistModal(currentVideo)} className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] transition-all">
+          <button onClick={() => openAddToPlaylistModal(currentVideo)} className="w-12 h-12 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
             <FiPlus size={20} />
           </button>
         </div>
@@ -384,7 +438,7 @@ const Player = () => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight line-clamp-1">{title}</h2>
                   <p className="text-white/45 text-sm md:text-base font-medium truncate mt-1">{artist}</p>
                 </div>
-                <button onClick={() => toggleFavorite(currentVideo)} className={`shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/20 hover:text-white'}`}>
+                <button onClick={() => toggleFavorite(currentVideo)} className={`shrink-0 w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/20 hover:text-white'}`}>
                   <FiHeart size={22} className={isFav ? 'fill-current' : ''} />
                 </button>
               </div>
@@ -402,20 +456,20 @@ const Player = () => {
 
               {/* Controls */}
               <div className="flex items-center justify-between w-full px-4 mb-2">
-                <ControlButton active={shuffle} onClick={toggleShuffle} className="w-10 h-10 flex items-center justify-center">
+                <ControlButton active={shuffle} onClick={toggleShuffle} className="w-12 h-12 md:w-10 md:h-10 flex items-center justify-center active:scale-95">
                   <FiShuffle size={18} />
                 </ControlButton>
-                <div className="flex items-center gap-8 md:gap-12">
-                  <button onClick={playPrevious} className="text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipBack size={32} /></button>
+                <div className="flex items-center gap-7 md:gap-12">
+                  <button onClick={playPrevious} className="w-14 h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipBack size={32} /></button>
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
-                    className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_12px_40px_rgba(255,255,255,0.25)]"
+                    className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_12px_40px_rgba(255,255,255,0.25)]"
                   >
                     {isPlaying ? <FiPause size={28} className="fill-current" /> : <FiPlay size={28} className="fill-current ml-1" />}
                   </button>
-                  <button onClick={handleNext} className="text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipForward size={32} /></button>
+                  <button onClick={handleNext} className="w-14 h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipForward size={32} /></button>
                 </div>
-                <ControlButton active={repeatMode !== 'off'} onClick={cycleRepeatMode} className="w-10 h-10 flex items-center justify-center">
+                <ControlButton active={repeatMode !== 'off'} onClick={cycleRepeatMode} className="w-12 h-12 md:w-10 md:h-10 flex items-center justify-center active:scale-95">
                   <FiRepeat size={18} />
                   {repeatMode === 'one' && <span className="absolute right-1 top-1 text-[8px] font-black leading-none">1</span>}
                 </ControlButton>
@@ -473,8 +527,8 @@ const Player = () => {
                         </div>
                         {isCurrentSong && isPlaying && (
                           <div className="flex items-end gap-[3px] h-4 shrink-0 mx-2">
-                            {[1,2,3].map(i => (
-                              <div key={i} className="w-[3px] bg-white rounded-full animate-[bounce_1s_infinite]" style={{ height: `${[10,14,8][i-1]}px`, animationDelay: `${i * 0.15}s` }} />
+                            {[1, 2, 3].map(i => (
+                              <div key={i} className="w-[3px] bg-white rounded-full animate-[bounce_1s_infinite]" style={{ height: `${[10, 14, 8][i - 1]}px`, animationDelay: `${i * 0.15}s` }} />
                             ))}
                           </div>
                         )}
@@ -496,59 +550,78 @@ const Player = () => {
                   })}
                 </div>
 
-                {recommendedSongs.length > 0 && (
+                {(isLoadingRecommendations || recommendedSongs.length > 0 || autoplay) && (
                   <div className="mt-8">
                     <div className="mb-4 px-1">
                       <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20 mb-1">Autoplay</p>
                       <h3 className="text-lg font-bold text-white tracking-tight">From Your Listening</h3>
                     </div>
-                    <div className="space-y-1">
-                      {recommendedSongs.slice(0, 8).map((song, idx) => (
-                        <div
-                          key={`${song.id}-recommended-${idx}`}
-                          onClick={() => setCurrentVideo(song, [...playlist, ...recommendedSongs])}
-                          className="flex items-center gap-4 p-3.5 rounded-2xl transition-all group cursor-pointer hover:bg-white/[0.04] border border-transparent"
-                        >
-                          <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
-                          <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                            <img src={song.image?.[0]?.link || song.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
+                    {isLoadingRecommendations ? (
+                      <div className="space-y-2">
+                        {[1, 2, 3].map(item => (
+                          <div key={item} className="flex items-center gap-4 p-3.5 rounded-2xl border border-white/[0.04] bg-white/[0.015]">
+                            <div className="w-11 h-11 rounded-xl skeleton shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <div className="h-3 rounded-full skeleton w-2/3" />
+                              <div className="h-2.5 rounded-full skeleton w-1/3" />
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className="text-[14px] font-bold truncate text-white/80 group-hover:text-white"
-                            >
-                              {cleanText(song.name, 'Unknown Song')}
-                            </p>
-                            <p className="text-[12px] text-white/30 truncate mt-0.5 font-medium">{cleanText(song.primaryArtists, 'Unknown Artist')}</p>
+                        ))}
+                      </div>
+                    ) : recommendedSongs.length > 0 ? (
+                      <div className="space-y-1">
+                        {recommendedSongs.slice(0, 8).map((song, idx) => (
+                          <div
+                            key={`${song.id}-recommended-${idx}`}
+                            onClick={() => setCurrentVideo(song, [...playlist, ...recommendedSongs])}
+                            className="flex items-center gap-4 p-3.5 rounded-2xl transition-all group cursor-pointer hover:bg-white/[0.04] border border-transparent"
+                          >
+                            <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
+                            <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
+                              <img src={song.image?.[0]?.link || song.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className="text-[14px] font-bold truncate text-white/80 group-hover:text-white"
+                              >
+                                {cleanText(song.name, 'Unknown Song')}
+                              </p>
+                              <p className="text-[12px] text-white/30 truncate mt-0.5 font-medium">{cleanText(song.primaryArtists, 'Unknown Artist')}</p>
+                            </div>
+                            <span className="text-white/20 text-[12px] font-bold tabular-nums shrink-0 ml-2">
+                              {fmt((song.duration || 0) * 1)}
+                            </span>
+                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  playNextInQueue(song);
+                                }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.05] transition-all"
+                                title="Play next"
+                              >
+                                <FiSkipForward size={15} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addToQueue(song);
+                                }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.05] transition-all"
+                                title="Add to queue"
+                              >
+                                <FiPlus size={15} />
+                              </button>
+                            </div>
                           </div>
-                          <span className="text-white/20 text-[12px] font-bold tabular-nums shrink-0 ml-2">
-                            {fmt((song.duration || 0) * 1)}
-                          </span>
-                          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                playNextInQueue(song);
-                              }}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.05] transition-all"
-                              title="Play next"
-                            >
-                              <FiSkipForward size={15} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToQueue(song);
-                              }}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.05] transition-all"
-                              title="Add to queue"
-                            >
-                              <FiPlus size={15} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
+                        <p className="text-sm font-bold text-white/70">Recommendations are warming up</p>
+                        <p className="text-xs text-white/32 mt-1">Play a few more songs and Melody will build a better autoplay queue.</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

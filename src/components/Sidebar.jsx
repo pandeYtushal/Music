@@ -1,16 +1,17 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiHome, FiSearch, FiHeart, FiSettings, FiMusic, FiZap } from 'react-icons/fi';
+import { FiHome, FiSearch, FiHeart, FiClock, FiSettings, FiMusic } from 'react-icons/fi';
 import AdSense from './AdSense';
-import logo from '../assets/logo.png';
+import logo from '../assets/logo-icon.png';
 
 const navSections = [
   {
     label: 'Discover',
     links: [
-      { name: 'Home',      icon: FiHome,   path: '/' },
-      { name: 'Search',    icon: FiSearch, path: '/search' },
-      { name: 'Favorites', icon: FiHeart,  path: '/favorites' },
+      { name: 'Home', icon: FiHome, path: '/' },
+      { name: 'Search', icon: FiSearch, path: '/search' },
+      { name: 'Favorites', icon: FiHeart, path: '/favorites' },
+      { name: 'Recent', icon: FiClock, path: '/recently-played' },
     ]
   },
   {
@@ -44,9 +45,10 @@ const Sidebar = () => {
         className="flex items-center gap-3 px-6 py-7 cursor-pointer group shrink-0"
       >
         <div
-          className="w-9 h-9 rounded-[10px] flex items-center justify-center bg-white shadow-white transition-shadow group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+          className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-shadow group-hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+          style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
         >
-          <img src={logo} alt="Melody" className="w-5 h-5 object-contain" style={{ filter: 'invert(1)' }} />
+          <img src={logo} alt="Melody" className="w-6 h-6 object-contain" />
         </div>
         <span className="text-[17px] font-bold tracking-tight text-white">Melody</span>
       </div>
@@ -65,10 +67,9 @@ const Sidebar = () => {
                   to={link.path}
                   end={link.path === '/'}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-semibold ${
-                      isActive
-                        ? 'bg-white/10 text-white'
-                        : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
+                    `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-semibold ${isActive
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
                     }`
                   }
                 >

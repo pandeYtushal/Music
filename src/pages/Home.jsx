@@ -76,8 +76,21 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white animate-spin" />
+      <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-8 md:pt-12 pb-40 animate-fade-up">
+        <div className="h-4 w-28 rounded-full skeleton mb-3" />
+        <div className="h-9 w-48 rounded-full skeleton mb-8" />
+        <div className="h-[240px] md:h-[340px] rounded-2xl skeleton mb-10" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6].map(item => (
+            <div key={item} className="flex items-center gap-3.5 p-2.5 rounded-2xl border border-white/[0.05] bg-white/[0.015]">
+              <div className="w-14 h-14 rounded-xl skeleton shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 rounded-full skeleton w-2/3" />
+                <div className="h-2.5 rounded-full skeleton w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -97,7 +110,7 @@ const Home = () => {
           <p className="text-[8px] uppercase tracking-[0.25em] text-white/10 font-bold mb-1.5">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
           </p>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white/80">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-white/90 to-purple-400 bg-clip-text text-transparent">
             {getGreeting()}
           </h1>
         </header>
@@ -265,6 +278,7 @@ const Home = () => {
               ))}
             </div>
           </section>
+
         </div>
 
         {/* ADS - COMPACT */}

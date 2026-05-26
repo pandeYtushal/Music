@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
-import { FiMusic, FiLoader, FiMail, FiLock, FiUser, FiArrowRight } from 'react-icons/fi';
+import { FiLoader, FiMail, FiLock, FiUser, FiArrowRight } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
+import logo from '../assets/logo-icon.png';
 import { auth, provider } from '../firebase';
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
@@ -90,10 +91,10 @@ const Login = () => {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div
-            className="w-16 h-16 rounded-3xl flex items-center justify-center mb-5 shadow-lift"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+            className="w-16 h-16 rounded-3xl flex items-center justify-center mb-5"
+            style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
           >
-            <FiMusic size={30} className="text-white" />
+            <img src={logo} alt="Melody" className="w-9 h-9 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight text-center">
             {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create account' : 'Reset password'}

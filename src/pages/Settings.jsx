@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { renderAvatar } from '../utils/avatar';
 import {
   FiBell,
   FiCheck,
-  FiCheckCircle,
   FiHeadphones,
   FiHeart,
-  FiMail,
   FiMoon,
-  FiSave,
   FiUser,
   FiWifi,
 } from 'react-icons/fi';
@@ -58,22 +56,17 @@ const Stat = ({ label, value, icon: Icon }) => (
 );
 
 const Settings = () => {
-  const { user, setUser } = useAuthStore();
+  const { user } = useAuthStore();
   const { autoplay, toggleAutoplay, quality, setQuality, favorites, recentlyPlayed, playlists } = usePlayerStore();
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
-  const [saved, setSaved] = useState(false);
   const [notifications, setNotifications] = useState(false);
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    setUser({ ...user, displayName });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  const derivedName = (() => {
+    const name = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Listener');
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  })();
 
   const sectionClass = 'rounded-xl p-5 md:p-6';
   const sectionStyle = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' };
-  const avatar = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || user?.email || 'User')}&background=222&color=fff&bold=true`;
 
   return (
     <div className="page-wrap animate-fade-up max-w-5xl">
@@ -86,9 +79,9 @@ const Settings = () => {
         <div className="lg:col-span-4 space-y-5">
           <section className={sectionClass} style={sectionStyle}>
             <div className="flex items-center gap-4">
-              <img src={avatar} alt="" className="w-16 h-16 rounded-xl object-cover border border-white/10" />
+              {renderAvatar(user?.photoURL, derivedName, user?.email, "w-16 h-16")}
               <div className="min-w-0">
-                <p className="text-white font-bold truncate">{displayName || 'Listener'}</p>
+                <p className="text-white font-bold truncate">{derivedName}</p>
                 <p className="text-white/35 text-sm truncate mt-0.5">{user?.email || 'Signed in'}</p>
               </div>
             </div>
@@ -105,7 +98,7 @@ const Settings = () => {
             <p className="text-sm text-white/38 font-medium mb-3">Keep the app calm and predictable.</p>
 
             <SettingRow icon={FiMoon} label="Dark Mode" description="Melody is tuned for low light.">
-              <Toggle active={true} onToggle={() => {}} label="Dark mode" />
+              <Toggle active={true} onToggle={() => { }} label="Dark mode" />
             </SettingRow>
             <SettingRow icon={FiBell} label="Notifications" description="Release and playlist updates.">
               <Toggle active={notifications} onToggle={() => setNotifications(value => !value)} label="Notifications" />
@@ -115,47 +108,32 @@ const Settings = () => {
 
         <div className="lg:col-span-8 space-y-5">
           <section className={sectionClass} style={sectionStyle}>
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
                 <FiUser size={18} className="text-white/55" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white tracking-tight">Profile</h2>
-                <p className="text-sm text-white/38 font-medium">This name appears across your library.</p>
+                <h2 className="text-lg font-bold text-white tracking-tight">Account Profile</h2>
+                <p className="text-sm text-white/38 font-medium">Your verified account information.</p>
               </div>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Display Name</label>
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full input-field rounded-xl px-4 py-3 text-[14px] font-medium"
-                  />
+            <div className="space-y-4">
+              <div className="p-4 bg-white/[0.02] border border-white/[0.04] rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/30">Username</p>
+                  <p className="text-white font-bold text-base mt-1">{derivedName}</p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">Email</label>
-                  <div className="relative">
-                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={14} />
-                    <input
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="w-full input-field rounded-xl pl-10 pr-4 py-3 text-[14px] font-medium opacity-45 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
+
               </div>
 
-              <button type="submit" className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 text-sm">
-                {saved ? <FiCheckCircle size={16} /> : <FiSave size={16} />}
-                {saved ? 'Saved' : 'Save Changes'}
-              </button>
-            </form>
+              <div className="p-4 bg-white/[0.02] border border-white/[0.04] rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/30">Email Address</p>
+                  <p className="text-white font-bold text-base mt-1">{user?.email || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section className={sectionClass} style={sectionStyle}>

@@ -167,6 +167,8 @@ export const usePlayerStore = create(
         }
       },
 
+      clearRecentlyPlayed: () => set({ recentlyPlayed: [] }),
+
       toggleAutoplay: () => set((state) => ({ autoplay: !state.autoplay })),
       toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
       cycleRepeatMode: () => set((state) => ({

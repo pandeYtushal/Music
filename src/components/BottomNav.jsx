@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiHome, FiSearch, FiMusic, FiHeart } from 'react-icons/fi';
+import { FiHome, FiSearch, FiMusic, FiHeart, FiClock } from 'react-icons/fi';
 
 const navItems = [
   { name: 'Home',      path: '/',          icon: FiHome,  end: true },
   { name: 'Search',    path: '/search',    icon: FiSearch            },
   { name: 'Library',   path: '/playlists', icon: FiMusic             },
   { name: 'Favorites', path: '/favorites', icon: FiHeart             },
+  { name: 'Recent',    path: '/recently-played', icon: FiClock       },
 ];
 
 const BottomNav = () => {

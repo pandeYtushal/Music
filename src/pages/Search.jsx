@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import VideoGrid from '../components/VideoGrid';
 import axios from 'axios';
 import { FiMic, FiMusic, FiSearch } from 'react-icons/fi';
@@ -23,23 +24,21 @@ const Search = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const query = searchParams.get('q');
-  const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!query) {
-      setVideos([]);
-      return;
-    }
+  const { data: videos = [], isLoading: loading, error } = useQuery({
+    queryKey: ['searchSongs', query],
+    queryFn: async () => {
+      if (!query) return [];
+      const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', { params: { query, limit: 24 } });
+      return res.data?.data?.results || [];
+    },
+    enabled: !!query,
+    staleTime: 5 * 60 * 1000, // 5 minutes caching
+  });
 
-    setLoading(true);
-    setError(null);
-    axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', { params: { query, limit: 24 } })
-      .then(res => setVideos(res.data?.data?.results || []))
-      .catch(err => setError(err.response?.data?.message || 'Failed to fetch results.'))
-      .finally(() => setLoading(false));
-  }, [query]);
+  const errorMessage = error 
+    ? (error.response?.data?.message || error.message || 'Failed to fetch results.')
+    : null;
 
   return (
     <div className="page-wrap animate-fade-up">
@@ -49,9 +48,20 @@ const Search = () => {
       </div>
 
       {loading && query ? (
-        <div className="flex flex-col items-center justify-center py-40 gap-4">
-          <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white animate-spin" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/30">Searching</p>
+        <div className="animate-fade-up">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl mb-8 border border-white/[0.06] bg-white/[0.035]">
+            <FiSearch size={14} className="text-white/30 shrink-0" />
+            <p className="text-white/45 text-sm font-medium">Searching for <span className="text-white font-bold">"{query}"</span></p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(item => (
+              <div key={item}>
+                <div className="aspect-square rounded-xl skeleton mb-3" />
+                <div className="h-3 rounded-full skeleton w-3/4 mb-2" />
+                <div className="h-2.5 rounded-full skeleton w-1/2" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : !query ? (
         <div>
@@ -91,13 +101,13 @@ const Search = () => {
             </p>
           </div>
 
-          {error ? (
+          {errorMessage ? (
             <div
               className="rounded-xl p-10 text-center"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(239,68,68,0.2)' }}
             >
               <p className="text-red-400 font-bold mb-2">Something went wrong</p>
-              <p className="text-white/40 text-sm">{error}</p>
+              <p className="text-white/40 text-sm">{errorMessage}</p>
             </div>
           ) : videos.length > 0 ? (
             <VideoGrid videos={videos} title="Top Results" />

@@ -26,7 +26,7 @@ const Favorites = () => {
 
         <div className="text-center sm:text-left">
           <p className="section-overline">Collection</p>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-tight mb-3">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black bg-gradient-to-r from-white via-white/90 to-pink-400 bg-clip-text text-transparent tracking-tight leading-tight mb-3">
             Liked Songs
           </h1>
           <p className="text-white/40 text-sm font-medium mb-5">
