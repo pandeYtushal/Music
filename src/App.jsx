@@ -80,10 +80,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="flex h-screen w-screen bg-black text-white overflow-hidden selection:bg-white/20">
+        <div
+          className={`flex h-screen w-screen text-white overflow-hidden selection:bg-white/20 ${(() => {
+            const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return prefersDark ? 'dark' : '';
+          })()}`}
+        >
           {user && <Sidebar />}
           
-          <div className={`flex-1 flex flex-col h-full overflow-hidden relative bg-[#080808] ${user ? 'md:ml-64' : ''}`}>
+          <div className={`flex-1 flex flex-col h-full overflow-hidden relative bg-background ${user ? 'md:ml-64' : ''}`}>
         
         <div className="flex-1 overflow-y-auto relative z-10 scrollbar-hide">
           {user && <Navbar />}
@@ -96,8 +101,9 @@ function App() {
                     <ProtectedRoute>
                       <Home />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
+
                 <Route 
                   path="/search" 
                   element={

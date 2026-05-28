@@ -23,7 +23,7 @@ export default defineConfig({
         name: 'Melody - Premium Music Streaming',
         short_name: 'Melody',
         description: 'A premium, ad-free music streaming experience featuring the latest hits, curated playlists, and high-quality audio.',
-        theme_color: '#8b5cf6',
+        theme_color: '#5b5762ff',
         background_color: '#030014',
         display: 'standalone',
         icons: [

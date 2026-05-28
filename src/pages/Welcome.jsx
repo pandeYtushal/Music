@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import {
   FiDownload, FiArrowRight, FiZap, FiSmartphone, FiShield,
-  FiSliders, FiClock, FiMusic, FiPlay, FiSkipBack, FiSkipForward,
-  FiVolume2, FiShuffle, FiRepeat, FiX, FiShare, FiMoreVertical, 
+  FiSliders, FiClock, FiX, FiShare, FiMoreVertical,
   FiPlusCircle, FiCheckCircle
 } from 'react-icons/fi';
+
 import { useAuthStore } from '../store/useAuthStore';
 import logo from '../assets/logo-icon.png';
 
@@ -33,6 +34,7 @@ const Welcome = () => {
   };
 
   const featureCards = [
+
     {
       icon: FiZap,
       title: 'Lossless Audio',
@@ -61,7 +63,8 @@ const Welcome = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#050409] text-white relative overflow-hidden flex flex-col font-sans">
+    <div className="min-h-screen w-full bg-background text-foreground relative overflow-hidden flex flex-col font-sans">
+
 
       {/* Background Gradients & Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
