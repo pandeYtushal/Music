@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiMusic, FiHeadphones, FiSliders, FiZap, FiVolume2 } from 'react-icons/fi';
 
 /**

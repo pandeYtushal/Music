@@ -1,4 +1,3 @@
-import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import VideoGrid from '../components/VideoGrid';
 import { FiClock, FiPlay, FiTrash2 } from 'react-icons/fi';

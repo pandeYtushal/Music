@@ -2,6 +2,7 @@ import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlay, FiPlus, FiSkipForward, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
+import { pickImageUrl } from '../utils/media';
 
 const formatDuration = (seconds) => {
   if (!seconds || Number.isNaN(Number(seconds))) return '';
@@ -94,7 +95,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
               className="relative aspect-square rounded-xl overflow-hidden mb-3 md:mb-3.5 transition-all duration-500 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/5 bg-[#121212]"
             >
               <img
-                src={video.image?.[2]?.link || video.image?.[1]?.link || video.image?.[0]?.link || ''}
+                src={pickImageUrl(video.image)}
                 alt={cleanText(video.name, 'Song cover')}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />

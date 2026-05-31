@@ -2,8 +2,40 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedInOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function hasValidLibraryShape() {
+      return request.resource.data.keys().hasOnly([
+          'favorites',
+          'recentlyPlayed',
+          'playlists',
+          'autoplay',
+          'shuffle',
+          'repeatMode',
+          'quality',
+          'updatedAt'
+        ])
+        && request.resource.data.favorites is list
+        && request.resource.data.favorites.size() <= 50
+        && request.resource.data.recentlyPlayed is list
+        && request.resource.data.recentlyPlayed.size() <= 20
+        && request.resource.data.playlists is list
+        && request.resource.data.playlists.size() <= 30
+        && request.resource.data.autoplay is bool
+        && request.resource.data.shuffle is bool
+        && request.resource.data.repeatMode in ['off', 'all', 'one']
+        && request.resource.data.quality in ['48kbps', '96kbps', '160kbps', '320kbps']
+        && request.resource.data.updatedAt is timestamp;
+    }
+
     match /users/{userId}/library/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedInOwner(userId);
+      allow create, update: if isSignedInOwner(userId)
+        && docId == 'state'
+        && hasValidLibraryShape();
+      allow delete: if false;
     }
   }
 }

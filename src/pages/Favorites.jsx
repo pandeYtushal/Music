@@ -1,4 +1,3 @@
-import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import VideoGrid from '../components/VideoGrid';
 import { FiHeart, FiPlay } from 'react-icons/fi';

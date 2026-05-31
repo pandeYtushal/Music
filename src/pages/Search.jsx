@@ -1,9 +1,8 @@
-import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import VideoGrid from '../components/VideoGrid';
-import axios from 'axios';
 import { FiMic, FiMusic, FiSearch } from 'react-icons/fi';
+import { searchSongs } from '../api/saavn';
 
 const categories = [
   { name: 'Hindi', query: 'Hindi songs', tone: 'from-rose-500/20 to-orange-400/10' },
@@ -27,10 +26,9 @@ const Search = () => {
 
   const { data: videos = [], isLoading: loading, error } = useQuery({
     queryKey: ['searchSongs', query],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!query) return [];
-      const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', { params: { query, limit: 24 } });
-      return res.data?.data?.results || [];
+      return searchSongs(query, { limit: 24, signal });
     },
     enabled: !!query,
     staleTime: 5 * 60 * 1000, // 5 minutes caching

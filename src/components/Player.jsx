@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import {
   FiPlay, FiPause, FiSkipBack, FiSkipForward,
   FiVolume2, FiHeart, FiRepeat, FiShuffle,
   FiChevronDown, FiVolumeX, FiPlus, FiX, FiMaximize2
 } from 'react-icons/fi';
-import axios from 'axios';
 import { cleanText } from '../utils/text';
+import { searchSongs } from '../api/saavn';
+import { pickAudioUrl, pickImageUrl } from '../utils/media';
 
 /* Stable outside Player; never remounts. */
 const SeekBar = ({ refEl, played, onSeekStart }) => (
@@ -162,9 +163,7 @@ const Player = () => {
       try {
         setIsLoadingRecommendations(true);
         const responses = await Promise.allSettled(
-          queries.map(query => axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', {
-            params: { query, limit: 10 }
-          }))
+          queries.map(query => searchSongs(query, { limit: 10 }))
         );
 
         const seen = new Set(queueIds);
@@ -172,7 +171,7 @@ const Player = () => {
 
         responses.forEach(response => {
           if (response.status !== 'fulfilled') return;
-          const results = response.value.data?.data?.results || [];
+          const results = response.value || [];
           results.forEach(song => {
             if (!song?.id || seen.has(song.id)) return;
             seen.add(song.id);
@@ -221,8 +220,8 @@ const Player = () => {
 
   if (!currentVideo) return null;
 
-  const audioUrl = (!currentVideo?.downloadUrl?.length) ? '' : (currentVideo.downloadUrl.find(d => d.quality === quality) || currentVideo.downloadUrl[currentVideo.downloadUrl.length - 1]).link;
-  const imageUrl = currentVideo?.image?.[2]?.link || currentVideo?.image?.[1]?.link || currentVideo?.image?.[0]?.link || '';
+  const audioUrl = pickAudioUrl(currentVideo?.downloadUrl, quality);
+  const imageUrl = pickImageUrl(currentVideo?.image);
   const title = cleanText(currentVideo?.name, 'Unknown');
   const artist = cleanText(currentVideo?.primaryArtists || currentVideo?.label, 'Unknown Artist');
   const isFav = favorites.some(v => v.id === currentVideo.id);
@@ -515,7 +514,7 @@ const Player = () => {
                       >
                         <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
                         <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                          <img src={song.image?.[0]?.link || song.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
+                          <img src={pickImageUrl(song.image)} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p
@@ -578,7 +577,7 @@ const Player = () => {
                           >
                             <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
                             <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                              <img src={song.image?.[0]?.link || song.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
+                              <img src={pickImageUrl(song.image)} alt="" className="w-full h-full object-cover" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p

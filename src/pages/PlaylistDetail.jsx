@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlay, FiEdit2, FiTrash2, FiCheck, FiMusic, FiHeart, FiShuffle, FiSkipBack, FiSkipForward, FiRepeat, FiPlus } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
+import { pickImageUrl } from '../utils/media';
+
+const formatDuration = (seconds) => {
+  if (!seconds || Number.isNaN(Number(seconds))) return '--:--';
+  const total = Math.max(0, Number(seconds));
+  const minutes = Math.floor(total / 60);
+  const remaining = Math.floor(total % 60).toString().padStart(2, '0');
+  return `${minutes}:${remaining}`;
+};
 
 const PlaylistDetail = () => {
   const { id } = useParams();
@@ -45,7 +54,7 @@ const PlaylistDetail = () => {
           <div className="relative group w-full max-w-[400px] aspect-square rounded-[40px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.8)] border border-white/5 bg-[#121212]">
             {playlist.songs.length > 0 ? (
               <img 
-                src={playlist.songs[0].image?.[2]?.link} 
+                src={pickImageUrl(playlist.songs[0].image)} 
                 className="w-full h-full object-cover"
                 alt={playlist.name} 
               />
@@ -139,7 +148,7 @@ const PlaylistDetail = () => {
                   
                   <div className="flex-1 flex items-center gap-4 min-w-0">
                     <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0">
-                      <img src={song.image?.[1]?.link} className="w-full h-full object-cover" alt="" />
+                      <img src={pickImageUrl(song.image)} className="w-full h-full object-cover" alt="" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-white text-[15px] truncate">{cleanText(song.name, 'Unknown Song')}</p>
@@ -148,11 +157,11 @@ const PlaylistDetail = () => {
                   </div>
 
                   <div className="hidden md:block text-white/25 text-[13px] font-medium tabular-nums mr-10">
-                    {song.album?.name || 'Single'}
+                    {cleanText(song.album?.name, 'Single')}
                   </div>
 
                   <div className="text-white/25 text-[13px] font-bold tabular-nums">
-                    .. {index === 0 ? '3.13' : (Math.random() * 2 + 2).toFixed(2)}
+                    {formatDuration(song.duration)}
                   </div>
 
                   {/* Actions (visible on hover) */}

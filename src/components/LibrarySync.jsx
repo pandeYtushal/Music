@@ -3,6 +3,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { sanitizeLibrary } from '../utils/library';
 
 const LibrarySync = () => {
   const user = useAuthStore(state => state.user);
@@ -32,7 +33,7 @@ const LibrarySync = () => {
         if (cancelled) return;
 
         if (snapshot.exists()) {
-          setLibraryFromCloud(snapshot.data());
+          setLibraryFromCloud(sanitizeLibrary(snapshot.data()));
         }
 
         loadedUserRef.current = user.uid;
@@ -59,13 +60,15 @@ const LibrarySync = () => {
       try {
         const ref = doc(db, 'users', user.uid, 'library', 'state');
         await setDoc(ref, {
-          favorites,
-          recentlyPlayed,
-          playlists,
-          autoplay,
-          shuffle,
-          repeatMode,
-          quality,
+          ...sanitizeLibrary({
+            favorites,
+            recentlyPlayed,
+            playlists,
+            autoplay,
+            shuffle,
+            repeatMode,
+            quality,
+          }),
           updatedAt: serverTimestamp(),
         }, { merge: true });
       } catch (error) {

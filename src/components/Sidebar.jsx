@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { FiHome, FiSearch, FiHeart, FiClock, FiSettings, FiMusic } from 'react-icons/fi';
 import AdSense from './AdSense';

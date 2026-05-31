@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlus, FiMusic, FiFolder, FiPlay, FiX } from 'react-icons/fi';
+import { pickImageUrl } from '../utils/media';
 
 const Playlists = () => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const Playlists = () => {
               >
                 {playlist.songs.length > 0 ? (
                   <img
-                    src={playlist.songs[0].image?.[2]?.link || playlist.songs[0].image?.[1]?.link}
+                    src={pickImageUrl(playlist.songs[0].image)}
                     alt={playlist.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />

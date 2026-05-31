@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { FiLoader, FiMail, FiLock, FiUser, FiArrowRight } from 'react-icons/fi';
@@ -6,6 +6,21 @@ import { FcGoogle } from 'react-icons/fc';
 import logo from '../assets/logo-icon.png';
 import { auth, provider } from '../firebase';
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+
+const friendlyAuthError = (error) => {
+  const messages = {
+    'auth/invalid-credential': 'The email or password is incorrect.',
+    'auth/user-not-found': 'The email or password is incorrect.',
+    'auth/wrong-password': 'The email or password is incorrect.',
+    'auth/email-already-in-use': 'An account already exists for this email.',
+    'auth/weak-password': 'Use a password with at least 6 characters.',
+    'auth/invalid-email': 'Enter a valid email address.',
+    'auth/popup-closed-by-user': 'The sign-in window was closed before it finished.',
+    'auth/network-request-failed': 'Network error. Please check your connection and try again.',
+  };
+
+  return messages[error?.code] || 'Sign-in failed. Please try again.';
+};
 
 const Login = () => {
   const { user, setUser } = useAuthStore();
@@ -41,7 +56,7 @@ const Login = () => {
     ) {
       fallback();
     } else {
-      setError(err.message.replace('Firebase: ', ''));
+      setError(friendlyAuthError(err));
     }
     setIsLoggingIn(false);
   };

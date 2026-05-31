@@ -1,7 +1,8 @@
-import React from 'react';
+import { useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiX, FiMusic, FiPlus } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
+import { pickImageUrl } from '../utils/media';
 
 const AddToPlaylistModal = () => {
   const { 
@@ -12,6 +13,7 @@ const AddToPlaylistModal = () => {
     addToPlaylist,
     createPlaylist 
   } = usePlayerStore();
+  const [newPlaylistName, setNewPlaylistName] = useState('');
 
   if (!isAddToPlaylistModalOpen || !pendingSong) return null;
 
@@ -20,13 +22,14 @@ const AddToPlaylistModal = () => {
     closeAddToPlaylistModal();
   };
 
-  const handleCreateAndAdd = () => {
-    const name = window.prompt('Enter playlist name:');
-    if (name) {
-      const id = createPlaylist(name);
-      addToPlaylist(id, pendingSong);
-      closeAddToPlaylistModal();
-    }
+  const handleCreateAndAdd = (event) => {
+    event.preventDefault();
+    if (!newPlaylistName.trim()) return;
+
+    const id = createPlaylist(newPlaylistName);
+    addToPlaylist(id, pendingSong);
+    setNewPlaylistName('');
+    closeAddToPlaylistModal();
   };
 
   return (
@@ -38,24 +41,33 @@ const AddToPlaylistModal = () => {
         </div>
 
         <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl mb-6">
-          <img src={pendingSong.image?.[0]?.link} className="w-12 h-12 rounded shadow-md" alt={pendingSong.name} />
+          <img src={pickImageUrl(pendingSong.image)} className="w-12 h-12 rounded shadow-md" alt={cleanText(pendingSong.name, 'Song cover')} />
           <div className="overflow-hidden">
             <p className="font-semibold text-textPrimary truncate">{cleanText(pendingSong.name, 'Unknown Song')}</p>
             <p className="text-xs text-textSecondary truncate">{cleanText(pendingSong.primaryArtists, 'Unknown Artist')}</p>
           </div>
         </div>
 
-        <div className="max-h-[300px] overflow-y-auto scrollbar-hide space-y-2 mb-6">
-          <button 
-            onClick={handleCreateAndAdd}
-            className="w-full flex items-center gap-4 p-4 hover:bg-primary/10 rounded-2xl transition-all group"
+        <form onSubmit={handleCreateAndAdd} className="flex items-center gap-2 mb-5">
+          <input
+            type="text"
+            value={newPlaylistName}
+            onChange={(event) => setNewPlaylistName(event.target.value)}
+            maxLength={60}
+            placeholder="New playlist name"
+            className="input-field min-w-0 flex-1 rounded-xl px-4 py-3 text-sm font-medium"
+          />
+          <button
+            type="submit"
+            disabled={!newPlaylistName.trim()}
+            className="w-12 h-12 rounded-xl bg-primary text-black flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            aria-label="Create playlist"
           >
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-all">
-              <FiPlus size={20} />
-            </div>
-            <span className="font-bold text-primary">New Playlist</span>
+            <FiPlus size={20} />
           </button>
+        </form>
 
+        <div className="max-h-[300px] overflow-y-auto scrollbar-hide space-y-2 mb-6">
           {playlists.map(playlist => (
             <button 
               key={playlist.id}
@@ -64,7 +76,7 @@ const AddToPlaylistModal = () => {
             >
               <div className="w-10 h-10 rounded-lg bg-surface border border-white/5 overflow-hidden flex items-center justify-center">
                 {playlist.songs.length > 0 ? (
-                  <img src={playlist.songs[0].image?.[0]?.link} className="w-full h-full object-cover" alt="" />
+                  <img src={pickImageUrl(playlist.songs[0].image)} className="w-full h-full object-cover" alt="" />
                 ) : (
                   <FiMusic className="text-textSecondary/20" />
                 )}

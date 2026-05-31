@@ -1,5 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import {
+  createPlaylistId,
+  sanitizeLibrary,
+  sanitizePlaylistName,
+  sanitizeSong,
+  sanitizeSongList,
+} from '../utils/library';
 
 export const usePlayerStore = create(
   persist(
@@ -30,20 +37,23 @@ export const usePlayerStore = create(
         }
 
         const state = get();
-        let newPlaylist = contextPlaylist || state.playlist;
+        const cleanVideo = sanitizeSong(video);
+        if (!cleanVideo) return;
+
+        let newPlaylist = contextPlaylist ? sanitizeSongList(contextPlaylist, 100) : state.playlist;
         
         if (!contextPlaylist && state.playlist.length === 0) {
-          newPlaylist = [video];
+          newPlaylist = [cleanVideo];
         }
         
-        const videoIdToFind = video.id;
+        const videoIdToFind = cleanVideo.id;
         const index = newPlaylist.findIndex(v => v.id === videoIdToFind);
         
         // Add to recently played (keep max 20)
-        const newRecentlyPlayed = [video, ...state.recentlyPlayed.filter(v => v.id !== video.id)].slice(0, 20);
+        const newRecentlyPlayed = [cleanVideo, ...state.recentlyPlayed.filter(v => v.id !== cleanVideo.id)].slice(0, 20);
         
         set({ 
-          currentVideo: video, 
+          currentVideo: cleanVideo, 
           isPlaying: true,
           playlist: newPlaylist,
           currentIndex: index !== -1 ? index : 0,
@@ -91,20 +101,22 @@ export const usePlayerStore = create(
       },
 
       addToQueue: (video) => {
-        if (!video?.id) return;
+        const cleanVideo = sanitizeSong(video);
+        if (!cleanVideo?.id) return;
         const state = get();
-        if (state.playlist.some(song => song.id === video.id)) return;
-        set({ playlist: [...state.playlist, video] });
+        if (state.playlist.some(song => song.id === cleanVideo.id)) return;
+        set({ playlist: [...state.playlist, cleanVideo] });
       },
 
       playNextInQueue: (video) => {
-        if (!video?.id) return;
+        const cleanVideo = sanitizeSong(video);
+        if (!cleanVideo?.id) return;
         const state = get();
-        const filteredQueue = state.playlist.filter(song => song.id !== video.id);
+        const filteredQueue = state.playlist.filter(song => song.id !== cleanVideo.id);
         const insertIndex = Math.max(0, state.currentIndex + 1);
         const nextQueue = [
           ...filteredQueue.slice(0, insertIndex),
-          video,
+          cleanVideo,
           ...filteredQueue.slice(insertIndex)
         ];
         set({
@@ -158,12 +170,14 @@ export const usePlayerStore = create(
       },
 
       toggleFavorite: (video) => {
+        const cleanVideo = sanitizeSong(video);
+        if (!cleanVideo) return;
         const state = get();
-        const isFavorite = state.favorites.some(v => v.id === video.id);
+        const isFavorite = state.favorites.some(v => v.id === cleanVideo.id);
         if (isFavorite) {
-          set({ favorites: state.favorites.filter(v => v.id !== video.id) });
+          set({ favorites: state.favorites.filter(v => v.id !== cleanVideo.id) });
         } else {
-          set({ favorites: [video, ...state.favorites] });
+          set({ favorites: [cleanVideo, ...state.favorites].slice(0, 50) });
         }
       },
 
@@ -174,20 +188,24 @@ export const usePlayerStore = create(
       cycleRepeatMode: () => set((state) => ({
         repeatMode: state.repeatMode === 'off' ? 'all' : state.repeatMode === 'all' ? 'one' : 'off'
       })),
-      setQuality: (quality) => set({ quality }),
-      setLibraryFromCloud: (library) => set((state) => ({
-        favorites: Array.isArray(library?.favorites) ? library.favorites : state.favorites,
-        recentlyPlayed: Array.isArray(library?.recentlyPlayed) ? library.recentlyPlayed : state.recentlyPlayed,
-        playlists: Array.isArray(library?.playlists) ? library.playlists : state.playlists,
-        autoplay: typeof library?.autoplay === 'boolean' ? library.autoplay : state.autoplay,
-        shuffle: typeof library?.shuffle === 'boolean' ? library.shuffle : state.shuffle,
-        repeatMode: ['off', 'all', 'one'].includes(library?.repeatMode) ? library.repeatMode : state.repeatMode,
-        quality: library?.quality || state.quality,
-      })),
+      setQuality: (quality) => set({ quality: sanitizeLibrary({ quality }).quality }),
+      setLibraryFromCloud: (library) => set((state) => {
+        const sanitized = sanitizeLibrary(library);
+
+        return {
+          favorites: Array.isArray(library?.favorites) ? sanitized.favorites : state.favorites,
+          recentlyPlayed: Array.isArray(library?.recentlyPlayed) ? sanitized.recentlyPlayed : state.recentlyPlayed,
+          playlists: Array.isArray(library?.playlists) ? sanitized.playlists : state.playlists,
+          autoplay: typeof library?.autoplay === 'boolean' ? sanitized.autoplay : state.autoplay,
+          shuffle: typeof library?.shuffle === 'boolean' ? sanitized.shuffle : state.shuffle,
+          repeatMode: typeof library?.repeatMode === 'string' ? sanitized.repeatMode : state.repeatMode,
+          quality: typeof library?.quality === 'string' ? sanitized.quality : state.quality,
+        };
+      }),
 
       createPlaylist: (name) => {
-        const id = 'playlist_' + Date.now();
-        const newPlaylist = { id, name, songs: [], image: null };
+        const id = createPlaylistId();
+        const newPlaylist = { id, name: sanitizePlaylistName(name), songs: [], image: null };
         set((state) => ({ playlists: [...state.playlists, newPlaylist] }));
         return id;
       },
@@ -197,15 +215,17 @@ export const usePlayerStore = create(
       })),
 
       renamePlaylist: (id, name) => set((state) => ({
-        playlists: state.playlists.map(p => p.id === id ? { ...p, name } : p)
+        playlists: state.playlists.map(p => p.id === id ? { ...p, name: sanitizePlaylistName(name) } : p)
       })),
 
       addToPlaylist: (playlistId, video) => set((state) => ({
         playlists: state.playlists.map(p => {
+          const cleanVideo = sanitizeSong(video);
+          if (!cleanVideo) return p;
           if (p.id === playlistId) {
             // Check if already exists
-            if (p.songs.some(s => s.id === video.id)) return p;
-            return { ...p, songs: [...p.songs, video] };
+            if (p.songs.some(s => s.id === cleanVideo.id)) return p;
+            return { ...p, songs: [...p.songs, cleanVideo].slice(0, 100) };
           }
           return p;
         })
@@ -222,14 +242,16 @@ export const usePlayerStore = create(
     }),
     {
       name: 'melody-player-storage',
+      version: 2,
+      migrate: (persistedState) => sanitizeLibrary(persistedState),
       partialize: (state) => ({ 
-        favorites: state.favorites, 
-        recentlyPlayed: state.recentlyPlayed, 
+        favorites: sanitizeSongList(state.favorites, 50), 
+        recentlyPlayed: sanitizeSongList(state.recentlyPlayed, 20), 
         autoplay: state.autoplay, 
         shuffle: state.shuffle,
         repeatMode: state.repeatMode,
         quality: state.quality,
-        playlists: state.playlists 
+        playlists: sanitizeLibrary({ playlists: state.playlists }).playlists 
       }),
     }
   )

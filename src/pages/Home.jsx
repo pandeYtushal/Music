@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import VideoGrid from '../components/VideoGrid';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { FiPlay, FiPlus, FiSkipForward, FiTrendingUp } from 'react-icons/fi';
 import AdSense from '../components/AdSense';
 import { cleanText } from '../utils/text';
+import { searchSongs } from '../api/saavn';
+import { pickImageUrl } from '../utils/media';
 
 const formatDuration = (seconds) => {
   if (!seconds || Number.isNaN(Number(seconds))) return '';
@@ -39,6 +40,8 @@ const Home = () => {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchHomeData = async () => {
       try {
         const hour = new Date().getHours();
@@ -48,10 +51,6 @@ const Home = () => {
         else if (hour >= 17 && hour < 21) qpQuery = 'evening party hits';
         else qpQuery = 'late night lofi';
 
-        const fetch = async (query, limit) => {
-          const res = await axios.get('https://jio-saavn-api-sigma.vercel.app/search/songs', { params: { query, limit } });
-          return res.data?.data?.results || [];
-        };
         let recQ = 'arijit singh', jbiQ = 'bollywood hits';
         if (recentlyPlayed?.length > 0) {
           if (recentlyPlayed[0]?.primaryArtists)
@@ -60,18 +59,23 @@ const Home = () => {
             jbiQ = recentlyPlayed[1].primaryArtists.split(',')[0].trim();
         }
         const [quickPicks, jumpBackIn, recommended, trending] = await Promise.all([
-          fetch(qpQuery, 10),
-          fetch(jbiQ, 8),
-          fetch(recQ, 8),
-          fetch('trending india', 10),
+          searchSongs(qpQuery, { limit: 10, signal: controller.signal }),
+          searchSongs(jbiQ, { limit: 8, signal: controller.signal }),
+          searchSongs(recQ, { limit: 8, signal: controller.signal }),
+          searchSongs('trending india', { limit: 10, signal: controller.signal }),
         ]);
         setCategories({ quickPicks, jumpBackIn, recommended, trending, recommendedQuery: recQ, jumpBackInQuery: jbiQ });
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        if (e.name !== 'CanceledError' && e.code !== 'ERR_CANCELED') console.error(e);
+      }
       finally { setLoading(false); }
     };
     fetchHomeData();
     const interval = setInterval(fetchHomeData, 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [recentlyPlayed]);
 
   if (loading) {
@@ -123,7 +127,7 @@ const Home = () => {
             style={{ height: 'clamp(200px, 28vw, 400px)' }}
           >
             <img
-              src={featured.image?.[2]?.link || featured.image?.[1]?.link || ''}
+              src={pickImageUrl(featured.image)}
               alt={featured.name}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
             />
@@ -171,7 +175,7 @@ const Home = () => {
                 className="relative overflow-hidden rounded-[18px] bg-white/[0.015] border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-300 p-2.5 flex items-center gap-3.5 text-left group"
               >
                 <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-[12px] overflow-hidden shrink-0 shadow-sm">
-                  <img src={video.image?.[2]?.link || video.image?.[1]?.link} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <img src={pickImageUrl(video.image)} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <FiPlay className="text-white fill-current" size={14} />
                   </div>
@@ -237,7 +241,7 @@ const Home = () => {
                     {idx + 1}
                   </span>
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden shrink-0 shadow-sm">
-                    <img src={video.image?.[2]?.link || video.image?.[1]?.link} alt="" className="w-full h-full object-cover" />
+                    <img src={pickImageUrl(video.image)} alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5">

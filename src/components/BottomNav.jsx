@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { FiHome, FiSearch, FiMusic, FiHeart, FiClock } from 'react-icons/fi';
 
