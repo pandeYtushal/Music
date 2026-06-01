@@ -95,80 +95,82 @@ function App() {
 
             <div className={`flex-1 overflow-y-auto relative z-10 scrollbar-hide flex flex-col ${user ? 'pb-[150px] md:pb-4' : ''}`}>
               {user && <Navbar />}
-              <Routes>
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Home />
-                    </ProtectedRoute>
-                  }
-                />
+              <div className="flex-1 shrink-0 w-full relative">
+                <Routes>
+                  <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Home />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                <Route
-                  path="/search"
-                  element={
-                    <ProtectedRoute>
-                      <Search />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/favorites"
-                  element={
-                    <ProtectedRoute>
-                      <Favorites />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/recently-played"
-                  element={
-                    <ProtectedRoute>
-                      <RecentlyPlayed />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <ProtectedRoute>
-                      <Settings />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/playlists"
-                  element={
-                    <ProtectedRoute>
-                      <Playlists />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/playlist/:id"
-                  element={
-                    <ProtectedRoute>
-                      <PlaylistDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="*"
-                  element={
-                    <ProtectedRoute>
-                      <div className="p-8 text-center text-textSecondary mt-20">
-                        <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
-                        <p>This page is under construction.</p>
-                      </div>
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
+                  <Route
+                    path="/search"
+                    element={
+                      <ProtectedRoute>
+                        <Search />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/favorites"
+                    element={
+                      <ProtectedRoute>
+                        <Favorites />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/recently-played"
+                    element={
+                      <ProtectedRoute>
+                        <RecentlyPlayed />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/playlists"
+                    element={
+                      <ProtectedRoute>
+                        <Playlists />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/playlist/:id"
+                    element={
+                      <ProtectedRoute>
+                        <PlaylistDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="*"
+                    element={
+                      <ProtectedRoute>
+                        <div className="p-8 text-center text-textSecondary mt-20">
+                          <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
+                          <p>This page is under construction.</p>
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </div>
               <Footer />
             </div>
           </div>
