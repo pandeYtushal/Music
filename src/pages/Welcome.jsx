@@ -84,9 +84,9 @@ const Welcome = () => {
             className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
           >
-            <img src={logo} alt="Melody" className="w-5 h-5 object-contain" />
+            <img src={logo} alt="MeldMusic" className="w-5 h-5 object-contain" />
           </div>
-          <span className="text-[16px] font-bold tracking-tight text-white">Melody</span>
+          <span className="text-[16px] font-bold tracking-tight text-white">MeldMusic</span>
         </div>
 
         <button
@@ -174,7 +174,7 @@ const Welcome = () => {
 
       {/* 4. Footer */}
       <footer className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between text-[11px] font-bold tracking-wider text-white/30 uppercase gap-3">
-        <span>&copy; {new Date().getFullYear()} Melody Audio Corp.</span>
+        <span>&copy; {new Date().getFullYear()} MeldMusic Audio Corp.</span>
         <div className="flex gap-4">
           <button onClick={() => navigate('/privacy')} className="text-white/60 hover:text-white hover:underline transition-all">Privacy Policy</button>
           <button onClick={() => navigate('/terms')} className="text-white/60 hover:text-white hover:underline transition-all">Terms of Service</button>
@@ -191,7 +191,7 @@ const Welcome = () => {
             <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
             <div className="flex items-center justify-between mb-6 relative z-10">
-              <h2 className="text-xl md:text-2xl font-black tracking-tight text-white">Install Melody</h2>
+              <h2 className="text-xl md:text-2xl font-black tracking-tight text-white">Install MeldMusic</h2>
               <button 
                 onClick={() => setShowInstallModal(false)}
                 className="text-white/45 hover:text-white/90 p-2 hover:bg-white/5 rounded-full transition-all active:scale-90"
@@ -201,7 +201,7 @@ const Welcome = () => {
             </div>
 
             <p className="text-white/50 text-[13px] md:text-sm font-medium mb-6 relative z-10 leading-relaxed">
-              Experience the best of Melody as a premium standalone app on your home screen or desktop. Follow the quick guide for your device:
+              Experience the best of MeldMusic as a premium standalone app on your home screen or desktop. Follow the quick guide for your device:
             </p>
 
             <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1 relative z-10 scrollbar-thin">
@@ -252,7 +252,7 @@ const Welcome = () => {
                 <div className="text-left">
                   <h3 className="text-[14px] font-bold text-purple-400 mb-1">Already Installed?</h3>
                   <p className="text-white/35 text-[12px] font-medium leading-relaxed">
-                    If you already installed Melody, search your apps list or desktop for the "Melody" icon to launch it as a premium native app.
+                    If you already installed MeldMusic, search your apps list or desktop for the "MeldMusic" icon to launch it as a premium native app.
                   </p>
                 </div>
               </div>

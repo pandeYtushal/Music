@@ -109,7 +109,7 @@ const Login = () => {
             className="w-16 h-16 rounded-3xl flex items-center justify-center mb-5"
             style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
           >
-            <img src={logo} alt="Melody" className="w-9 h-9 object-contain" />
+            <img src={logo} alt="MeldMusic" className="w-9 h-9 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight text-center">
             {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create account' : 'Reset password'}
@@ -118,7 +118,7 @@ const Login = () => {
             {mode === 'login'
               ? 'Sign in to continue listening.'
               : mode === 'register'
-              ? 'Join Melody for the ultimate experience.'
+              ? 'Join MeldMusic for the ultimate experience.'
               : 'Enter your email to receive a reset link.'}
           </p>
         </div>
