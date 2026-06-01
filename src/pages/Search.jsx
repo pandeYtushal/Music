@@ -75,14 +75,16 @@ const Search = () => {
               <button
                 key={idx}
                 onClick={() => navigate(`/search?q=${encodeURIComponent(cat.query)}`)}
-                className={`relative flex flex-col items-start p-4 rounded-xl transition-all duration-200 hover:bg-white/[0.07] hover:scale-[1.02] active:scale-[0.98] text-left group overflow-hidden bg-gradient-to-br ${cat.tone}`}
-                style={{ border: '1px solid rgba(255,255,255,0.08)', aspectRatio: '1' }}
+                className={`flex flex-col justify-between p-4 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-left group overflow-hidden bg-gradient-to-br ${cat.tone} aspect-square`}
+                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
               >
-                <div className="w-9 h-9 rounded-lg bg-black/20 border border-white/10 flex items-center justify-center mb-auto">
+                <div className="w-9 h-9 rounded-lg bg-black/20 border border-white/10 flex items-center justify-center">
                   <FiMusic size={17} className="text-white/70" />
                 </div>
-                <p className="text-white font-bold text-sm mt-4 tracking-tight">{cat.name}</p>
-                <FiMic size={14} className="absolute bottom-4 right-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                <div className="flex items-center justify-between w-full mt-2 gap-2">
+                  <p className="text-white font-bold text-sm md:text-base tracking-tight truncate">{cat.name}</p>
+                  <FiMic size={14} className="text-white/20 group-hover:text-white/40 transition-colors shrink-0" />
+                </div>
               </button>
             ))}
           </div>

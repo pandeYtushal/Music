@@ -166,7 +166,7 @@
 
   /* Page container */
   .page-wrap {
-    @apply p-6 md:p-10 pb-44 min-h-full;
+    @apply p-6 md:p-10 pb-10 min-h-full;
     max-width: 1600px;
     margin: 0 auto;
   }

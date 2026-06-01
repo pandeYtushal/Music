@@ -102,7 +102,7 @@ const Home = () => {
   const featured = categories.quickPicks[0];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden pb-32 relative">
+    <div className="w-full bg-[#050505] text-white overflow-hidden relative">
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0)_240px)]" />
         <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.35)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.35)_1px,transparent_1px)] [background-size:48px_48px]" />
@@ -218,75 +218,89 @@ const Home = () => {
             onShowAll={() => navigate(`/search?q=${categories.jumpBackInQuery || 'bollywood hits'}`)}
           />
 
-          {/* TRENDING NOW - TIGHTER LIST */}
+          {/* TRENDING NOW - REDESIGNED LEADERBOARD */}
           <section className="pb-16">
-            <div className="flex items-end justify-between mb-6">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight">Trending Now</h2>
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <p className="text-orange-500/80 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Global Top</p>
+                <h2 className="text-2xl md:text-3xl font-black tracking-tight">Trending Now</h2>
+              </div>
               <button
                 onClick={() => navigate('/search?q=trending india')}
-                className="text-[9px] font-bold text-white/20 hover:text-white transition-colors uppercase tracking-widest"
+                className="px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/[0.08] transition-all uppercase tracking-widest"
               >
                 Full Chart
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {categories.trending.slice(0, 10).map((video, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => setCurrentVideo(video, categories.trending)}
-                  className="relative overflow-hidden rounded-xl bg-white/[0.015] border border-white/5 hover:border-white/10 hover:bg-white/[0.035] transition-all duration-300 p-2.5 flex items-center gap-3 cursor-pointer group"
-                >
-                  <span className="text-xl md:text-2xl font-bold text-white/[0.02] w-6 md:w-8 text-center group-hover:text-white/5 transition-colors">
-                    {idx + 1}
-                  </span>
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden shrink-0 shadow-sm">
-                    <img src={pickImageUrl(video.image)} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-white font-bold text-[13px] truncate">{cleanText(video.name, 'Unknown Song')}</p>
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] shrink-0">
-                        <FiTrendingUp className="text-white/35" size={9} />
-                        <span className="text-[7px] font-bold text-white/35 uppercase tracking-wider">{getSignal(video, idx).direction}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+              {categories.trending.slice(0, 10).map((video, idx) => {
+                const isTop3 = idx < 3;
+                const rankColor = 
+                  idx === 0 ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]' : 
+                  idx === 1 ? 'text-slate-300 drop-shadow-[0_0_10px_rgba(203,213,225,0.4)]' : 
+                  idx === 2 ? 'text-orange-400 drop-shadow-[0_0_10px_rgba(251,146,60,0.4)]' : 
+                  'text-white/[0.08] group-hover:text-white/20';
+                
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setCurrentVideo(video, categories.trending)}
+                    className={`relative overflow-hidden rounded-2xl transition-all duration-300 p-3 flex items-center gap-4 cursor-pointer group ${isTop3 ? 'bg-gradient-to-r from-white/[0.04] to-transparent border border-white/[0.08] hover:border-white/20' : 'bg-transparent border border-transparent hover:bg-white/[0.02]'}`}
+                  >
+                    <span className={`text-2xl md:text-4xl font-black w-8 md:w-12 text-center transition-all ${rankColor}`}>
+                      {idx + 1}
+                    </span>
+                    
+                    <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden shrink-0 shadow-lg">
+                      <img src={pickImageUrl(video.image)} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <FiPlay className="text-white fill-current" size={16} />
                       </div>
                     </div>
-                    <p className="text-white/25 text-[10px] font-medium truncate">
-                      <span>{cleanText(video.primaryArtists, 'Unknown Artist')}</span>
-                      {video.duration ? <span className="text-white/15"> / {formatDuration(video.duration)}</span> : null}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-0.5 pr-2">
-                    <div className="opacity-0 md:group-hover:opacity-100 transition-opacity">
-                      <FiTrendingUp className="text-white/40" size={14} />
+
+                    <div className="min-w-0 flex-1 py-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-white font-bold text-[14px] md:text-[15px] truncate group-hover:text-orange-100 transition-colors">{cleanText(video.name, 'Unknown Song')}</p>
+                        {isTop3 && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 shrink-0">
+                            <FiTrendingUp className="text-orange-400" size={9} />
+                            <span className="text-[8px] font-bold text-orange-400 uppercase tracking-widest">Hot</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-white/40 text-[11px] font-medium truncate">
+                        <span>{cleanText(video.primaryArtists, 'Unknown Artist')}</span>
+                        {video.duration ? <span className="text-white/20"> &bull; {formatDuration(video.duration)}</span> : null}
+                      </p>
                     </div>
-                    <p className="text-[8px] font-bold text-white/10 uppercase tracking-tighter tabular-nums">{getSignal(video, idx).plays}k</p>
+
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        title="Play next"
+                        onClick={() => playNextInQueue(video)}
+                        className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/20 transition-all shadow-lg backdrop-blur-md"
+                      >
+                        <FiSkipForward size={14} />
+                      </button>
+                      <button
+                        title="Add to queue"
+                        onClick={() => addToQueue(video)}
+                        className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 text-white/60 hover:text-white hover:bg-white/20 transition-all shadow-lg backdrop-blur-md"
+                      >
+                        <FiPlus size={14} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      title="Play next"
-                      onClick={() => playNextInQueue(video)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
-                    >
-                      <FiSkipForward size={15} />
-                    </button>
-                    <button
-                      title="Add to queue"
-                      onClick={() => addToQueue(video)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
-                    >
-                      <FiPlus size={15} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
         </div>
 
         {/* ADS - COMPACT */}
-        <div className="mt-10 py-8 border-t border-white/5 opacity-10">
+        <div className="mt-10 py-8 border-t border-white/5">
           <AdSense adSlot="7792854986" />
         </div>
       </div>

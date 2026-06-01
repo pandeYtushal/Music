@@ -173,8 +173,12 @@ const Welcome = () => {
       </main>
 
       {/* 4. Footer */}
-      <footer className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between text-[11px] font-bold tracking-wider text-white/20 uppercase gap-3">
+      <footer className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between text-[11px] font-bold tracking-wider text-white/30 uppercase gap-3">
         <span>&copy; {new Date().getFullYear()} Melody Audio Corp.</span>
+        <div className="flex gap-4">
+          <button onClick={() => navigate('/privacy')} className="text-white/60 hover:text-white hover:underline transition-all">Privacy Policy</button>
+          <button onClick={() => navigate('/terms')} className="text-white/60 hover:text-white hover:underline transition-all">Terms of Service</button>
+        </div>
         <span>Lossless &middot; High Fidelity &middot; Ad-Free</span>
       </footer>
 

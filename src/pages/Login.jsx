@@ -215,6 +215,11 @@ const Login = () => {
             </>
           )}
         </p>
+
+        <div className="flex justify-center gap-6 mt-8 text-xs font-medium text-white/40">
+          <button onClick={() => navigate('/privacy')} className="hover:text-white hover:underline transition-all">Privacy Policy</button>
+          <button onClick={() => navigate('/terms')} className="hover:text-white hover:underline transition-all">Terms of Service</button>
+        </div>
       </div>
     </div>
   );

@@ -67,7 +67,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
             {horizontal && onShowAll && (
               <button
                 onClick={onShowAll}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 hover:text-white transition-colors"
+                className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 hover:text-white transition-colors whitespace-nowrap shrink-0"
               >
                 See All
               </button>

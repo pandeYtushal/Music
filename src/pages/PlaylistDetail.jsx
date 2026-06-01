@@ -46,7 +46,7 @@ const PlaylistDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white p-6 md:p-12 pb-40">
+    <div className="w-full bg-[#080808] text-white p-6 md:p-12">
       <div className="max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-12 items-start">
         
         {/* Left Column — Fixed Album Art */}
