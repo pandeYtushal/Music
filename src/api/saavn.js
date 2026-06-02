@@ -2,7 +2,7 @@ import axios from 'axios';
 import { sanitizeSongList } from '../utils/library';
 
 const api = axios.create({
-  baseURL: 'https://jio-saavn-api-sigma.vercel.app',
+  baseURL: import.meta.env.VITE_SAAVN_API_URL || 'https://jio-saavn-api-sigma.vercel.app',
   timeout: 8000,
 });
 

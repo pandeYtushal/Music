@@ -3,8 +3,11 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import {
   FiPlay, FiPause, FiSkipBack, FiSkipForward,
   FiVolume2, FiHeart, FiRepeat, FiShuffle,
-  FiChevronDown, FiVolumeX, FiPlus, FiX, FiMaximize2
+  FiChevronDown, FiVolumeX, FiPlus, FiX, FiMaximize2, FiShare2, FiMenu
 } from 'react-icons/fi';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { cleanText } from '../utils/text';
 import { searchSongs } from '../api/saavn';
 import { pickAudioUrl, pickImageUrl } from '../utils/media';
@@ -29,14 +32,68 @@ const SeekBar = ({ refEl, played, onSeekStart }) => (
   </div>
 );
 
-const ControlButton = ({ active, className = '', children, ...props }) => (
-  <button
-    className={`${className} relative transition-colors ${active ? 'text-white' : 'text-white/22 hover:text-white/60'}`}
-    {...props}
-  >
+const ControlButton = ({ active, onClick, children }) => (
+  <button onClick={onClick} className={`p-2 transition-colors relative ${active ? 'text-purple-400' : 'text-white/40 hover:text-white/80'}`}>
     {children}
+    {active && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-400" />}
   </button>
 );
+
+const fmt = s => {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const rm = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${rm}`;
+};
+
+const SortableSongItem = ({ song, idx, isCurrentSong, isPlaying, onPlay, onRemove }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: song.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-3.5 rounded-2xl transition-all group ${isCurrentSong ? 'bg-white/[0.07] border border-white/5' : 'hover:bg-white/[0.04] border border-transparent'}`}
+    >
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-white/30 hover:text-white/60">
+        <FiMenu size={16} />
+      </div>
+      <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg cursor-pointer" onClick={onPlay}>
+        <img src={pickImageUrl(song.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+      </div>
+      <div className="min-w-0 flex-1 cursor-pointer" onClick={onPlay}>
+        <p className={`text-[14px] font-bold truncate ${isCurrentSong ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+          {cleanText(song.name, 'Unknown Song')}
+        </p>
+        <p className="text-[12px] text-white/30 truncate mt-0.5 font-medium">{cleanText(song.primaryArtists, 'Unknown Artist')}</p>
+      </div>
+      {isCurrentSong && isPlaying && (
+        <div className="flex items-end gap-[3px] h-4 shrink-0 mx-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="w-[3px] bg-white rounded-full animate-[bounce_1s_infinite]" style={{ height: `${[10, 14, 8][i - 1]}px`, animationDelay: `${i * 0.15}s` }} />
+          ))}
+        </div>
+      )}
+      <span className="text-white/20 text-[12px] font-bold tabular-nums shrink-0 ml-2">
+        {fmt((song.duration || 0) * 1)}
+      </span>
+      <button
+        onClick={onRemove}
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-white/18 hover:text-red-400 hover:bg-red-400/5 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+        title="Remove from queue"
+      >
+        <FiX size={16} />
+      </button>
+    </div>
+  );
+};
 
 const getLeadArtist = (song) => song?.primaryArtists?.split(',')?.[0]?.trim();
 
@@ -46,8 +103,24 @@ const Player = () => {
     playlist, favorites, recentlyPlayed, toggleFavorite, autoplay, quality,
     shuffle, repeatMode, toggleShuffle, cycleRepeatMode,
     openAddToPlaylistModal, setCurrentVideo, currentIndex,
-    addToQueue, playNextInQueue, removeFromQueue, clearQueue
+    addToQueue, playNextInQueue, removeFromQueue, clearQueue, reorderQueue
   } = usePlayerStore();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const oldIndex = playlist.findIndex(song => song.id === active.id);
+    const newIndex = playlist.findIndex(song => song.id === over.id);
+    if (oldIndex !== -1 && newIndex !== -1) {
+      reorderQueue(oldIndex, newIndex);
+    }
+  };
 
   const [played, setPlayed] = useState(0);
   const [volume, setVolume] = useState(0.8);
@@ -140,6 +213,7 @@ const Player = () => {
     setMiniTouchStart(null);
   };
 
+  // Sync audio element with state
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.volume = isMuted ? 0 : volume;
@@ -147,10 +221,10 @@ const Player = () => {
     else audioRef.current.pause();
   }, [isPlaying, currentVideo, volume, isMuted]);
 
+  // Debounced recommendation fetches — waits 2s after a song/queue change
   useEffect(() => {
     let cancelled = false;
-
-    const fetchRecommendations = async () => {
+    const debounceTimer = setTimeout(async () => {
       const artistSeeds = [currentVideo, ...(recentlyPlayed || [])]
         .map(getLeadArtist)
         .filter(Boolean);
@@ -185,14 +259,40 @@ const Player = () => {
       } finally {
         if (!cancelled) setIsLoadingRecommendations(false);
       }
-    };
-
-    fetchRecommendations();
+    }, 2000);
 
     return () => {
       cancelled = true;
+      clearTimeout(debounceTimer);
     };
-  }, [currentVideo, recentlyPlayed, playlist]);
+  }, [currentVideo?.id, playlist.length]);
+
+  // ── Media Session API: lock screen / notification controls ──
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !currentVideo) return;
+
+    const title = cleanText(currentVideo?.name, 'Unknown');
+    const artist = cleanText(currentVideo?.primaryArtists || currentVideo?.label, 'Unknown Artist');
+    const imageUrl = pickImageUrl(currentVideo?.image);
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title,
+      artist,
+      album: currentVideo?.album?.name || '',
+      artwork: imageUrl ? [{ src: imageUrl, sizes: '512x512', type: 'image/jpeg' }] : [],
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
+    navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
+    navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
+    navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
+
+    return () => {
+      ['play', 'pause', 'previoustrack', 'nexttrack'].forEach(action =>
+        navigator.mediaSession.setActionHandler(action, null)
+      );
+    };
+  }, [currentVideo?.id]);
 
   const updateSeek = clientX => {
     if (!activeProgressRef.current) return;
@@ -227,15 +327,30 @@ const Player = () => {
   const isFav = favorites.some(v => v.id === currentVideo.id);
   const seekBound = (e, ref) => handleSeekStart(e, ref);
 
+  const handleShare = () => {
+    if (!currentVideo?.id) return;
+    const url = `${window.location.origin}/play?id=${currentVideo.id}`;
+    if (navigator.share) {
+      navigator.share({ title: `Listen to ${title} on MeldMusic`, url }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(url);
+      pulse('tap');
+      alert('Link copied to clipboard!');
+    }
+  };
+
   return (
     <>
-      <audio
-        ref={audioRef} src={audioUrl} autoPlay
-        onTimeUpdate={() => { if (audioRef.current && !isNaN(audioRef.current.duration) && !isSeeking) setPlayed(audioRef.current.currentTime / audioRef.current.duration || 0); }}
-        onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
-        onEnded={handleEnded}
-        onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)}
-      />
+      {/* Only render <audio> when a valid URL is available */}
+      {audioUrl && (
+        <audio
+          ref={audioRef} src={audioUrl} autoPlay
+          onTimeUpdate={() => { if (audioRef.current && !isNaN(audioRef.current.duration) && !isSeeking) setPlayed(audioRef.current.currentTime / audioRef.current.duration || 0); }}
+          onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
+          onEnded={handleEnded}
+          onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)}
+        />
+      )}
 
       {/* Mobile mini player */}
       <div
@@ -431,15 +546,20 @@ const Player = () => {
                 <img src={imageUrl} alt={title} className="w-full h-full object-cover block" />
               </div>
 
-              {/* Track info + heart */}
+              {/* Track info + heart + share */}
               <div className="flex items-start justify-between gap-4 w-full px-2">
                 <div className="min-w-0">
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight line-clamp-1">{title}</h2>
                   <p className="text-white/45 text-sm md:text-base font-medium truncate mt-1">{artist}</p>
                 </div>
-                <button onClick={() => toggleFavorite(currentVideo)} className={`shrink-0 w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/20 hover:text-white'}`}>
-                  <FiHeart size={22} className={isFav ? 'fill-current' : ''} />
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={handleShare} className="w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all text-white/20 hover:text-white" title="Share Song">
+                    <FiShare2 size={22} />
+                  </button>
+                  <button onClick={() => toggleFavorite(currentVideo)} className={`w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/20 hover:text-white'}`}>
+                    <FiHeart size={22} className={isFav ? 'fill-current' : ''} />
+                  </button>
+                </div>
               </div>
 
               {/* Progress bar */}
@@ -503,51 +623,23 @@ const Player = () => {
                   <button onClick={clearQueue} className="text-[11px] font-bold text-white/25 hover:text-white transition-colors uppercase tracking-widest">Clear</button>
                 </div>
 
-                <div className="space-y-1">
-                  {playlist.map((song, idx) => {
-                    const isCurrentSong = song.id === currentVideo.id;
-                    return (
-                      <div
-                        key={`${song.id}-${idx}`}
-                        onClick={() => setCurrentVideo(song, playlist)}
-                        className={`flex items-center gap-4 p-3.5 rounded-2xl transition-all group cursor-pointer ${isCurrentSong ? 'bg-white/[0.07] border border-white/5' : 'hover:bg-white/[0.04] border border-transparent'}`}
-                      >
-                        <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
-                        <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                          <img src={pickImageUrl(song.image)} alt="" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={`text-[14px] font-bold truncate ${isCurrentSong ? 'text-white' : 'text-white/80 group-hover:text-white'}`}
-                          >
-                            {cleanText(song.name, 'Unknown Song')}
-                          </p>
-                          <p className="text-[12px] text-white/30 truncate mt-0.5 font-medium">{cleanText(song.primaryArtists, 'Unknown Artist')}</p>
-                        </div>
-                        {isCurrentSong && isPlaying && (
-                          <div className="flex items-end gap-[3px] h-4 shrink-0 mx-2">
-                            {[1, 2, 3].map(i => (
-                              <div key={i} className="w-[3px] bg-white rounded-full animate-[bounce_1s_infinite]" style={{ height: `${[10, 14, 8][i - 1]}px`, animationDelay: `${i * 0.15}s` }} />
-                            ))}
-                          </div>
-                        )}
-                        <span className="text-white/20 text-[12px] font-bold tabular-nums shrink-0 ml-2">
-                          {fmt((song.duration || 0) * 1)}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFromQueue(song.id, idx);
-                          }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white/18 hover:text-red-400 hover:bg-red-400/5 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                          title="Remove from queue"
-                        >
-                          <FiX size={16} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={playlist.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-1">
+                      {playlist.map((song, idx) => (
+                        <SortableSongItem
+                          key={`${song.id}-${idx}`}
+                          song={song}
+                          idx={idx}
+                          isCurrentSong={song.id === currentVideo.id}
+                          isPlaying={isPlaying}
+                          onPlay={() => setCurrentVideo(song, playlist)}
+                          onRemove={(e) => { e.stopPropagation(); removeFromQueue(song.id, idx); }}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
 
                 {(isLoadingRecommendations || recommendedSongs.length > 0 || autoplay) && (
                   <div className="mt-8">
@@ -577,7 +669,7 @@ const Player = () => {
                           >
                             <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
                             <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                              <img src={pickImageUrl(song.image)} alt="" className="w-full h-full object-cover" />
+                              <img src={pickImageUrl(song.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p

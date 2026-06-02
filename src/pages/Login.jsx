@@ -35,6 +35,11 @@ const Login = () => {
   useEffect(() => { if (user) navigate('/'); }, [user, navigate]);
 
   const handleMockLogin = (mockName, mockEmail) => {
+    // Only allow mock login in development — never in production.
+    if (!import.meta.env.DEV) {
+      setError('Authentication is unavailable. Please try again later.');
+      return;
+    }
     setUser({
       uid: 'mock-' + Date.now(),
       displayName: mockName || 'Guest User',

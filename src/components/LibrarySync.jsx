@@ -74,7 +74,7 @@ const LibrarySync = () => {
       } catch (error) {
         console.error('[Melody] Failed to save library to Firestore:', error);
       }
-    }, 700);
+    }, 3000);
 
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);

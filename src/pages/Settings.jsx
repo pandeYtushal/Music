@@ -2,6 +2,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { renderAvatar } from '../utils/avatar';
 import { FiUser, FiSettings, FiWifi, FiCheck, FiHeadphones } from 'react-icons/fi';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const qualityOptions = [
   { value: '48kbps', label: 'Mobile', helper: 'Data saver' },
@@ -41,6 +42,7 @@ const Toggle = ({ active, onToggle, label }) => (
 const Settings = () => {
   const { user } = useAuthStore();
   const { autoplay, toggleAutoplay, quality, setQuality } = usePlayerStore();
+  useDocumentTitle('Settings');
 
   const derivedName = (() => {
     const name = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Listener');

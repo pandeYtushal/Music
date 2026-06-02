@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlus, FiMusic, FiFolder, FiPlay, FiX } from 'react-icons/fi';
 import { pickImageUrl } from '../utils/media';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Playlists = () => {
   const navigate = useNavigate();
   const { playlists, createPlaylist } = usePlayerStore();
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
+  useDocumentTitle('Playlists');
 
   const handleCreate = (e) => {
     e.preventDefault();

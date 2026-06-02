@@ -1,9 +1,11 @@
 import { usePlayerStore } from '../store/usePlayerStore';
 import VideoGrid from '../components/VideoGrid';
 import { FiHeart, FiPlay } from 'react-icons/fi';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Favorites = () => {
   const { favorites, setCurrentVideo } = usePlayerStore();
+  useDocumentTitle('Favorites');
 
   return (
     <div className="page-wrap animate-fade-up">

@@ -1,9 +1,44 @@
 import { usePlayerStore } from '../store/usePlayerStore';
 import VideoGrid from '../components/VideoGrid';
 import { FiClock, FiPlay, FiTrash2 } from 'react-icons/fi';
+import useDocumentTitle from '../hooks/useDocumentTitle';
+
+const groupHistory = (history) => {
+  const groups = {
+    'Today': [],
+    'Yesterday': [],
+    'This Week': [],
+    'Older': []
+  };
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const yesterdayStart = todayStart - 86400000;
+  const weekStart = todayStart - 86400000 * 7;
+
+  history.forEach(song => {
+    if (!song.playedAt) {
+      groups['Older'].push(song);
+      return;
+    }
+    
+    if (song.playedAt >= todayStart) {
+      groups['Today'].push(song);
+    } else if (song.playedAt >= yesterdayStart) {
+      groups['Yesterday'].push(song);
+    } else if (song.playedAt >= weekStart) {
+      groups['This Week'].push(song);
+    } else {
+      groups['Older'].push(song);
+    }
+  });
+
+  return groups;
+};
 
 const RecentlyPlayed = () => {
   const { recentlyPlayed, setCurrentVideo, clearRecentlyPlayed } = usePlayerStore();
+  useDocumentTitle('Recently Played');
 
   return (
     <div className="page-wrap animate-fade-up">
@@ -64,7 +99,17 @@ const RecentlyPlayed = () => {
       <div className="divider mb-8" />
 
       {recentlyPlayed.length > 0 ? (
-        <VideoGrid videos={recentlyPlayed} />
+        <div className="space-y-12">
+          {Object.entries(groupHistory(recentlyPlayed)).map(([title, videos]) => {
+            if (videos.length === 0) return null;
+            return (
+              <div key={title}>
+                <h2 className="text-xl font-bold text-white mb-5 tracking-tight px-1">{title}</h2>
+                <VideoGrid videos={videos} />
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div
           className="flex flex-col items-center justify-center py-36 rounded-3xl"

@@ -20,7 +20,7 @@ service cloud.firestore {
         && request.resource.data.favorites is list
         && request.resource.data.favorites.size() <= 50
         && request.resource.data.recentlyPlayed is list
-        && request.resource.data.recentlyPlayed.size() <= 20
+        && request.resource.data.recentlyPlayed.size() <= 50
         && request.resource.data.playlists is list
         && request.resource.data.playlists.size() <= 30
         && request.resource.data.autoplay is bool

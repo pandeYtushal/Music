@@ -2,15 +2,8 @@ import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlay, FiPlus, FiSkipForward, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
+import { formatDuration } from '../utils/format';
 import { pickImageUrl } from '../utils/media';
-
-const formatDuration = (seconds) => {
-  if (!seconds || Number.isNaN(Number(seconds))) return '';
-  const total = Number(seconds);
-  const minutes = Math.floor(total / 60);
-  const remaining = Math.floor(total % 60).toString().padStart(2, '0');
-  return `${minutes}:${remaining}`;
-};
 
 const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
   const { setCurrentVideo, addToQueue, playNextInQueue } = usePlayerStore();
@@ -97,6 +90,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
               <img
                 src={pickImageUrl(video.image)}
                 alt={cleanText(video.name, 'Song cover')}
+                loading="lazy"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               {/* Play overlay */}

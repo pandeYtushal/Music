@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -20,17 +20,32 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const query = String(formData.get('q') || '').trim();
-    if (query) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-    }
-  };
+  const [query, setQuery] = useState(routeQuery);
+
+  // Debounced search effect
+  useEffect(() => {
+    // Don't navigate if the typed query perfectly matches the URL query
+    if (query === routeQuery) return;
+
+    const handler = setTimeout(() => {
+      if (query.trim()) {
+        navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+      } else if (location.pathname === '/search') {
+        // If they cleared the search while on the search page
+        navigate('/search');
+      }
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(handler);
+  }, [query, routeQuery, navigate, location.pathname]);
+
+  // Keep internal state synced if URL changes externally (e.g. back button)
+  useEffect(() => {
+    setQuery(routeQuery);
+  }, [routeQuery]);
 
   const clearSearch = () => {
-    searchFormRef.current?.reset();
+    setQuery('');
     navigate('/search');
   };
 
@@ -45,10 +60,7 @@ const Navbar = () => {
       }}
     >
       <div className="flex-1 flex justify-center min-w-0">
-        <form
-          key={`${location.pathname}${location.search}`}
-          ref={searchFormRef}
-          onSubmit={handleSearch}
+        <div
           className="flex items-center gap-3 w-full max-w-xl rounded-xl md:rounded-full px-4 md:px-5 py-2.5 transition-all duration-300 group"
           style={{
             background: isFocused ? 'rgba(255,255,255,0.11)' : 'rgba(255,255,255,0.055)',
@@ -58,19 +70,19 @@ const Navbar = () => {
           <FiSearch size={16} className={`transition-colors ${isFocused ? 'text-white' : 'text-white/30'}`} />
           <input
             type="text"
-            name="q"
-            defaultValue={routeQuery}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Search songs, artists, albums"
             className="bg-transparent border-none outline-none text-white w-full text-[14px] font-medium placeholder:text-white/20"
           />
-          {routeQuery && (
+          {query && (
             <button type="button" onClick={clearSearch} className="text-white/20 hover:text-white/60 transition-colors">
               <FiX size={14} />
             </button>
           )}
-        </form>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 md:min-w-[64px] justify-end shrink-0">

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import VideoGrid from '../components/VideoGrid';
 import { FiMic, FiMusic, FiSearch } from 'react-icons/fi';
 import { searchSongs } from '../api/saavn';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const categories = [
   { name: 'Hindi', query: 'Hindi songs', tone: 'from-rose-500/20 to-orange-400/10' },
@@ -23,6 +24,8 @@ const Search = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const query = searchParams.get('q');
+
+  useDocumentTitle(query ? `Search \"${query}\"` : 'Search');
 
   const { data: videos = [], isLoading: loading, error } = useQuery({
     queryKey: ['searchSongs', query],

@@ -49,8 +49,8 @@ export const usePlayerStore = create(
         const videoIdToFind = cleanVideo.id;
         const index = newPlaylist.findIndex(v => v.id === videoIdToFind);
         
-        // Add to recently played (keep max 20)
-        const newRecentlyPlayed = [cleanVideo, ...state.recentlyPlayed.filter(v => v.id !== cleanVideo.id)].slice(0, 20);
+        // Add to recently played (keep max 50)
+        const newRecentlyPlayed = [{ ...cleanVideo, playedAt: Date.now() }, ...state.recentlyPlayed.filter(v => v.id !== cleanVideo.id)].slice(0, 50);
         
         set({ 
           currentVideo: cleanVideo, 
@@ -80,7 +80,7 @@ export const usePlayerStore = create(
         if (nextIndex < 0 || nextIndex >= state.playlist.length) return;
 
         const nextVideo = state.playlist[nextIndex];
-        const newRecentlyPlayed = [nextVideo, ...state.recentlyPlayed.filter(v => v.id !== nextVideo.id)].slice(0, 20);
+        const newRecentlyPlayed = [{ ...nextVideo, playedAt: Date.now() }, ...state.recentlyPlayed.filter(v => v.id !== nextVideo.id)].slice(0, 50);
         set({ currentVideo: nextVideo, currentIndex: nextIndex, isPlaying: true, recentlyPlayed: newRecentlyPlayed });
       },
       
@@ -96,7 +96,7 @@ export const usePlayerStore = create(
         if (prevIndex < 0 || prevIndex >= state.playlist.length) return;
 
         const prevVideo = state.playlist[prevIndex];
-        const newRecentlyPlayed = [prevVideo, ...state.recentlyPlayed.filter(v => v.id !== prevVideo.id)].slice(0, 20);
+        const newRecentlyPlayed = [{ ...prevVideo, playedAt: Date.now() }, ...state.recentlyPlayed.filter(v => v.id !== prevVideo.id)].slice(0, 50);
         set({ currentVideo: prevVideo, currentIndex: prevIndex, isPlaying: true, recentlyPlayed: newRecentlyPlayed });
       },
 
@@ -138,22 +138,40 @@ export const usePlayerStore = create(
         const removedCurrent = removeIndex === state.currentIndex;
         let nextIndex = state.currentIndex;
         let nextCurrentVideo = state.currentVideo;
-        let nextIsPlaying = state.isPlaying;
 
         if (removedCurrent) {
           nextIndex = Math.min(removeIndex, nextQueue.length - 1);
-          nextCurrentVideo = nextIndex >= 0 ? nextQueue[nextIndex] : null;
-          nextIsPlaying = Boolean(nextCurrentVideo);
+          nextCurrentVideo = nextQueue[nextIndex] || null;
         } else if (removeIndex < state.currentIndex) {
-          nextIndex = state.currentIndex - 1;
+          nextIndex -= 1;
         }
 
         set({
           playlist: nextQueue,
           currentIndex: nextIndex,
           currentVideo: nextCurrentVideo,
-          isPlaying: nextIsPlaying,
+          isPlaying: removedCurrent ? !!nextCurrentVideo : state.isPlaying,
         });
+      },
+
+      reorderQueue: (oldIndex, newIndex) => {
+        const state = get();
+        if (oldIndex < 0 || oldIndex >= state.playlist.length || newIndex < 0 || newIndex >= state.playlist.length) return;
+        
+        const nextQueue = [...state.playlist];
+        const [movedItem] = nextQueue.splice(oldIndex, 1);
+        nextQueue.splice(newIndex, 0, movedItem);
+
+        let nextIndex = state.currentIndex;
+        if (state.currentIndex === oldIndex) {
+          nextIndex = newIndex;
+        } else if (state.currentIndex > oldIndex && state.currentIndex <= newIndex) {
+          nextIndex--;
+        } else if (state.currentIndex < oldIndex && state.currentIndex >= newIndex) {
+          nextIndex++;
+        }
+
+        set({ playlist: nextQueue, currentIndex: nextIndex });
       },
 
       clearQueue: () => {

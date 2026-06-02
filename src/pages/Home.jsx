@@ -1,20 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import VideoGrid from '../components/VideoGrid';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useNavigate } from 'react-router-dom';
 import { FiPlay, FiPlus, FiSkipForward, FiTrendingUp } from 'react-icons/fi';
 import AdSense from '../components/AdSense';
 import { cleanText } from '../utils/text';
+import { formatDuration } from '../utils/format';
 import { searchSongs } from '../api/saavn';
 import { pickImageUrl } from '../utils/media';
-
-const formatDuration = (seconds) => {
-  if (!seconds || Number.isNaN(Number(seconds))) return '';
-  const total = Number(seconds);
-  const minutes = Math.floor(total / 60);
-  const remaining = Math.floor(total % 60).toString().padStart(2, '0');
-  return `${minutes}:${remaining}`;
-};
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const getSignal = (video, idx) => {
   const seed = `${video?.id || video?.name || idx}`.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -30,6 +24,15 @@ const Home = () => {
   });
   const [loading, setLoading] = useState(true);
   const { setCurrentVideo, recentlyPlayed, addToQueue, playNextInQueue } = usePlayerStore();
+
+  useDocumentTitle('Home');
+
+  // Stable seed derived from the first 2 recently played IDs.
+  // Prevents the useEffect below from re-firing on every play.
+  const recentSeed = useMemo(
+    () => recentlyPlayed?.slice(0, 2).map(s => s.id).join(',') || '',
+    [recentlyPlayed]
+  );
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -76,7 +79,7 @@ const Home = () => {
       controller.abort();
       clearInterval(interval);
     };
-  }, [recentlyPlayed]);
+  }, [recentSeed]);
 
   if (loading) {
     return (
@@ -129,6 +132,7 @@ const Home = () => {
             <img
               src={pickImageUrl(featured.image)}
               alt={featured.name}
+              loading="lazy"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -175,7 +179,7 @@ const Home = () => {
                 className="relative overflow-hidden rounded-[18px] bg-white/[0.015] border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-300 p-2.5 flex items-center gap-3.5 text-left group"
               >
                 <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-[12px] overflow-hidden shrink-0 shadow-sm">
-                  <img src={pickImageUrl(video.image)} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <img src={pickImageUrl(video.image)} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <FiPlay className="text-white fill-current" size={14} />
                   </div>
@@ -253,7 +257,7 @@ const Home = () => {
                     </span>
                     
                     <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                      <img src={pickImageUrl(video.image)} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img src={pickImageUrl(video.image)} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <FiPlay className="text-white fill-current" size={16} />
                       </div>
