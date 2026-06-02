@@ -63,7 +63,7 @@ const Welcome = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-background text-foreground relative overflow-hidden flex flex-col font-sans">
+    <div className="min-h-[100dvh] w-full bg-background text-foreground relative overflow-hidden flex flex-col font-sans">
 
 
       {/* Background Gradients & Ambient Glow */}

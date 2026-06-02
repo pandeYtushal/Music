@@ -511,7 +511,7 @@ const Player = () => {
 
       {/* Full player overlay */}
       <div
-        className={`fixed inset-0 z-[200] flex flex-col transition-all duration-500 ease-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
+        className={`fixed top-0 left-0 w-full h-[100dvh] md:h-screen z-[200] flex flex-col transition-all duration-500 ease-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
         style={{ background: '#0a0a0a' }}
       >
         {/* Blurred bg */}
@@ -541,7 +541,7 @@ const Player = () => {
             {/* Left column: album art and controls */}
             <div className="flex flex-col items-center gap-6 xl:sticky xl:top-0 w-full xl:w-auto shrink-0 max-w-[450px]">
               <div
-                className={`w-full aspect-square rounded-[32px] md:rounded-[48px] overflow-hidden transition-all duration-700 shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/5 ${isPlaying ? 'scale-100' : 'scale-[0.94] opacity-75'}`}
+                className={`w-full max-w-[340px] md:max-w-full mx-auto aspect-square rounded-[32px] md:rounded-[48px] overflow-hidden transition-all duration-700 shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/5 ${isPlaying ? 'scale-100' : 'scale-[0.94] opacity-75'}`}
               >
                 <img src={imageUrl} alt={title} className="w-full h-full object-cover block" />
               </div>
@@ -553,10 +553,10 @@ const Player = () => {
                   <p className="text-white/45 text-sm md:text-base font-medium truncate mt-1">{artist}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={handleShare} className="w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all text-white/20 hover:text-white" title="Share Song">
+                  <button onClick={handleShare} className="w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all text-white/50 hover:text-white" title="Share Song">
                     <FiShare2 size={22} />
                   </button>
-                  <button onClick={() => toggleFavorite(currentVideo)} className={`w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/20 hover:text-white'}`}>
+                  <button onClick={() => toggleFavorite(currentVideo)} className={`w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/50 hover:text-white'}`}>
                     <FiHeart size={22} className={isFav ? 'fill-current' : ''} />
                   </button>
                 </div>
@@ -578,15 +578,15 @@ const Player = () => {
                 <ControlButton active={shuffle} onClick={toggleShuffle} className="w-12 h-12 md:w-10 md:h-10 flex items-center justify-center active:scale-95">
                   <FiShuffle size={18} />
                 </ControlButton>
-                <div className="flex items-center gap-7 md:gap-12">
-                  <button onClick={playPrevious} className="w-14 h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipBack size={32} /></button>
+                <div className="flex items-center gap-5 md:gap-12">
+                  <button onClick={playPrevious} className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipBack size={28} className="md:w-8 md:h-8" /></button>
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
-                    className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_12px_40px_rgba(255,255,255,0.25)]"
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_12px_40px_rgba(255,255,255,0.25)]"
                   >
-                    {isPlaying ? <FiPause size={28} className="fill-current" /> : <FiPlay size={28} className="fill-current ml-1" />}
+                    {isPlaying ? <FiPause size={24} className="fill-current md:w-7 md:h-7" /> : <FiPlay size={24} className="fill-current ml-1 md:w-7 md:h-7" />}
                   </button>
-                  <button onClick={handleNext} className="w-14 h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipForward size={32} /></button>
+                  <button onClick={handleNext} className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90"><FiSkipForward size={28} className="md:w-8 md:h-8" /></button>
                 </div>
                 <ControlButton active={repeatMode !== 'off'} onClick={cycleRepeatMode} className="w-12 h-12 md:w-10 md:h-10 flex items-center justify-center active:scale-95">
                   <FiRepeat size={18} />

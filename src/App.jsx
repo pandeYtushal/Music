@@ -55,17 +55,7 @@ const PageLoader = () => (
 function App() {
   const { user, setUser, setIsLoading, isLoading } = useAuthStore();
 
-  // ── Dark mode: reactive to OS changes ──
-  const [isDark, setIsDark] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  );
-
-  useEffect(() => {
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e) => setIsDark(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  // ── Dark mode is now permanently enabled for the music app ──
 
   // ── Firebase auth listener ──
   useEffect(() => {
@@ -89,7 +79,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-black flex items-center justify-center">
+      <div className="h-[100dvh] md:h-screen bg-black flex items-center justify-center">
         <FiLoader className="animate-spin text-white" size={50} />
       </div>
     );
@@ -99,7 +89,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <div
-          className={`flex h-screen w-screen text-white overflow-hidden selection:bg-white/20 ${isDark ? 'dark' : ''}`}
+          className="flex h-[100dvh] md:h-screen w-screen text-white overflow-hidden selection:bg-white/20 dark"
         >
           {user && <Sidebar />}
 
