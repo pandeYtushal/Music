@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -10,17 +10,16 @@ const Navbar = () => {
   const location = useLocation();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const searchFormRef = useRef(null);
   const routeQuery = location.pathname === '/search'
     ? new URLSearchParams(location.search).get('q') || ''
     : '';
+  const [queryState, setQueryState] = useState({ routeQuery, value: routeQuery });
+  const query = queryState.routeQuery === routeQuery ? queryState.value : routeQuery;
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
-  const [query, setQuery] = useState(routeQuery);
 
   // Debounced search effect
   useEffect(() => {
@@ -39,13 +38,8 @@ const Navbar = () => {
     return () => clearTimeout(handler);
   }, [query, routeQuery, navigate, location.pathname]);
 
-  // Keep internal state synced if URL changes externally (e.g. back button)
-  useEffect(() => {
-    setQuery(routeQuery);
-  }, [routeQuery]);
-
   const clearSearch = () => {
-    setQuery('');
+    setQueryState({ routeQuery, value: '' });
     navigate('/search');
   };
 
@@ -71,7 +65,7 @@ const Navbar = () => {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => setQueryState({ routeQuery, value: e.target.value })}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Search songs, artists, albums"
@@ -98,7 +92,7 @@ const Navbar = () => {
             <div
               className={`absolute top-full right-0 mt-3 w-56 rounded-xl py-2 z-[60] transition-all duration-300 origin-top-right ${isProfileOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
               style={{
-                background: '#121212',
+background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 boxShadow: '0 32px 64px rgba(0,0,0,0.8)',
               }}

@@ -37,8 +37,8 @@ const Welcome = () => {
 
     {
       icon: FiZap,
-      title: 'Lossless Audio',
-      desc: 'Stream standard 24-bit / 192kHz studio quality FLAC audio.',
+      title: 'High Quality Audio',
+      desc: 'Stream crystal-clear 320kbps audio, the highest quality available.',
     },
     {
       icon: FiSmartphone,
@@ -63,7 +63,7 @@ const Welcome = () => {
   ];
 
   return (
-    <div className="min-h-[100dvh] w-full bg-background text-foreground relative overflow-hidden flex flex-col font-sans">
+<div className="min-h-[100dvh] w-full bg-background text-foreground relative overflow-hidden flex flex-col font-sans" style={{ backgroundImage: 'linear-gradient(180deg, rgba(249,115,22,0.06), rgba(0,0,0,0) 40%)' }}>
 
 
       {/* Background Gradients & Ambient Glow */}
@@ -115,7 +115,7 @@ const Welcome = () => {
             </h1>
 
             <p className="text-white/40 text-sm md:text-[15px] font-medium leading-relaxed max-w-[420px] mb-10">
-              Experience studio-grade, lossless audio streaming in its purest, ad-free form.
+              Experience high-fidelity, ad-free music streaming in its purest form.
             </p>
 
             {/* Action buttons matching mockup */}
@@ -179,7 +179,7 @@ const Welcome = () => {
           <button onClick={() => navigate('/privacy')} className="text-white/60 hover:text-white hover:underline transition-all">Privacy Policy</button>
           <button onClick={() => navigate('/terms')} className="text-white/60 hover:text-white hover:underline transition-all">Terms of Service</button>
         </div>
-        <span>Lossless &middot; High Fidelity &middot; Ad-Free</span>
+          <span>320kbps &middot; High Fidelity &middot; Ad-Free</span>
       </footer>
 
       {/* 5. Elegant Install Instructions Modal */}

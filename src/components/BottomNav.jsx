@@ -15,7 +15,7 @@ const BottomNav = () => {
       <div
         className="mx-auto max-w-[460px] flex items-center justify-between px-3 pt-2 pb-3 gap-1"
         style={{
-          background: 'linear-gradient(180deg, rgba(12,12,12,0.82), rgba(8,8,8,0.98))',
+background: 'linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))',
           backdropFilter: 'blur(34px)',
           WebkitBackdropFilter: 'blur(34px)',
           borderTop: '1px solid rgba(255,255,255,0.08)',

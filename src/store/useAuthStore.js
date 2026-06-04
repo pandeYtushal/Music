@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
 
 export const useAuthStore = create((set) => ({
   user: null, // null means not logged in
@@ -9,6 +7,10 @@ export const useAuthStore = create((set) => ({
   setIsLoading: (isLoading) => set({ isLoading }),
   logout: async () => {
     try {
+      const [{ auth }, { signOut }] = await Promise.all([
+        import('../firebase'),
+        import('firebase/auth'),
+      ]);
       await signOut(auth);
       set({ user: null });
     } catch (error) {

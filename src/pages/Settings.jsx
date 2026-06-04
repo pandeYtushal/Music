@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { renderAvatar } from '../utils/avatar';
-import { FiUser, FiSettings, FiWifi, FiCheck, FiHeadphones } from 'react-icons/fi';
+import { FiUser, FiSettings, FiWifi, FiCheck, FiHeadphones, FiCommand } from 'react-icons/fi';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const qualityOptions = [
@@ -53,9 +53,9 @@ const Settings = () => {
   const sectionStyle = { background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)' };
 
   return (
-    <div className="w-full bg-[#050505] text-white">
+    <div className="w-full bg-background text-white">
       <div className="max-w-[1200px] mx-auto px-6 md:px-10 pt-8 md:pt-14 animate-fade-up">
-        
+
         {/* Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
@@ -70,12 +70,12 @@ const Settings = () => {
         {/* Profile Card */}
         <div className="relative rounded-[32px] overflow-hidden border border-white/[0.08] mb-10 group p-8 md:p-10" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)' }}>
           <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
-          
+
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="shrink-0 p-1 rounded-full bg-white/[0.05] border border-white/[0.1]">
               {renderAvatar(user?.photoURL, derivedName, user?.email, "w-28 h-28 md:w-32 md:h-32 rounded-full shadow-2xl")}
             </div>
-            
+
             <div className="text-center md:text-left flex-1 flex flex-col justify-center h-full pt-2 md:pt-4">
               <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">{derivedName}</h2>
               <p className="text-white/40 font-medium text-sm md:text-base flex items-center justify-center md:justify-start gap-2">
@@ -88,7 +88,7 @@ const Settings = () => {
 
         {/* Settings Grid */}
         <div className="max-w-3xl mx-auto">
-          
+
           {/* Playback Settings */}
           <section className={sectionClass} style={sectionStyle}>
             <div className="flex items-center gap-4 mb-8">
@@ -127,6 +127,48 @@ const Settings = () => {
               <SettingRow icon={FiHeadphones} label="Infinite Playback" description="Auto-play similar tracks when your queue ends.">
                 <Toggle active={autoplay} onToggle={toggleAutoplay} label="Infinite playback" />
               </SettingRow>
+            </div>
+          </section>
+
+          {/* Keyboard Shortcuts Section */}
+          <section className={`${sectionClass} mt-8 mb-12`} style={sectionStyle}>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                <FiCommand size={20} className="text-orange-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white tracking-tight">Keyboard Shortcuts</h2>
+                <p className="text-sm text-white/40 font-medium mt-1">Control playback using global hotkeys.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {[
+                { keys: ['Space'], action: 'Play / Pause' },
+                { keys: ['←', '→'], action: 'Seek Backward / Forward (5s)' },
+                { keys: ['↑', '↓'], action: 'Volume Up / Down (5%)' },
+                { keys: ['M'], action: 'Toggle Mute / Unmute' },
+                { keys: ['N'], action: 'Next Track' },
+                { keys: ['P'], action: 'Previous Track' },
+                { keys: ['S'], action: 'Toggle Shuffle' },
+                { keys: ['R'], action: 'Cycle Repeat Mode' },
+                { keys: ['F'], action: 'Toggle Favorite' },
+                { keys: ['Esc'], action: 'Close Full-Screen Overlay' },
+              ].map((shortcut, idx) => (
+                <div key={idx} className="flex items-center justify-between py-2.5 border-b border-white/[0.03] last:border-0">
+                  <span className="text-sm font-semibold text-white/70">{shortcut.action}</span>
+                  <div className="flex items-center gap-1.5">
+                    {shortcut.keys.map((k, kIdx) => (
+                      <kbd
+                        key={kIdx}
+                        className="px-2.5 py-1 text-xs font-mono font-bold bg-white/[0.06] border border-white/[0.08] text-orange-400 rounded-lg shadow-sm"
+                      >
+                        {k}
+                      </kbd>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 

@@ -30,6 +30,7 @@ export const sanitizeSong = (song) => {
     name: clampText(song.name, 'Unknown Song'),
     primaryArtists: clampText(song.primaryArtists, ''),
     label: clampText(song.label, ''),
+    language: typeof song.language === 'string' ? song.language.slice(0, 30).toLowerCase() : '',
     duration: Number.isFinite(Number(song.duration)) ? Math.max(0, Number(song.duration)) : 0,
     album: song.album?.name ? { name: clampText(song.album.name) } : null,
     image: sanitizeMediaList(song.image),
@@ -86,3 +87,35 @@ export const sanitizeLibrary = (library = {}) => ({
   repeatMode: VALID_REPEAT_MODES.has(library.repeatMode) ? library.repeatMode : 'off',
   quality: VALID_QUALITIES.has(library.quality) ? library.quality : '320kbps',
 });
+
+export const isSongAcceptable = (song, currentLang, allowedLangs) => {
+  if (!song) return false;
+
+  const name = (song.name || '').toLowerCase();
+  const album = (song.album?.name || '').toLowerCase();
+  const artists = (song.primaryArtists || song.label || '').toLowerCase();
+
+  const badKeywords = [
+    'bhakti', 'bhajan', 'aarti', 'mantra', 'chalisa', 'devotional',
+    'hanuman', 'krishna', 'shiv ji', 'ganesh', 'shree ram', 'ram stuti',
+    'stotra', 'stotram', 'stuti', 'sloka', 'slokam', 'chalisha',
+    'bhagwan', 'katha', 'shlok', 'shloka', 'stuti'
+  ];
+
+  if (badKeywords.some(kw => name.includes(kw) || album.includes(kw) || artists.includes(kw))) {
+    return false;
+  }
+
+  if (song.language && currentLang) {
+    const songLang = song.language.toLowerCase();
+    const targetLang = currentLang.toLowerCase();
+
+    // Allow if language matches current language or is in the allowed languages set
+    if (songLang !== targetLang && allowedLangs && !allowedLangs.has(songLang)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+

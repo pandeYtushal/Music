@@ -25,7 +25,7 @@ const Search = () => {
   const navigate = useNavigate();
   const query = searchParams.get('q');
 
-  useDocumentTitle(query ? `Search \"${query}\"` : 'Search');
+  useDocumentTitle(query ? `Search "${query}"` : 'Search');
 
   const { data: videos = [], isLoading: loading, error } = useQuery({
     queryKey: ['searchSongs', query],

@@ -1,11 +1,7 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { onAuthStateChanged } from 'firebase/auth';
 import { FiLoader } from 'react-icons/fi';
-
-// Firebase
-import { auth } from './firebase';
 
 // Stores
 import { useAuthStore } from './store/useAuthStore';
@@ -14,12 +10,12 @@ import { usePlayerStore } from './store/usePlayerStore';
 // Always-visible shell components (not lazy-loaded)
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
-import Player from './components/Player';
 import BottomNav from './components/BottomNav';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
-import LibrarySync from './components/LibrarySync';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import Toast from './components/Toast';
 
 // Lazy-loaded pages — only downloaded when navigated to
 const Home = lazy(() => import('./pages/Home'));
@@ -34,6 +30,8 @@ const PlaylistDetail = lazy(() => import('./pages/PlaylistDetail'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const SharedSong = lazy(() => import('./pages/SharedSong'));
+const Player = lazy(() => import('./components/Player'));
+const LibrarySync = lazy(() => import('./components/LibrarySync'));
 
 // React Query client (stable singleton, never recreated)
 const queryClient = new QueryClient({
@@ -54,27 +52,52 @@ const PageLoader = () => (
 
 function App() {
   const { user, setUser, setIsLoading, isLoading } = useAuthStore();
+  const currentVideo = usePlayerStore(state => state.currentVideo);
 
   // ── Dark mode is now permanently enabled for the music app ──
 
   // ── Firebase auth listener ──
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser({
-          uid: currentUser.uid,
-          displayName: currentUser.displayName,
-          email: currentUser.email,
-          photoURL: currentUser.photoURL,
-        });
-      } else {
+    let unsubscribe = null;
+    let cancelled = false;
+
+    const attachAuthListener = async () => {
+      const [{ auth }, { onAuthStateChanged }] = await Promise.all([
+        import('./firebase'),
+        import('firebase/auth'),
+      ]);
+
+      if (cancelled) return;
+
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        if (currentUser) {
+          setUser({
+            uid: currentUser.uid,
+            displayName: currentUser.displayName,
+            email: currentUser.email,
+            photoURL: currentUser.photoURL,
+          });
+        } else {
+          setUser(null);
+          usePlayerStore.getState().setCurrentVideo(null, []);
+          usePlayerStore.getState().setIsPlaying(false);
+        }
+        setIsLoading(false);
+      });
+    };
+
+    attachAuthListener().catch((error) => {
+      console.error('[Melody] Failed to initialize auth:', error);
+      if (!cancelled) {
         setUser(null);
-        usePlayerStore.getState().setCurrentVideo(null, []);
-        usePlayerStore.getState().setIsPlaying(false);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
-    return () => unsubscribe();
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
   }, [setUser, setIsLoading]);
 
   if (isLoading) {
@@ -93,11 +116,12 @@ function App() {
         >
           {user && <Sidebar />}
 
-          <div className={`flex-1 flex flex-col h-full overflow-hidden relative bg-background ${user ? 'md:ml-64' : ''}`}>
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background">
 
-            <div className={`flex-1 overflow-y-auto relative z-10 scrollbar-hide flex flex-col ${user ? 'pb-[150px] md:pb-4' : ''}`}>
-              {user && <Navbar />}
+            <div className={`flex-1 overflow-y-auto relative z-10 scrollbar-hide flex flex-col ${user ? 'pb-[150px] md:pb-36 md:pt-24' : ''}`}>
+              {user && <div className="md:hidden"><Navbar /></div>}
               <div className="flex-1 shrink-0 w-full relative">
+                <ErrorBoundary compact>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/welcome" element={<Welcome />} />
@@ -178,6 +202,7 @@ function App() {
                     />
                   </Routes>
                 </Suspense>
+                </ErrorBoundary>
               </div>
               <Footer />
             </div>
@@ -185,9 +210,18 @@ function App() {
         </div>
 
         {user && <BottomNav />}
-        {user && <Player />}
+        {user && currentVideo && (
+          <Suspense fallback={null}>
+            <Player />
+          </Suspense>
+        )}
         {user && <AddToPlaylistModal />}
-        {user && <LibrarySync />}
+        {user && (
+          <Suspense fallback={null}>
+            <LibrarySync />
+          </Suspense>
+        )}
+        <Toast />
       </Router>
     </QueryClientProvider>
   );
