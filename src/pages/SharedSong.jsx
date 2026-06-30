@@ -24,7 +24,7 @@ const SharedSong = () => {
 
     const fetchSong = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_SAAVN_API_URL || 'https://jio-saavn-api-sigma.vercel.app'}/songs?id=${id}`);
+        const response = await fetch(`${import.meta.env.VITE_SAAVN_API_URL || 'https://saavn.dev/api'}/songs?id=${id}`);
         const data = await response.json();
         
         if (isMounted) {
