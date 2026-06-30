@@ -15,7 +15,7 @@ const MiniPlayer = ({
   miniGestureRef, pulse,
 }) => (
   <div
-    className={`md:hidden fixed left-4 right-4 z-[95] transition-all duration-500 ease-out ${isExpanded ? 'bottom-0 opacity-0 pointer-events-none' : 'bottom-[84px] opacity-100'} ${miniFeedback ? 'scale-[0.985]' : 'scale-100'}`}
+    className={`md:hidden fixed left-4 right-4 z-[95] transition-all duration-500 ease-out ${isExpanded ? 'bottom-0 opacity-0 pointer-events-none' : 'bottom-[96px] opacity-100'} ${miniFeedback ? 'scale-[0.985]' : 'scale-100'}`}
     onClick={() => {
       if (miniGestureRef.current) {
         miniGestureRef.current = false;
