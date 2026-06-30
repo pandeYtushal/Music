@@ -5,14 +5,12 @@ import { cleanText } from '../utils/text';
 import { pickImageUrl } from '../utils/media';
 
 const AddToPlaylistModal = () => {
-  const { 
-    playlists, 
-    isAddToPlaylistModalOpen, 
-    closeAddToPlaylistModal, 
-    pendingSong, 
-    addToPlaylist,
-    createPlaylist 
-  } = usePlayerStore();
+  const playlists = usePlayerStore(state => state.playlists);
+  const isAddToPlaylistModalOpen = usePlayerStore(state => state.isAddToPlaylistModalOpen);
+  const closeAddToPlaylistModal = usePlayerStore(state => state.closeAddToPlaylistModal);
+  const pendingSong = usePlayerStore(state => state.pendingSong);
+  const addToPlaylist = usePlayerStore(state => state.addToPlaylist);
+  const createPlaylist = usePlayerStore(state => state.createPlaylist);
   const [newPlaylistName, setNewPlaylistName] = useState('');
 
   if (!isAddToPlaylistModalOpen || !pendingSong) return null;

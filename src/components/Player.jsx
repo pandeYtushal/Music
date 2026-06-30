@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { useToast } from './Toast';
+import { useToast } from '../hooks/useToast';
 import { cleanText } from '../utils/text';
 import { searchSongs } from '../api/saavn';
 import { pickAudioUrl, pickImageUrl } from '../utils/media';
@@ -9,7 +9,8 @@ import { isSongAcceptable } from '../utils/library';
 // Sub-components
 import MiniPlayer from './player/MiniPlayer';
 import DesktopPlayerBar from './player/DesktopPlayerBar';
-import FullScreenPlayer from './player/FullScreenPlayer';
+
+const FullScreenPlayer = lazy(() => import('./player/FullScreenPlayer'));
 
 // ── Helpers for smart recommendations ──
 const getAllArtists = (song) =>
@@ -72,6 +73,11 @@ const Player = () => {
   const [recommendedSongs, setRecommendedSongs] = useState([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [shouldPrefetch, setShouldPrefetch] = useState(false);
+  const [prevVideoId, setPrevVideoId] = useState(currentVideo?.id);
+  if (currentVideo?.id !== prevVideoId) {
+    setPrevVideoId(currentVideo?.id);
+    setShouldPrefetch(false);
+  }
 
   // ── Touch gesture state ──
   const [touchStart, setTouchStart] = useState(null);
@@ -128,18 +134,22 @@ const Player = () => {
     else setIsPlaying(false);
   }, [repeatMode, autoplay, shuffle, handleNext, setIsPlaying]);
 
-  // ── Sync audio element with state ──
+  // ── Sync play/pause with isPlaying state ──
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.play().catch(console.error);
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
+
+  // ── Sync volume and mute ──
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.volume = isMuted ? 0 : volume;
-    if (isPlaying) audioRef.current.play().catch(console.error);
-    else audioRef.current.pause();
-  }, [isPlaying, currentVideo, volume, isMuted]);
+  }, [volume, isMuted]);
 
-  // ── Reset prefetch status when song changes ──
-  useEffect(() => {
-    setShouldPrefetch(false);
-  }, [currentVideo?.id]);
 
   // ── Helper to determine the next song to prefetch ──
   const getNextSong = useCallback(() => {
@@ -165,9 +175,29 @@ const Player = () => {
   }, [currentVideo, repeatMode, shuffle, playlist, currentIndex, recommendedSongs]);
 
   const nextSong = getNextSong();
-  const nextAudioUrl = useMemo(() => {
-    return nextSong ? pickAudioUrl(nextSong.downloadUrl, quality) : null;
-  }, [nextSong, quality]);
+
+  // ── Prefetch next track using an off-DOM Audio object (never renders to JSX) ──
+  const prefetchRef = useRef(null);
+  const prefetchUrlRef = useRef(null);
+  useEffect(() => {
+    if (!nextSong || !shouldPrefetch) {
+      if (prefetchRef.current) {
+        prefetchRef.current.src = '';
+        prefetchRef.current = null;
+        prefetchUrlRef.current = null;
+      }
+      return;
+    }
+    const url = pickAudioUrl(nextSong.downloadUrl, quality);
+    if (!url || url === audioUrl || url === prefetchUrlRef.current) return;
+    // Create a muted, non-playing Audio node purely to warm up the browser cache
+    const prefetch = new Audio();
+    prefetch.muted = true;
+    prefetch.preload = 'auto';
+    prefetch.src = url;
+    prefetchRef.current = prefetch;
+    prefetchUrlRef.current = url;
+  }, [nextSong, shouldPrefetch, quality, audioUrl]);
 
   // ── Global Keyboard Shortcuts ──
   useEffect(() => {
@@ -263,6 +293,7 @@ const Player = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     isPlaying,
+    setIsPlaying,
     duration,
     handleNext,
     playPrevious,
@@ -487,7 +518,7 @@ const Player = () => {
       navigator.clipboard.writeText(url);
       toast('Link copied to clipboard!');
     }
-  }, [currentVideo?.id, title, toast]);
+  }, [currentVideo, title, toast]);
 
   // ── Guard: nothing to render ──
   if (!currentVideo) return null;
@@ -499,12 +530,12 @@ const Player = () => {
 
   return (
     <>
-      {/* Audio element */}
+      {/* Audio element — keyed by URL so it fully remounts on song change */}
       {audioUrl && (
         <audio
+          key={audioUrl}
           ref={audioRef}
           src={audioUrl}
-          autoPlay
           onTimeUpdate={() => {
             if (audioRef.current && !isNaN(audioRef.current.duration) && !isSeeking) {
               const current = audioRef.current.currentTime;
@@ -520,20 +551,14 @@ const Player = () => {
               }
             }
           }}
-          onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
-          onEnded={handleEnded}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
-      )}
+          onLoadedMetadata={() => {
+            if (!audioRef.current) return;
+            audioRef.current.volume = isMuted ? 0 : volume;
+            setDuration(audioRef.current.duration);
+            if (isPlaying) audioRef.current.play().catch(console.error);
+          }}
 
-      {/* Auxiliary audio element to prefetch the next track */}
-      {shouldPrefetch && nextAudioUrl && nextAudioUrl !== audioUrl && (
-        <audio
-          key={`prefetch-${nextSong?.id || 'unknown'}`}
-          src={nextAudioUrl}
-          preload="auto"
-          style={{ display: 'none' }}
+          onEnded={handleEnded}
         />
       )}
 
@@ -586,49 +611,51 @@ const Player = () => {
       />
 
       {/* Full-screen player overlay */}
-      <FullScreenPlayer
-        title={title}
-        artist={artist}
-        imageUrl={imageUrl}
-        currentVideo={currentVideo}
-        isPlaying={isPlaying}
-        isFav={isFav}
-        played={played}
-        duration={duration}
-        volume={volume}
-        isMuted={isMuted}
-        shuffle={shuffle}
-        repeatMode={repeatMode}
-        isExpanded={isExpanded}
-        playlist={playlist}
-        currentIndex={currentIndex}
-        recommendedSongs={recommendedSongs}
-        isLoadingRecommendations={isLoadingRecommendations}
-        autoplay={autoplay}
-        onTogglePlay={onTogglePlay}
-        onToggleFav={onToggleFav}
-        onNext={handleNext}
-        onPrev={playPrevious}
-        onToggleShuffle={toggleShuffle}
-        onCycleRepeat={cycleRepeatMode}
-        onToggleMute={onToggleMute}
-        onCollapse={() => setIsExpanded(false)}
-        onShare={handleShare}
-        onAddToPlaylist={openAddToPlaylistModal}
-        onSetCurrentVideo={setCurrentVideo}
-        onRemoveFromQueue={removeFromQueue}
-        onClearQueue={clearQueue}
-        onReorderQueue={reorderQueue}
-        onPlayNextInQueue={playNextInQueue}
-        onAddToQueue={addToQueue}
-        fullSeekRef={fullSeekRef}
-        fullVolumeRef={fullVolumeRef}
-        onSeekStart={handleSeekStart}
-        onVolStart={handleVolStart}
-        onSwipeStart={handleSwipeStart}
-        onSwipeMove={handleSwipeMove}
-        onSwipeEnd={handleSwipeEnd}
-      />
+      <Suspense fallback={null}>
+        <FullScreenPlayer
+          title={title}
+          artist={artist}
+          imageUrl={imageUrl}
+          currentVideo={currentVideo}
+          isPlaying={isPlaying}
+          isFav={isFav}
+          played={played}
+          duration={duration}
+          volume={volume}
+          isMuted={isMuted}
+          shuffle={shuffle}
+          repeatMode={repeatMode}
+          isExpanded={isExpanded}
+          playlist={playlist}
+          currentIndex={currentIndex}
+          recommendedSongs={recommendedSongs}
+          isLoadingRecommendations={isLoadingRecommendations}
+          autoplay={autoplay}
+          onTogglePlay={onTogglePlay}
+          onToggleFav={onToggleFav}
+          onNext={handleNext}
+          onPrev={playPrevious}
+          onToggleShuffle={toggleShuffle}
+          onCycleRepeat={cycleRepeatMode}
+          onToggleMute={onToggleMute}
+          onCollapse={() => setIsExpanded(false)}
+          onShare={handleShare}
+          onAddToPlaylist={openAddToPlaylistModal}
+          onSetCurrentVideo={setCurrentVideo}
+          onRemoveFromQueue={removeFromQueue}
+          onClearQueue={clearQueue}
+          onReorderQueue={reorderQueue}
+          onPlayNextInQueue={playNextInQueue}
+          onAddToQueue={addToQueue}
+          fullSeekRef={fullSeekRef}
+          fullVolumeRef={fullVolumeRef}
+          onSeekStart={handleSeekStart}
+          onVolStart={handleVolStart}
+          onSwipeStart={handleSwipeStart}
+          onSwipeMove={handleSwipeMove}
+          onSwipeEnd={handleSwipeEnd}
+        />
+      </Suspense>
     </>
   );
 };

@@ -41,7 +41,16 @@ const Toggle = ({ active, onToggle, label }) => (
 
 const Settings = () => {
   const { user } = useAuthStore();
-  const { autoplay, toggleAutoplay, quality, setQuality } = usePlayerStore();
+  const autoplay = usePlayerStore(state => state.autoplay);
+  const toggleAutoplay = usePlayerStore(state => state.toggleAutoplay);
+  const quality = usePlayerStore(state => state.quality);
+  const setQuality = usePlayerStore(state => state.setQuality);
+  const crossfade = usePlayerStore(state => state.crossfade);
+  const toggleCrossfade = usePlayerStore(state => state.toggleCrossfade);
+  const crossfadeDuration = usePlayerStore(state => state.crossfadeDuration);
+  const setCrossfadeDuration = usePlayerStore(state => state.setCrossfadeDuration);
+  const eqPreset = usePlayerStore(state => state.eqPreset);
+  const setEqPreset = usePlayerStore(state => state.setEqPreset);
   useDocumentTitle('Settings');
 
   const derivedName = (() => {
@@ -127,6 +136,64 @@ const Settings = () => {
               <SettingRow icon={FiHeadphones} label="Infinite Playback" description="Auto-play similar tracks when your queue ends.">
                 <Toggle active={autoplay} onToggle={toggleAutoplay} label="Infinite playback" />
               </SettingRow>
+            </div>
+          </section>
+
+          {/* Audio Tuning Section */}
+          <section className={sectionClass} style={sectionStyle}>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                <FiHeadphones size={20} className="text-orange-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white tracking-tight">Equalizer & Crossfade</h2>
+                <p className="text-sm text-white/40 font-medium mt-1">Configure sound processing presets and crossfades.</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* Equalizer Preset */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.01] px-4 -mx-4 rounded-xl transition-colors">
+                <div>
+                  <p className="text-white font-bold text-[15px] leading-snug">Equalizer Preset</p>
+                  <p className="text-white/40 text-[13px] font-medium mt-0.5 leading-snug">Adjust audio frequency amplification curves.</p>
+                </div>
+                <select
+                  value={eqPreset}
+                  onChange={(e) => setEqPreset(e.target.value)}
+                  className="bg-[#18181c]/80 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-orange-500 cursor-pointer"
+                >
+                  <option value="flat">Flat (Default)</option>
+                  <option value="bassBoost">Bass Booster</option>
+                  <option value="electronic">Electronic</option>
+                  <option value="vocal">Vocal Booster</option>
+                  <option value="pop">Pop</option>
+                  <option value="classical">Classical</option>
+                </select>
+              </div>
+
+              {/* Crossfade Toggle */}
+              <SettingRow icon={FiHeadphones} label="Crossfade Tracks" description="Smoothly blend ending tracks into starting tracks.">
+                <Toggle active={crossfade} onToggle={toggleCrossfade} label="Toggle Crossfade" />
+              </SettingRow>
+
+              {/* Crossfade Duration Slider */}
+              {crossfade && (
+                <div className="py-4 border-b border-white/[0.04]">
+                  <div className="flex items-center justify-between text-xs font-bold mb-3">
+                    <span className="text-white/70">Crossfade Duration</span>
+                    <span className="text-orange-500">{crossfadeDuration}s</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="12"
+                    value={crossfadeDuration}
+                    onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
+                    className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-orange-500 outline-none"
+                  />
+                </div>
+              )}
             </div>
           </section>
 

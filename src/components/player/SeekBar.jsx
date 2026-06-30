@@ -1,5 +1,3 @@
-import { FiPlay, FiPause } from 'react-icons/fi';
-
 /**
  * Shared seek bar used in both the desktop bar and full-screen player.
  * Rendered outside Player to avoid unnecessary remounts.
@@ -39,14 +37,4 @@ const ControlButton = ({ active, onClick, children, className = '' }) => (
   </button>
 );
 
-/**
- * Format seconds into "m:ss" display string.
- */
-const fmt = (s) => {
-  if (!s || isNaN(s)) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec < 10 ? '0' : ''}${sec}`;
-};
-
-export { SeekBar, ControlButton, fmt };
+export { SeekBar, ControlButton };

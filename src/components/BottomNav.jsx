@@ -11,15 +11,14 @@ const navItems = [
 
 const BottomNav = () => {
   return (
-    <nav className="md:hidden fixed left-0 right-0 bottom-0 z-[90] pb-[env(safe-area-inset-bottom)]">
+    <nav className="md:hidden fixed left-4 right-4 bottom-5 z-[90] pb-[env(safe-area-inset-bottom)]">
       <div
-        className="mx-auto max-w-[460px] flex items-center justify-between px-3 pt-2 pb-3 gap-1"
+        className="mx-auto max-w-[420px] flex items-center justify-between px-2.5 py-2 gap-1 rounded-2.5xl border border-white/[0.07]"
         style={{
-background: 'linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))',
-          backdropFilter: 'blur(34px)',
-          WebkitBackdropFilter: 'blur(34px)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 -18px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.035)',
+          background: 'rgba(18,18,22,0.7)',
+          backdropFilter: 'blur(36px)',
+          WebkitBackdropFilter: 'blur(36px)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.65)',
         }}
       >
         {navItems.map((item) => (

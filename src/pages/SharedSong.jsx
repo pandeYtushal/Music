@@ -8,7 +8,7 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 const SharedSong = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setCurrentVideo } = usePlayerStore();
+  const setCurrentVideo = usePlayerStore(state => state.setCurrentVideo);
   const [error, setError] = useState(null);
 
   useDocumentTitle('Opening Song...');

@@ -6,6 +6,7 @@ import {
   ReCaptchaV3Provider,
   ReCaptchaEnterpriseProvider
 } from "firebase/app-check";
+import { logger } from "./utils/logger";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,8 +19,8 @@ const firebaseConfig = {
 
 // Guard: log a clear warning if env vars are missing (common cause of blank screen on deploy)
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'undefined') {
-  console.error(
-    '[Melody] Firebase env vars are missing. ' +
+  logger.error(
+    'Firebase env vars are missing. ' +
     'Add VITE_FIREBASE_* variables to your Vercel project settings and redeploy.'
   );
 }
@@ -47,8 +48,8 @@ if (typeof window !== "undefined") {
       isTokenAutoRefreshEnabled: true,
     });
   } else {
-    console.warn(
-      "[Melody] App Check reCAPTCHA Site Key (VITE_RECAPTCHA_SITE_KEY) is missing. " +
+    logger.warn(
+      "App Check reCAPTCHA Site Key (VITE_RECAPTCHA_SITE_KEY) is missing. " +
       "App Check is not initialized in production."
     );
   }

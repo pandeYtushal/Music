@@ -24,6 +24,10 @@ export const usePlayerStore = create(
       playlists: [],
       isAddToPlaylistModalOpen: false,
       pendingSong: null,
+      crossfade: false,
+      crossfadeDuration: 5,
+      eqPreset: 'flat',
+      sleepTimerDuration: null, // in minutes, null means off
       
       setCurrentVideo: (video, contextPlaylist = null) => {
         if (!video) {
@@ -207,6 +211,10 @@ export const usePlayerStore = create(
         repeatMode: state.repeatMode === 'off' ? 'all' : state.repeatMode === 'all' ? 'one' : 'off'
       })),
       setQuality: (quality) => set({ quality: sanitizeLibrary({ quality }).quality }),
+      toggleCrossfade: () => set((state) => ({ crossfade: !state.crossfade })),
+      setCrossfadeDuration: (duration) => set({ crossfadeDuration: Math.min(12, Math.max(0, duration)) }),
+      setEqPreset: (eqPreset) => set({ eqPreset }),
+      setSleepTimer: (duration) => set({ sleepTimerDuration: duration }),
       setLibraryFromCloud: (library) => set((state) => {
         const sanitized = sanitizeLibrary(library);
 
@@ -269,7 +277,10 @@ export const usePlayerStore = create(
         shuffle: state.shuffle,
         repeatMode: state.repeatMode,
         quality: state.quality,
-        playlists: sanitizeLibrary({ playlists: state.playlists }).playlists 
+        playlists: sanitizeLibrary({ playlists: state.playlists }).playlists,
+        crossfade: state.crossfade,
+        crossfadeDuration: state.crossfadeDuration,
+        eqPreset: state.eqPreset,
       }),
     }
   )

@@ -4,7 +4,8 @@ import { FiHeart, FiPlay } from 'react-icons/fi';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Favorites = () => {
-  const { favorites, setCurrentVideo } = usePlayerStore();
+  const favorites = usePlayerStore(state => state.favorites);
+  const setCurrentVideo = usePlayerStore(state => state.setCurrentVideo);
   useDocumentTitle('Favorites');
 
   return (
@@ -12,16 +13,15 @@ const Favorites = () => {
       {/* Hero Header */}
       <div className="flex flex-col sm:flex-row items-center sm:items-end gap-7 mb-10 mt-4">
         <div
-          className="w-40 h-40 sm:w-52 sm:h-52 shrink-0 rounded-3xl flex items-center justify-center shadow-lift"
+          className="w-40 h-40 sm:w-48 sm:h-48 shrink-0 rounded-[32px] flex items-center justify-center shadow-lg border border-white/10"
           style={{
-            background: 'linear-gradient(145deg, #1a1a1a, #111111)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(236, 72, 153, 0.25) 100%)',
+            boxShadow: '0 20px 40px rgba(236, 72, 153, 0.1)',
           }}
         >
           <FiHeart
-            size={60}
-            className="text-white"
-            style={{ fill: 'rgba(255,255,255,0.9)' }}
+            size={56}
+            className="text-pink-500 fill-current"
           />
         </div>
 
@@ -51,13 +51,9 @@ const Favorites = () => {
         <VideoGrid videos={favorites} />
       ) : (
         <div
-          className="flex flex-col items-center justify-center py-36 rounded-3xl"
-          style={{
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.05)',
-          }}
+          className="flex flex-col items-center justify-center py-28 rounded-3xl border border-white/[0.06] bg-white/[0.015]"
         >
-          <FiHeart size={48} className="text-white/10 mb-5" />
+          <FiHeart size={44} className="text-white/10 mb-5" />
           <h2 className="text-xl font-bold text-white mb-2 tracking-tight">No liked songs yet</h2>
           <p className="text-white/35 text-sm font-medium text-center max-w-xs">
             Tap the heart icon on any track to add it to your collection.

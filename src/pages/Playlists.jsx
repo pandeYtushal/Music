@@ -7,7 +7,8 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Playlists = () => {
   const navigate = useNavigate();
-  const { playlists, createPlaylist } = usePlayerStore();
+  const playlists = usePlayerStore(state => state.playlists);
+  const createPlaylist = usePlayerStore(state => state.createPlaylist);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   useDocumentTitle('Playlists');
@@ -69,13 +70,13 @@ const Playlists = () => {
               className="group cursor-pointer"
             >
               <div
-                className="relative aspect-square rounded-2xl overflow-hidden mb-3 transition-all duration-200 group-hover:shadow-lift"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+                className="relative aspect-square rounded-[24px] overflow-hidden mb-3 md:mb-3.5 transition-all duration-500 shadow-md group-hover:shadow-[0_20px_48px_rgba(0,0,0,0.6)] group-hover:translate-y-[-2px] border border-white/[0.08] bg-white/[0.015]"
               >
                 {playlist.songs.length > 0 ? (
                   <img
                     src={pickImageUrl(playlist.songs[0].image)}
                     alt={playlist.name}
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
@@ -83,9 +84,9 @@ const Playlists = () => {
                     <FiMusic size={32} className="text-white/10" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                   <div
-                    className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lift scale-90 group-hover:scale-100 transition-transform duration-200"
+                    className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lift scale-90 group-hover:scale-100 transition-transform duration-300 hover:bg-orange-500 hover:text-white"
                   >
                     <FiPlay size={18} className="fill-current ml-0.5" />
                   </div>
@@ -100,13 +101,17 @@ const Playlists = () => {
 
       {/* Create Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5"
-          style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5 bg-black/45 backdrop-blur-md transition-all duration-300"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="w-full max-w-sm rounded-3xl p-8 animate-scale-in"
-            style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 30px 80px rgba(0,0,0,0.7)' }}
+            className="w-full max-w-sm rounded-[24px] p-8 animate-scale-in border border-white/10"
+            style={{
+              background: 'rgba(22,22,25,0.85)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              boxShadow: '0 30px 80px rgba(0,0,0,0.65)'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">

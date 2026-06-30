@@ -1,12 +1,14 @@
+import { useState, useRef, useEffect } from 'react';
 import {
   FiPlay, FiPause, FiSkipBack, FiSkipForward,
   FiVolume2, FiVolumeX, FiHeart, FiRepeat, FiShuffle,
-  FiChevronDown, FiPlus, FiShare2, FiX, FiMenu,
+  FiChevronDown, FiPlus, FiShare2, FiX, FiMenu, FiMoon, FiMic,
 } from 'react-icons/fi';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { SeekBar, ControlButton, fmt } from './SeekBar';
+import { SeekBar, ControlButton } from './SeekBar';
+import { formatDuration as fmt } from '../../utils/format';
 import { cleanText } from '../../utils/text';
 import { pickImageUrl } from '../../utils/media';
 
@@ -76,7 +78,7 @@ const FullScreenPlayer = ({
   isPlaying, isFav, played, duration, volume, isMuted,
   shuffle, repeatMode, isExpanded,
   // Queue data
-  playlist, currentIndex, recommendedSongs, isLoadingRecommendations, autoplay,
+  playlist, recommendedSongs, isLoadingRecommendations, autoplay,
   // Callbacks
   onTogglePlay, onToggleFav, onNext, onPrev,
   onToggleShuffle, onCycleRepeat, onToggleMute,
@@ -88,6 +90,38 @@ const FullScreenPlayer = ({
   // Touch gesture handlers for swipe skip
   onSwipeStart, onSwipeMove, onSwipeEnd,
 }) => {
+  const [activeTab, setActiveTab] = useState('queue'); // 'queue' | 'lyrics'
+  const [sleepTimer, setSleepTimer] = useState(null); // in minutes, null = off
+  const [isSleepMenuOpen, setIsSleepMenuOpen] = useState(false);
+  const sleepTimerRef = useRef(null); // holds the timeout id
+  const sleepMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isSleepMenuOpen) return;
+    const handleOutsideClick = (e) => {
+      if (sleepMenuRef.current && !sleepMenuRef.current.contains(e.target)) {
+        setIsSleepMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [isSleepMenuOpen]);
+
+  const handleSleepTimer = (minutes) => {
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    if (!minutes) { setSleepTimer(null); return; }
+    setSleepTimer(minutes);
+    sleepTimerRef.current = setTimeout(() => {
+      // Pause playback when sleep timer fires
+      if (typeof onTogglePlay === 'function') onTogglePlay(false);
+      setSleepTimer(null);
+    }, minutes * 60 * 1000);
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -105,15 +139,18 @@ const FullScreenPlayer = ({
 
   const seekBound = (e, ref) => onSeekStart(e, ref);
 
+  const sleepTimerOptions = [5, 15, 30, 60];
+
   return (
     <div
       className={`fixed top-0 left-0 w-full h-[100dvh] md:h-screen z-[200] flex flex-col transition-all duration-500 ease-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
-      style={{ background: '#0a0a0a' }}
+      style={{ background: '#08080a' }}
     >
-      {/* Blurred bg */}
+      {/* Blurred bg (Apple Music style) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img src={imageUrl} alt="" className="w-full h-full object-cover scale-125 blur-[100px] opacity-[0.06]" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg,rgba(10,10,10,0.6) 0%,#0a0a0a 65%)' }} />
+        <img src={imageUrl} alt="" className="w-full h-full object-cover scale-150 blur-[90px] opacity-[0.38] transition-all duration-1000" />
+        <div className="absolute inset-0 bg-[#08080a]/60 backdrop-blur-[20px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#08080a] via-transparent to-[#08080a]/80" />
       </div>
 
       {/* Header */}
@@ -122,9 +159,56 @@ const FullScreenPlayer = ({
           <FiChevronDown size={26} />
         </button>
         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/25">Now Playing</p>
-        <button onClick={() => onAddToPlaylist(currentVideo)} className="w-12 h-12 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
-          <FiPlus size={20} />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Sleep Timer */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSleepMenuOpen(prev => !prev);
+              }}
+              className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${sleepTimer ? 'text-orange-400 bg-orange-500/10' : 'text-white/40 hover:text-white hover:bg-white/[0.07]'}`}
+              title="Sleep Timer"
+            >
+              <FiMoon size={16} />
+            </button>
+            {isSleepMenuOpen && (
+              <div
+                ref={sleepMenuRef}
+                className="absolute right-0 top-full mt-2 z-50 min-w-[130px] rounded-2xl border border-white/10 py-1.5 transition-all duration-200"
+                style={{ background: 'rgba(22,22,28,0.95)', backdropFilter: 'blur(30px)' }}
+              >
+                <p className="text-[9px] uppercase font-black tracking-widest text-white/25 px-4 py-1.5">Sleep Timer</p>
+                {sleepTimerOptions.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      handleSleepTimer(sleepTimer === m ? null : m);
+                      setIsSleepMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${sleepTimer === m ? 'text-orange-400' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                  >
+                    {m} min{sleepTimer === m ? ' ✓' : ''}
+                  </button>
+                ))}
+                {sleepTimer && (
+                  <button
+                    onClick={() => {
+                      handleSleepTimer(null);
+                      setIsSleepMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-bold text-red-400/70 hover:text-red-400 hover:bg-red-400/5 transition-colors border-t border-white/5 mt-1"
+                  >
+                    Cancel Timer
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <button onClick={() => onAddToPlaylist(currentVideo)} className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
+            <FiPlus size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Body */}
@@ -221,35 +305,75 @@ const FullScreenPlayer = ({
             </div>
           </div>
 
-          {/* Right column: Up Next queue */}
+          {/* Right column: Tabs (Queue / Lyrics) */}
           {playlist.length > 0 && (
             <div className="flex-1 w-full min-w-0 pb-10">
-              <div className="flex items-center justify-between mb-6 px-1">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20 mb-1">Queue</p>
-                  <h3 className="text-xl font-bold text-white tracking-tight">Up Next</h3>
-                </div>
-                <button onClick={onClearQueue} className="text-[11px] font-bold text-white/25 hover:text-white transition-colors uppercase tracking-widest">
-                  Clear
+              {/* Tab bar */}
+              <div className="flex items-center gap-1 mb-6 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
+                <button
+                  onClick={() => setActiveTab('queue')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all ${activeTab === 'queue' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}
+                >
+                  <FiMenu size={12} /> Queue
+                </button>
+                <button
+                  onClick={() => setActiveTab('lyrics')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all ${activeTab === 'lyrics' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}
+                >
+                  <FiMic size={12} /> Lyrics
                 </button>
               </div>
 
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={playlist.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-1">
-                    {playlist.map((song, idx) => (
-                      <SortableSongItem
-                        key={`${song.id}-${idx}`}
-                        song={song}
-                        isCurrentSong={song.id === currentVideo.id}
-                        isPlaying={isPlaying}
-                        onPlay={() => onSetCurrentVideo(song, playlist)}
-                        onRemove={(e) => { e.stopPropagation(); onRemoveFromQueue(song.id, idx); }}
-                      />
-                    ))}
+              {/* Queue Tab Content */}
+              {activeTab === 'queue' && (
+                <>
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <p className="text-sm font-black text-white/60">Up Next — {playlist.length} tracks</p>
+                    <button onClick={onClearQueue} className="text-[11px] font-bold text-white/25 hover:text-white transition-colors uppercase tracking-widest">
+                      Clear
+                    </button>
                   </div>
-                </SortableContext>
-              </DndContext>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={playlist.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-1">
+                        {playlist.map((song, idx) => (
+                          <SortableSongItem
+                            key={`${song.id}-${idx}`}
+                            song={song}
+                            isCurrentSong={song.id === currentVideo.id}
+                            isPlaying={isPlaying}
+                            onPlay={() => onSetCurrentVideo(song, playlist)}
+                            onRemove={(e) => { e.stopPropagation(); onRemoveFromQueue(song.id, idx); }}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </>
+              )}
+
+              {/* Lyrics Tab Content */}
+              {activeTab === 'lyrics' && (
+                <div className="px-1 py-4 text-center">
+                  <div className="w-12 h-12 mx-auto mb-5 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                    <FiMic size={20} className="text-white/40" />
+                  </div>
+                  <p className="text-sm font-black text-white/60 mb-2">Now Playing</p>
+                  <p className="text-2xl font-black text-white mb-1 leading-tight">{title}</p>
+                  <p className="text-white/45 text-sm font-semibold mb-8">{artist}</p>
+                  <div className="space-y-4 text-center max-w-sm mx-auto">
+                    <p className="text-base font-bold text-white/80 leading-relaxed">Lyrics are coming soon.</p>
+                    <p className="text-xs font-semibold text-white/35 leading-relaxed">
+                      Synced timed lyrics with word-level highlighting will be available in a future update.
+                    </p>
+                    <div className="flex items-end justify-center gap-1 mt-6 h-8">
+                      {[8, 14, 6, 12, 10, 16, 8].map((h, i) => (
+                        <span key={i} className="w-1 rounded-full bg-orange-500/60 animate-[bounce_1s_infinite]" style={{ height: h, animationDelay: `${i * 0.1}s` }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Recommendations section */}
               {(isLoadingRecommendations || recommendedSongs.length > 0 || autoplay) && (

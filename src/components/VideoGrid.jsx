@@ -6,7 +6,9 @@ import { formatDuration } from '../utils/format';
 import { pickImageUrl } from '../utils/media';
 
 const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
-  const { setCurrentVideo, addToQueue, playNextInQueue } = usePlayerStore();
+  const setCurrentVideo = usePlayerStore(state => state.setCurrentVideo);
+  const addToQueue = usePlayerStore(state => state.addToQueue);
+  const playNextInQueue = usePlayerStore(state => state.playNextInQueue);
   const scrollContainerRef = React.useRef(null);
 
   if (!videos || videos.length === 0) return null;
@@ -85,7 +87,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
           >
             {/* Thumbnail */}
             <div
-              className="relative aspect-square rounded-xl overflow-hidden mb-3 md:mb-3.5 transition-all duration-500 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/5 bg-[#121212]"
+              className="relative aspect-square rounded-2xl overflow-hidden mb-3 md:mb-4 transition-all duration-500 group-hover:shadow-[0_24px_50px_rgba(0,0,0,0.7)] group-hover:translate-y-[-2px] border border-white/[0.08] bg-white/[0.015] shadow-lg"
             >
               <img
                 src={pickImageUrl(video.image)}
@@ -94,12 +96,12 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               {/* Play overlay */}
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-black flex items-center justify-center shadow-2xl scale-90 group-hover:scale-100 transition-all duration-300">
-                  <FiPlay className="fill-current" size={18} style={{ marginLeft: 2 }} />
+              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                <div className="w-12 h-12 md:w-13 md:h-13 rounded-full bg-white text-black flex items-center justify-center shadow-2xl scale-90 group-hover:scale-100 transition-all duration-300 hover:bg-orange-500 hover:text-white">
+                  <FiPlay className="fill-current" size={16} style={{ marginLeft: 2 }} />
                 </div>
               </div>
-              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
                 <button
                   type="button"
                   title="Play next"
@@ -107,9 +109,9 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
                     e.stopPropagation();
                     playNextInQueue(video);
                   }}
-                  className="w-8 h-8 rounded-full bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+                  className="w-7 h-7 rounded-full bg-black/55 backdrop-blur-md border border-white/12 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all active:scale-90"
                 >
-                  <FiSkipForward size={14} />
+                  <FiSkipForward size={12} />
                 </button>
                 <button
                   type="button"
@@ -118,9 +120,9 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
                     e.stopPropagation();
                     addToQueue(video);
                   }}
-                  className="w-8 h-8 rounded-full bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+                  className="w-7 h-7 rounded-full bg-black/55 backdrop-blur-md border border-white/12 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all active:scale-90"
                 >
-                  <FiPlus size={15} />
+                  <FiPlus size={13} />
                 </button>
               </div>
               {video.duration && (
@@ -155,4 +157,4 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
   );
 };
 
-export default VideoGrid;
+export default React.memo(VideoGrid);

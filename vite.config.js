@@ -28,14 +28,16 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'https://ui-avatars.com/api/?name=Melody&background=8B5CF6&color=fff&size=192',
+            src: '/icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: 'https://ui-avatars.com/api/?name=Melody&background=8B5CF6&color=fff&size=512',
+            src: '/icon-512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
@@ -45,5 +47,29 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
+              return 'vendor-core';
+            }
+            if (id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
+            if (id.includes('react-icons') || id.includes('lucide')) {
+              return 'vendor-icons';
+            }
+            return 'vendor-packages';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1200,
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    sourcemap: false
   }
 })

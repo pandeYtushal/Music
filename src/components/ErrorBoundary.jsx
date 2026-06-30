@@ -11,7 +11,9 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('App crashed:', error, info);
+    import('../utils/logger').then(({ logger }) => {
+      logger.error('App crashed:', error, info);
+    });
   }
 
   handleReset = () => {

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { FiLoader } from 'react-icons/fi';
@@ -16,6 +16,7 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Toast from './components/Toast';
+import CommandPalette from './components/CommandPalette';
 
 // Lazy-loaded pages — only downloaded when navigated to
 const Home = lazy(() => import('./pages/Home'));
@@ -32,13 +33,17 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const SharedSong = lazy(() => import('./pages/SharedSong'));
 const Player = lazy(() => import('./components/Player'));
 const LibrarySync = lazy(() => import('./components/LibrarySync'));
+const StatsDashboard = lazy(() => import('./pages/StatsDashboard'));
 
 // React Query client (stable singleton, never recreated)
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 10 * 60 * 1000, // 10 minutes (music details / search metadata are static)
+      gcTime: 45 * 60 * 1000,    // 45 minutes cache retention
       refetchOnWindowFocus: false,
+      refetchOnReconnect: true,  // Automatically resume queries when network reconnects
+      retry: 1,                  // Limit retry counts to prevent UI stuttering on failure
     },
   },
 });
@@ -53,8 +58,19 @@ const PageLoader = () => (
 function App() {
   const { user, setUser, setIsLoading, isLoading } = useAuthStore();
   const currentVideo = usePlayerStore(state => state.currentVideo);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
-  // ── Dark mode is now permanently enabled for the music app ──
+  // Keyboard shortcut listener to open command palette
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // ── Firebase auth listener ──
   useEffect(() => {
@@ -112,13 +128,20 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <div
-          className="flex h-[100dvh] md:h-screen w-screen text-white overflow-hidden selection:bg-white/20 dark"
+          className="flex h-[100dvh] md:h-screen w-screen text-white overflow-hidden selection:bg-white/20 dark relative bg-background"
         >
+          {/* Global Ambient Glow Backdrops (Apple Music style) */}
+          <div className="fixed inset-0 -z-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-[-10%] left-[10%] w-[50vw] h-[50vw] rounded-full ambient-glow-1 opacity-40 blur-[120px]" />
+            <div className="absolute bottom-[-10%] right-[10%] w-[45vw] h-[45vw] rounded-full ambient-glow-2 opacity-30 blur-[120px]" />
+            <div className="absolute inset-0 opacity-[0.012] [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:80px_80px]" />
+          </div>
+
           {user && <Sidebar />}
 
-          <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background">
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
 
-            <div className={`flex-1 overflow-y-auto relative z-10 scrollbar-hide flex flex-col ${user ? 'pb-[150px] md:pb-36 md:pt-24' : ''}`}>
+            <div className={`flex-1 overflow-y-auto relative z-10 scrollbar-hide flex flex-col ${user ? `${currentVideo ? 'pb-[160px] md:pb-32' : 'pb-[90px] md:pb-12'} md:pt-24` : ''}`}>
               {user && <div className="md:hidden"><Navbar /></div>}
               <div className="flex-1 shrink-0 w-full relative">
                 <ErrorBoundary compact>
@@ -186,6 +209,14 @@ function App() {
                       }
                     />
                     <Route
+                      path="/stats"
+                      element={
+                        <ProtectedRoute>
+                          <StatsDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/play"
                       element={<SharedSong />}
                     />
@@ -221,6 +252,7 @@ function App() {
             <LibrarySync />
           </Suspense>
         )}
+        <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
         <Toast />
       </Router>
     </QueryClientProvider>

@@ -1,42 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { create } from 'zustand';
+import { useState, useEffect } from 'react';
 import { FiCheck, FiAlertCircle, FiInfo, FiX } from 'react-icons/fi';
-
-// ── Zustand micro-store for toast state ──
-const useToastStore = create((set) => ({
-  toasts: [],
-  addToast: (message, variant = 'success') => {
-    let id;
-    set((state) => {
-      if (state.toasts.length > 0) {
-        const existing = state.toasts[0];
-        id = existing.id;
-        return {
-          toasts: [{ ...existing, message, variant }],
-        };
-      }
-      id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      return {
-        toasts: [{ id, message, variant }],
-      };
-    });
-    return id;
-  },
-  removeToast: (id) =>
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    })),
-}));
-
-// ── Public hook — import this wherever you need to show a toast ──
-export const useToast = () => {
-  const addToast = useToastStore((s) => s.addToast);
-  const toast = useCallback(
-    (message, variant) => addToast(message, variant),
-    [addToast],
-  );
-  return toast;
-};
+import { useToastStore } from '../store/useToastStore';
 
 // ── Individual toast item ──
 const VARIANTS = {
@@ -46,15 +10,23 @@ const VARIANTS = {
 };
 
 const ToastItem = ({ toast, onDismiss }) => {
+  const [prevToastId, setPrevToastId] = useState(toast.id);
+  const [prevMessage, setPrevMessage] = useState(toast.message);
   const [isExiting, setIsExiting] = useState(false);
+
+  if (toast.id !== prevToastId || toast.message !== prevMessage) {
+    setPrevToastId(toast.id);
+    setPrevMessage(toast.message);
+    setIsExiting(false);
+  }
+
   const v = VARIANTS[toast.variant] || VARIANTS.success;
   const Icon = v.icon;
 
   useEffect(() => {
-    setIsExiting(false);
     const autoClose = setTimeout(() => setIsExiting(true), 2700);
     return () => clearTimeout(autoClose);
-  }, [toast.message, toast.variant]);
+  }, [toast.id, toast.message, toast.variant]);
 
   useEffect(() => {
     if (isExiting) {
@@ -109,3 +81,4 @@ const Toast = () => {
 };
 
 export default Toast;
+

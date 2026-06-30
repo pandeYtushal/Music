@@ -34,7 +34,6 @@ const Search = () => {
       return searchSongs(query, { limit: 24, signal });
     },
     enabled: !!query,
-    staleTime: 5 * 60 * 1000, // 5 minutes caching
   });
 
   const errorMessage = error 

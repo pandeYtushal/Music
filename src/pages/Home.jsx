@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import VideoGrid from '../components/VideoGrid';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -23,12 +23,17 @@ const FILTER_CATEGORIES = [
 
 const Home = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState({
-    quickPicks: [], jumpBackIn: [], recommended: [], trending: []
+  const [rawHomeData, setRawHomeData] = useState({
+    quickPicks: [], jumpBackIn: [], trending: [], jumpBackInQuery: ''
   });
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
-  const { currentVideo, isPlaying, setCurrentVideo, recentlyPlayed, addToQueue, playNextInQueue } = usePlayerStore();
+  const currentVideo = usePlayerStore(state => state.currentVideo);
+  const isPlaying = usePlayerStore(state => state.isPlaying);
+  const recentlyPlayed = usePlayerStore(state => state.recentlyPlayed);
+  const setCurrentVideo = usePlayerStore(state => state.setCurrentVideo);
+  const addToQueue = usePlayerStore(state => state.addToQueue);
+  const playNextInQueue = usePlayerStore(state => state.playNextInQueue);
   const { user } = useAuthStore();
 
   useDocumentTitle('Home');
@@ -37,9 +42,10 @@ const Home = () => {
 
   const getGreeting = () => {
     const h = new Date().getHours();
-    let greet = 'Good Morning';
-    if (h >= 12 && h < 17) greet = 'Good Afternoon';
-    else if (h >= 17 && h < 21) greet = 'Good Evening';
+    let greet;
+    if (h >= 5 && h < 12) greet = 'Good Morning';
+    else if (h >= 12 && h < 17) greet = 'Good Afternoon';
+    else if (h >= 17 && h < 22) greet = 'Good Evening';
     else greet = 'Late Night';
 
     const firstName = user?.displayName ? user.displayName.split(' ')[0] : 'Listener';
@@ -76,19 +82,10 @@ const Home = () => {
           searchSongs(trendQuery, { limit: 20, signal: controller.signal }),
         ]);
 
-        const currentLang = currentVideo?.language || 'hindi';
-        const allowedLangs = new Set(
-          [currentLang, ...(recentlyPlayed || []).map(s => s.language)].filter(Boolean).map(l => l.toLowerCase())
-        );
-
-        const filteredQp = (quickPicks || []).filter(song => isSongAcceptable(song, currentLang, allowedLangs)).slice(0, 10);
-        const filteredJbi = (jumpBackIn || []).filter(song => isSongAcceptable(song, currentLang, allowedLangs)).slice(0, 8);
-        const filteredTrend = (trending || []).filter(song => isSongAcceptable(song, currentLang, allowedLangs)).slice(0, 10);
-
-        setCategories({ 
-          quickPicks: filteredQp, 
-          jumpBackIn: filteredJbi, 
-          trending: filteredTrend, 
+        setRawHomeData({ 
+          quickPicks: quickPicks || [], 
+          jumpBackIn: jumpBackIn || [], 
+          trending: trending || [], 
           jumpBackInQuery: jbiQuery 
         });
       } catch (e) {
@@ -104,6 +101,24 @@ const Home = () => {
       clearInterval(interval);
     };
   }, [recentArtist, activeFilter]);
+
+  const currentLang = currentVideo?.language || 'hindi';
+  const allowedLangs = useMemo(() => new Set(
+    [currentLang, ...(recentlyPlayed || []).map(s => s.language)].filter(Boolean).map(l => l.toLowerCase())
+  ), [currentLang, recentlyPlayed]);
+
+  const filteredQuickPicks = useMemo(() => 
+    (rawHomeData.quickPicks || []).filter(song => isSongAcceptable(song, currentLang, allowedLangs)).slice(0, 10),
+    [rawHomeData.quickPicks, currentLang, allowedLangs]
+  );
+  const filteredJumpBackIn = useMemo(() => 
+    (rawHomeData.jumpBackIn || []).filter(song => isSongAcceptable(song, currentLang, allowedLangs)).slice(0, 8),
+    [rawHomeData.jumpBackIn, currentLang, allowedLangs]
+  );
+  const filteredTrending = useMemo(() => 
+    (rawHomeData.trending || []).filter(song => isSongAcceptable(song, currentLang, allowedLangs)).slice(0, 10),
+    [rawHomeData.trending, currentLang, allowedLangs]
+  );
 
   if (loading) {
     return (
@@ -126,18 +141,10 @@ const Home = () => {
     );
   }
 
-  const featured = categories.quickPicks[0];
+  const featured = filteredQuickPicks[0];
 
   return (
-    <div className="w-full bg-background text-white overflow-hidden relative">
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.015),rgba(255,255,255,0)_400px)]" />
-        {/* Animated Glow Blobs */}
-        <div className="absolute top-[-10%] left-[20%] w-[50vw] h-[50vw] rounded-full ambient-glow-1 opacity-70 pointer-events-none" />
-        <div className="absolute bottom-[10%] right-[10%] w-[45vw] h-[45vw] rounded-full ambient-glow-2 opacity-50 pointer-events-none" />
-        <div className="absolute inset-0 opacity-[0.02] [background-image:linear-gradient(rgba(255,255,255,.35)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.35)_1px,transparent_1px)] [background-size:64px_64px]" />
-      </div>
-
+    <div className="w-full text-white overflow-hidden relative">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-6 md:pt-12">
         {/* COMPACT HEADER */}
         <header className="mb-6 md:mb-8 animate-fade-up" style={{ animationDelay: '0ms' }}>
@@ -160,10 +167,10 @@ const Home = () => {
               <button
                 key={cat.id}
                 onClick={() => setActiveFilter(cat.id)}
-                className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 whitespace-nowrap border shrink-0 hover:scale-105 active:scale-95 cursor-pointer ${
+                className={`px-5 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 whitespace-nowrap border shrink-0 hover:scale-[1.04] active:scale-[0.96] cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-orange-500 to-purple-500 text-white border-transparent shadow-[0_6px_20px_rgba(249,115,22,0.3)]'
-                    : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.08] hover:border-white/20'
+                    ? 'bg-gradient-to-r from-orange-500 to-purple-600 text-white border-transparent shadow-[0_8px_24px_rgba(249,115,22,0.25)]'
+                    : 'bg-white/[0.03] border-white/[0.06] text-white/55 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15]'
                 }`}
               >
                 {cat.label}
@@ -188,8 +195,8 @@ const Home = () => {
             </div>
 
             <div
-              onClick={() => setCurrentVideo(featured, categories.quickPicks)}
-              className="relative w-full overflow-hidden rounded-[32px] md:rounded-[40px] border border-white/[0.06] bg-[#0c0c0e]/40 shadow-[0_32px_96px_rgba(0,0,0,0.75)] hover:border-white/15 transition-all duration-500 cursor-pointer"
+              onClick={() => setCurrentVideo(featured, filteredQuickPicks)}
+              className="relative w-full overflow-hidden rounded-[2.5xl] md:rounded-[4xl] border border-white/[0.08] bg-white/[0.015] shadow-[0_32px_96px_rgba(0,0,0,0.7)] hover:border-white/20 transition-all duration-500 cursor-pointer"
               style={{ height: 'clamp(280px, 35vw, 440px)' }}
             >
               <img
@@ -203,7 +210,7 @@ const Home = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent hidden md:block" />
 
               {/* Floating Glassmorphic Text Card */}
-              <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 z-10 p-6 md:p-8 rounded-3xl backdrop-blur-2xl bg-black/40 border border-white/10 max-w-[min(90vw,480px)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover/hero:border-white/20 group-hover/hero:bg-black/45">
+              <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 z-10 p-6 md:p-8 rounded-[2.5xl] backdrop-blur-3xl bg-black/30 border border-white/12 max-w-[min(90vw,480px)] shadow-[0_24px_50px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover/hero:border-white/20 group-hover/hero:bg-black/40">
                 <div className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-purple-500 border border-white/10 text-[8px] uppercase tracking-widest text-white font-extrabold w-fit mb-3 shadow-md">
                   On Rotation
                 </div>
@@ -214,7 +221,7 @@ const Home = () => {
                   {cleanText(featured.primaryArtists, 'Unknown Artist')}
                 </p>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setCurrentVideo(featured, categories.quickPicks); }}
+                  onClick={(e) => { e.stopPropagation(); setCurrentVideo(featured, filteredQuickPicks); }}
                   className="h-10 px-6 rounded-full bg-white text-black font-extrabold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-md text-xs hover:bg-orange-500 hover:text-white"
                 >
                   <FiPlay size={14} className="fill-current" />
@@ -238,17 +245,17 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {categories.quickPicks.slice(1, 7).map((video, idx) => {
+            {filteredQuickPicks.slice(1, 7).map((video, idx) => {
               const isCurrent = video.id === currentVideo?.id;
 
               return (
                 <div
                   key={idx}
-                  onClick={() => setCurrentVideo(video, categories.quickPicks)}
-                  className={`relative overflow-hidden rounded-[18px] bg-white/[0.012] border transition-all duration-300 p-3 flex items-center gap-3.5 text-left group cursor-pointer ${
+                  onClick={() => setCurrentVideo(video, filteredQuickPicks)}
+                  className={`relative overflow-hidden rounded-2xl bg-white/[0.01] border transition-all duration-500 p-2.5 flex items-center gap-3.5 text-left group cursor-pointer ${
                     isCurrent 
-                      ? 'border-orange-500/30 bg-orange-500/[0.02] shadow-[0_8px_24px_rgba(249,115,22,0.06)]' 
-                      : 'border-white/5 hover:border-white/[0.12] hover:bg-white/[0.035] hover:shadow-[0_8px_32px_rgba(249,115,22,0.05)] hover:translate-y-[-2px]'
+                      ? 'border-orange-500/25 bg-orange-500/[0.02] shadow-[0_8px_24px_rgba(249,115,22,0.06)]' 
+                      : 'border-white/[0.05] hover:border-white/[0.15] hover:bg-white/[0.04] hover:shadow-[0_12px_32px_rgba(0,0,0,0.45)] hover:translate-y-[-3px]'
                   }`}
                 >
                   {/* Hover Left Indicator Line */}
@@ -304,10 +311,10 @@ const Home = () => {
 
           <div className="animate-fade-up" style={{ animationDelay: '350ms' }}>
             <VideoGrid
-              videos={categories.jumpBackIn}
+              videos={filteredJumpBackIn}
               title="Based on Your Listening"
               horizontal
-              onShowAll={() => navigate(`/search?q=${categories.jumpBackInQuery || 'bollywood hits'}`)}
+              onShowAll={() => navigate(`/search?q=${rawHomeData.jumpBackInQuery || 'bollywood hits'}`)}
             />
           </div>
 
@@ -330,7 +337,7 @@ const Home = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3.5">
-              {categories.trending.slice(0, 10).map((video, idx) => {
+              {filteredTrending.slice(0, 10).map((video, idx) => {
                 const isTop3 = idx < 3;
                 const isCurrent = video.id === currentVideo?.id;
                 const rankColor =
@@ -342,13 +349,13 @@ const Home = () => {
                 return (
                   <div
                     key={idx}
-                    onClick={() => setCurrentVideo(video, categories.trending)}
-                    className={`relative overflow-hidden rounded-[20px] transition-all duration-300 p-3.5 flex items-center gap-4 cursor-pointer group border ${
+                    onClick={() => setCurrentVideo(video, filteredTrending)}
+                    className={`relative overflow-hidden rounded-2.5xl transition-all duration-500 p-3.5 flex items-center gap-4 cursor-pointer group border ${
                       isCurrent 
-                        ? 'border-orange-500/30 bg-orange-500/[0.02] shadow-[0_8px_24px_rgba(249,115,22,0.06)]' 
+                        ? 'border-orange-500/25 bg-orange-500/[0.02] shadow-[0_8px_24px_rgba(249,115,22,0.06)]' 
                         : isTop3 
-                          ? 'bg-white/[0.015] border-white/[0.06] hover:border-white/25 hover:bg-white/[0.035] hover:shadow-[0_12px_40px_rgba(249,115,22,0.06)] hover:translate-y-[-1px]' 
-                          : 'bg-transparent border-transparent hover:bg-white/[0.02] hover:border-white/5'
+                          ? 'bg-white/[0.012] border-white/[0.06] hover:border-white/22 hover:bg-white/[0.035] hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] hover:translate-y-[-2px]' 
+                          : 'bg-transparent border-transparent hover:bg-white/[0.025] hover:border-white/[0.08] hover:translate-y-[-1px]'
                     }`}
                   >
                     {/* Left Border Highlight for Top 3 */}

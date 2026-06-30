@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import VideoGrid from '../components/VideoGrid';
 import { FiClock, FiPlay, FiTrash2 } from 'react-icons/fi';
@@ -37,8 +38,12 @@ const groupHistory = (history) => {
 };
 
 const RecentlyPlayed = () => {
-  const { recentlyPlayed, setCurrentVideo, clearRecentlyPlayed } = usePlayerStore();
+  const recentlyPlayed = usePlayerStore(state => state.recentlyPlayed);
+  const setCurrentVideo = usePlayerStore(state => state.setCurrentVideo);
+  const clearRecentlyPlayed = usePlayerStore(state => state.clearRecentlyPlayed);
   useDocumentTitle('Recently Played');
+
+  const groupedHistory = useMemo(() => groupHistory(recentlyPlayed), [recentlyPlayed]);
 
   return (
     <div className="page-wrap animate-fade-up">
@@ -46,17 +51,15 @@ const RecentlyPlayed = () => {
       <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-7 mb-10 mt-4 w-full">
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-7 text-center sm:text-left">
           <div
-            className="w-40 h-40 sm:w-52 sm:h-52 shrink-0 rounded-3xl flex items-center justify-center shadow-lift relative group"
+            className="w-40 h-40 sm:w-48 sm:h-48 shrink-0 rounded-[32px] flex items-center justify-center shadow-lg border border-white/10"
             style={{
-              background: 'linear-gradient(145deg, #1f1c2c, #0b0a10)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
+              boxShadow: '0 20px 40px rgba(139, 92, 246, 0.1)',
             }}
           >
-            <div className="absolute inset-0 bg-purple-500/10 rounded-3xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity pointer-events-none" />
             <FiClock
-              size={60}
-              className="text-white relative z-10"
-              style={{ filter: 'drop-shadow(0 4px 12px rgba(255,255,255,0.15))' }}
+              size={56}
+              className="text-purple-400 relative z-10 animate-[pulse_3s_infinite]"
             />
           </div>
 
@@ -88,7 +91,7 @@ const RecentlyPlayed = () => {
                 clearRecentlyPlayed();
               }
             }}
-            className="flex items-center gap-2 px-4.5 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-red-500/10 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs font-bold tracking-wide uppercase transition-all duration-300 active:scale-95 shrink-0 self-center sm:self-end"
+            className="flex items-center gap-2 px-4.5 py-2.5 rounded-full border border-white/10 bg-white/[0.02] hover:bg-red-500/10 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs font-bold tracking-wide uppercase transition-all duration-300 active:scale-95 shrink-0 self-center sm:self-end"
           >
             <FiTrash2 size={13} />
             Clear History
@@ -100,7 +103,7 @@ const RecentlyPlayed = () => {
 
       {recentlyPlayed.length > 0 ? (
         <div className="space-y-12">
-          {Object.entries(groupHistory(recentlyPlayed)).map(([title, videos]) => {
+          {Object.entries(groupedHistory).map(([title, videos]) => {
             if (videos.length === 0) return null;
             return (
               <div key={title}>
@@ -112,13 +115,9 @@ const RecentlyPlayed = () => {
         </div>
       ) : (
         <div
-          className="flex flex-col items-center justify-center py-36 rounded-3xl"
-          style={{
-            background: 'rgba(255,255,255,0.01)',
-            border: '1px solid rgba(255,255,255,0.03)',
-          }}
+          className="flex flex-col items-center justify-center py-28 rounded-3xl border border-white/[0.06] bg-white/[0.015]"
         >
-          <FiClock size={48} className="text-white/10 mb-5 animate-pulse" />
+          <FiClock size={44} className="text-white/10 mb-5 animate-pulse" />
           <h2 className="text-xl font-bold text-white mb-2 tracking-tight">No listening history yet</h2>
           <p className="text-white/35 text-sm font-medium text-center max-w-xs leading-relaxed">
             Start listening to songs from Home or Search to build your profile's playback history.

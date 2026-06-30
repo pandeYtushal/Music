@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { analytics } from '../utils/analytics';
 
 const BASE_TITLE = 'MeldMusic';
 
@@ -11,7 +12,12 @@ const BASE_TITLE = 'MeldMusic';
 const useDocumentTitle = (title) => {
   useEffect(() => {
     const prev = document.title;
-    document.title = title ? `${title} — ${BASE_TITLE}` : BASE_TITLE;
+    const finalTitle = title ? `${title} — ${BASE_TITLE}` : BASE_TITLE;
+    document.title = finalTitle;
+    
+    // Dispatch page view to centralized production analytics
+    analytics.trackPageView(title || 'Home');
+    
     return () => { document.title = prev; };
   }, [title]);
 };
