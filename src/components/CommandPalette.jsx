@@ -4,6 +4,7 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { searchSongs } from '../api/saavn';
 import { FiSearch, FiHome, FiMusic, FiHeart, FiClock, FiSettings, FiTrendingUp, FiPlay, FiShuffle, FiRepeat, FiTrash2 } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
+import { pickImageUrl } from '../utils/media';
 
 // CommandPaletteInner is only mounted while the palette is open.
 // Unmounting it resets all state naturally — no need for setState-in-effect.
@@ -111,7 +112,7 @@ const CommandPaletteInner = ({ onClose }) => {
                       onClick={() => handlePlaySong(song)}
                       className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/[0.05] rounded-xl text-left transition-colors"
                     >
-                      <img src={song.image?.[0]?.link} className="w-8 h-8 rounded-lg object-cover" alt="" />
+                      <img src={pickImageUrl(song.image)} className="w-8 h-8 rounded-lg object-cover" alt="" />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold text-white truncate">{cleanText(song.name)}</p>
                         <p className="text-[10px] text-white/40 font-semibold truncate mt-0.5">{cleanText(song.primaryArtists)}</p>

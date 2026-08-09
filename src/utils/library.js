@@ -11,15 +11,36 @@ const VALID_QUALITIES = new Set(['48kbps', '96kbps', '160kbps', '320kbps']);
 const clampText = (value, fallback = '') => cleanText(value, fallback).slice(0, MAX_TEXT_LENGTH);
 
 const sanitizeMediaList = (items) => {
-  if (!Array.isArray(items)) return [];
+  if (!items) return [];
 
-  return items
-    .map(item => ({
-      quality: clampText(item?.quality),
-      link: safeUrl(item?.link || item?.url),
-    }))
-    .filter(item => item.link)
-    .slice(0, 8);
+  if (typeof items === 'string') {
+    const link = safeUrl(items);
+    return link ? [{ quality: '500x500', link }] : [];
+  }
+
+  if (Array.isArray(items)) {
+    return items
+      .map(item => {
+        if (typeof item === 'string') {
+          const link = safeUrl(item);
+          return link ? { quality: '', link } : null;
+        }
+        if (item && typeof item === 'object') {
+          const link = safeUrl(item.link || item.url || item.href);
+          return link ? { quality: clampText(item.quality), link } : null;
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .slice(0, 8);
+  }
+
+  if (typeof items === 'object') {
+    const link = safeUrl(items.link || items.url || items.href);
+    return link ? [{ quality: clampText(items.quality), link }] : [];
+  }
+
+  return [];
 };
 
 export const sanitizeSong = (song) => {
@@ -36,6 +57,9 @@ export const sanitizeSong = (song) => {
       : String(song.artists.primary);
   }
 
+  const rawImage = song.image || song.images || song.album?.image;
+  const rawDownloadUrl = song.downloadUrl || song.download_url || song.downloadUrls;
+
   return {
     id: clampText(song.id),
     name: clampText(song.name, 'Unknown Song'),
@@ -44,8 +68,8 @@ export const sanitizeSong = (song) => {
     language: typeof song.language === 'string' ? song.language.slice(0, 30).toLowerCase() : '',
     duration: Number.isFinite(Number(song.duration)) ? Math.max(0, Number(song.duration)) : 0,
     album: song.album?.name ? { name: clampText(song.album.name) } : null,
-    image: sanitizeMediaList(song.image),
-    downloadUrl: sanitizeMediaList(song.downloadUrl),
+    image: sanitizeMediaList(rawImage),
+    downloadUrl: sanitizeMediaList(rawDownloadUrl),
   };
 };
 

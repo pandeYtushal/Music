@@ -4,18 +4,37 @@ export const safeUrl = (value, fallback = '') => {
   if (!value) return fallback;
 
   try {
-    const url = new URL(String(value));
+    const str = String(value).trim();
+    if (!str) return fallback;
+    const url = new URL(str);
     return ALLOWED_PROTOCOLS.has(url.protocol) ? url.href : fallback;
   } catch {
     return fallback;
   }
 };
 
-export const pickImageUrl = (images = [], fallback = '') => {
-  if (!Array.isArray(images)) return fallback;
+export const pickImageUrl = (images, fallback = '') => {
+  if (!images) return fallback;
 
-  for (const image of [...images].reverse()) {
-    const link = safeUrl(image?.link);
+  if (typeof images === 'string') {
+    return safeUrl(images) || fallback;
+  }
+
+  if (Array.isArray(images)) {
+    for (const image of [...images].reverse()) {
+      if (typeof image === 'string') {
+        const link = safeUrl(image);
+        if (link) return link;
+      }
+      if (image && typeof image === 'object') {
+        const link = safeUrl(image.link || image.url || image.href);
+        if (link) return link;
+      }
+    }
+  }
+
+  if (typeof images === 'object') {
+    const link = safeUrl(images.link || images.url || images.href);
     if (link) return link;
   }
 
@@ -23,8 +42,21 @@ export const pickImageUrl = (images = [], fallback = '') => {
 };
 
 export const pickAudioUrl = (downloadUrls = [], quality) => {
-  if (!Array.isArray(downloadUrls) || downloadUrls.length === 0) return '';
+  if (!downloadUrls) return '';
 
-  const selected = downloadUrls.find(item => item?.quality === quality) || downloadUrls[downloadUrls.length - 1];
-  return safeUrl(selected?.link);
+  if (typeof downloadUrls === 'string') {
+    return safeUrl(downloadUrls);
+  }
+
+  if (Array.isArray(downloadUrls) && downloadUrls.length > 0) {
+    const selected = downloadUrls.find(item => item?.quality === quality) || downloadUrls[downloadUrls.length - 1];
+    if (typeof selected === 'string') return safeUrl(selected);
+    if (selected && typeof selected === 'object') return safeUrl(selected.link || selected.url || selected.href);
+  }
+
+  if (typeof downloadUrls === 'object') {
+    return safeUrl(downloadUrls.link || downloadUrls.url || downloadUrls.href);
+  }
+
+  return '';
 };
