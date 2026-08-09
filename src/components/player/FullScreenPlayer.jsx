@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import {
   FiPlay, FiPause, FiSkipBack, FiSkipForward,
   FiVolume2, FiVolumeX, FiHeart, FiRepeat, FiShuffle,

@@ -105,7 +105,9 @@ export const searchYouTube = async (query) => {
             });
           });
       }
-    } catch (_) {}
+    } catch {
+      // Fallback to local matches below
+    }
   }
 
   const localMatches = DEFAULT_YOUTUBE_TRACKS.filter(t =>

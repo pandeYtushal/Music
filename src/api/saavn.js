@@ -98,7 +98,7 @@ export const getLyrics = async (id, { signal } = {}) => {
     try {
       const data = await fetchWithFallback('/lyrics', { id: cleanId }, signal);
       return data?.data?.lyrics || data?.data?.snippet || null;
-    } catch (_) {
+    } catch {
       return null;
     }
   });
