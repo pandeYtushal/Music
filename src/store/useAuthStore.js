@@ -1,21 +1,40 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-export const useAuthStore = create((set) => ({
-  user: null, // null means not logged in
-  isLoading: true, // initializing firebase auth
-  setUser: (user) => set({ user }),
-  setIsLoading: (isLoading) => set({ isLoading }),
-  logout: async () => {
-    try {
-      const [{ auth }, { signOut }] = await Promise.all([
-        import('../firebase'),
-        import('firebase/auth'),
-      ]);
-      await signOut(auth);
-      set({ user: null });
-    } catch (error) {
-      console.error('Error signing out:', error);
-      set({ user: null });
-    }
-  },
-}));
+const DEFAULT_PROFILE = {
+  uid: 'local',
+  displayName: 'Listener',
+  email: null,
+  photoURL: null,
+};
+
+export const useAuthStore = create(
+  persist(
+    (set) => ({
+      user: DEFAULT_PROFILE,
+      isLoading: false,
+      setUser: (user) => set({ user: user || DEFAULT_PROFILE }),
+      setDisplayName: (displayName) =>
+        set((state) => ({
+          user: {
+            ...(state.user || DEFAULT_PROFILE),
+            displayName: String(displayName || 'Listener').trim().slice(0, 40) || 'Listener',
+          },
+        })),
+      setIsLoading: (isLoading) => set({ isLoading }),
+      // Local-only app — no remote sign-out; reset display name only
+      logout: () => set({ user: DEFAULT_PROFILE }),
+    }),
+    {
+      name: 'melody-local-profile',
+      partialize: (state) => ({
+        user: {
+          uid: 'local',
+          displayName: state.user?.displayName || 'Listener',
+          email: null,
+          photoURL: null,
+        },
+      }),
+    },
+  ),
+);

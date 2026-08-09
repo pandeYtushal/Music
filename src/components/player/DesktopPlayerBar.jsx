@@ -6,7 +6,7 @@ import { SeekBar, ControlButton } from './SeekBar';
 import { formatDuration as fmt } from '../../utils/format';
 
 /**
- * Desktop floating bottom player bar — hidden on mobile, visible md+.
+ * Desktop floating bottom player bar — modern sleek aesthetic with neon gradients & glassmorphism.
  */
 const DesktopPlayerBar = ({
   title, artist, imageUrl,
@@ -20,117 +20,111 @@ const DesktopPlayerBar = ({
   onSeekStart, onVolStart,
 }) => (
   <div
-    className={`hidden md:block fixed left-1/2 z-[100] w-[min(calc(100vw-3rem),1000px)] -translate-x-1/2 overflow-hidden rounded-2.5xl transition-all duration-500 ease-out ${isExpanded ? 'bottom-0 opacity-0 scale-95 pointer-events-none' : 'bottom-6 opacity-100 scale-100'}`}
+    className={`hidden md:block fixed left-1/2 z-[100] w-[min(calc(100vw-3rem),1180px)] -translate-x-1/2 overflow-hidden rounded-full transition-all duration-500 ease-out ${isExpanded ? 'bottom-0 opacity-0 scale-95 pointer-events-none' : 'bottom-6 opacity-100 scale-100'}`}
     style={{
-      background: 'rgba(20,20,24,0.72)',
-      backdropFilter: 'blur(36px)',
-      WebkitBackdropFilter: 'blur(36px)',
-      border: '1px solid rgba(255,255,255,0.09)',
-      boxShadow: '0 20px 48px rgba(0,0,0,0.6), 0 0 30px rgba(249,115,22,0.04)',
-      height: 76,
+      background: 'rgba(23, 23, 20, 0.92)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      border: '1px solid rgba(244,241,232,0.15)',
+      boxShadow: '0 18px 50px rgba(0,0,0,.45)',
+      height: 80,
     }}
   >
-    <div className="grid h-full grid-cols-[minmax(160px,0.8fr)_minmax(260px,1.2fr)_minmax(110px,0.5fr)] lg:grid-cols-[minmax(200px,0.85fr)_minmax(320px,1.25fr)_minmax(140px,0.55fr)] items-center gap-3 px-4 lg:gap-4 lg:px-5">
+    <div className="grid h-full grid-cols-[minmax(180px,0.85fr)_minmax(280px,1.3fr)_minmax(140px,0.6fr)] items-center gap-4 px-5">
       {/* Left: Track Info */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-3.5 min-w-0">
         <div
-          className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/5 cursor-pointer hover:scale-[1.03] transition-transform duration-300"
+          className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-[0_8px_20px_rgba(0,0,0,0.6)] border border-white/10 cursor-pointer hover:scale-105 transition-transform duration-300 relative group"
           onClick={onExpand}
         >
           <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <FiMaximize2 size={16} className="text-white" />
+          </div>
         </div>
+
         <div className="min-w-0 flex-1">
           <p
-            className="text-white font-extrabold text-[13.5px] truncate leading-tight cursor-pointer hover:underline"
+            className="text-white font-extrabold text-[14px] truncate leading-tight cursor-pointer hover:text-rose-400 transition-colors"
             onClick={onExpand}
           >
             {title}
           </p>
-          <p className="text-white/45 text-[11px] font-semibold truncate mt-0.5 leading-none">
+          <p className="text-white/50 text-[11.5px] font-semibold truncate mt-1 leading-none">
             {artist}
           </p>
         </div>
-        <div className="hidden xl:flex items-center gap-1 shrink-0 ml-1">
-          <button
-            onClick={onToggleFav}
-            className={`p-2 transition-all hover:scale-105 active:scale-95 ${isFav ? 'text-red-500' : 'text-white/20 hover:text-white/60'}`}
-          >
-            <FiHeart size={15} className={isFav ? 'fill-current' : ''} />
-          </button>
-        </div>
+
+        <button
+          onClick={onToggleFav}
+          className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${isFav ? 'text-rose-500 bg-rose-500/10' : 'text-white/30 hover:text-white'}`}
+          title={isFav ? 'Liked' : 'Like'}
+        >
+          <FiHeart size={16} className={isFav ? 'fill-current' : ''} />
+        </button>
       </div>
 
-      {/* Center: Progress & Controls */}
-      <div className="min-w-0 flex flex-col items-center gap-1 px-2">
-        <div className="flex items-center gap-4 lg:gap-5 mb-0.5">
+      {/* Center: Controls & Seeker */}
+      <div className="min-w-0 flex flex-col items-center gap-1.5 px-2">
+        <div className="flex items-center gap-5">
           <ControlButton active={shuffle} onClick={onToggleShuffle}>
             <FiShuffle size={14} />
           </ControlButton>
-          <button onClick={onPrev} className="text-white/50 hover:text-white transition-all active:scale-90">
+          <button onClick={onPrev} className="text-white/60 hover:text-white transition-all active:scale-90">
             <FiSkipBack size={18} />
           </button>
           <button
             onClick={onTogglePlay}
-            className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 active:scale-90 transition-all shadow-[0_4px_16px_rgba(255,255,255,0.18)] hover:bg-white/90"
+            className="w-10 h-10 rounded-full bg-[#d6ff42] text-[#10100e] flex items-center justify-center hover:scale-110 active:scale-93 transition-all shadow-none"
           >
-            {isPlaying ? <FiPause size={16} className="fill-current" /> : <FiPlay size={16} className="fill-current ml-0.5" />}
+            {isPlaying ? <FiPause size={18} className="fill-current" /> : <FiPlay size={18} className="fill-current ml-0.5" />}
           </button>
-          <button onClick={onNext} className="text-white/50 hover:text-white transition-all active:scale-90">
+          <button onClick={onNext} className="text-white/60 hover:text-white transition-all active:scale-90">
             <FiSkipForward size={18} />
           </button>
           <ControlButton active={repeatMode !== 'off'} onClick={onCycleRepeat}>
             <FiRepeat size={14} />
             {repeatMode === 'one' && (
-              <span className="absolute -right-1 -top-1 text-[7px] font-black leading-none bg-white text-black rounded-full px-0.5">1</span>
+              <span className="absolute -right-1 -top-1 text-[7px] font-black leading-none bg-rose-500 text-white rounded-full px-0.5">1</span>
             )}
           </ControlButton>
         </div>
-        <div className="flex items-center gap-3.5 w-full max-w-md">
-          <span className="text-[9.5px] font-extrabold text-white/25 tabular-nums w-8 text-right select-none">
+
+        <div className="flex items-center gap-3 w-full max-w-md">
+          <span className="text-[10px] font-bold text-white/35 tabular-nums w-8 text-right select-none">
             {fmt(played * duration)}
           </span>
           <SeekBar refEl={seekRef} played={played} onSeekStart={onSeekStart} />
-          <span className="text-[9.5px] font-extrabold text-white/25 tabular-nums w-8 select-none">
+          <span className="text-[10px] font-bold text-white/35 tabular-nums w-8 select-none">
             {fmt(duration)}
           </span>
         </div>
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-1.5 justify-end min-w-0">
-        <button
-          onClick={onToggleFav}
-          className={`xl:hidden p-2 rounded-xl transition-all active:scale-95 ${isFav ? 'text-red-500 bg-white/[0.04]' : 'text-white/25 hover:text-white/60'}`}
-        >
-          <FiHeart size={15} className={isFav ? 'fill-current' : ''} />
-        </button>
-        <button
-          onClick={onExpand}
-          className="p-2 text-white/30 hover:text-white hover:bg-white/5 rounded-xl transition-all active:scale-95"
-          title="Open full screen player"
-        >
-          <FiMaximize2 size={16} />
-        </button>
-        <div className="flex items-center gap-2 group relative">
-          <button onClick={onToggleMute} className="p-2 text-white/30 hover:text-white transition-all active:scale-95">
+      {/* Right: Volume & Expand */}
+      <div className="flex items-center gap-3 justify-end min-w-0">
+        <div className="flex items-center gap-2 group">
+          <button onClick={onToggleMute} className="text-white/40 hover:text-white transition-colors">
             {isMuted || volume === 0 ? <FiVolumeX size={16} /> : <FiVolume2 size={16} />}
           </button>
           <div
             ref={barVolumeRef}
-            className="w-14 xl:w-18 h-[3.5px] rounded-full cursor-pointer relative hidden lg:block group bg-white/[0.08]"
-            onMouseDown={(e) => onVolStart(e, barVolumeRef)}
-            onTouchStart={(e) => onVolStart(e, barVolumeRef)}
+            onMouseDown={(event) => onVolStart(event, barVolumeRef)}
+            onTouchStart={(event) => onVolStart(event, barVolumeRef)}
+            className="w-20 h-1.5 bg-white/15 rounded-full cursor-pointer relative overflow-hidden group-hover:bg-white/25 transition-all"
+            role="slider"
+            aria-label="Volume"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round((isMuted ? 0 : volume) * 100)}
           >
-            <div
-              className="absolute top-0 left-0 h-full rounded-full bg-white/70 group-hover:bg-white transition-colors"
-              style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
-            />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white scale-0 group-hover:scale-100 transition-transform cursor-pointer"
-              style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - 5px)` }}
-            />
+            <div className="h-full bg-[#d6ff42] rounded-full" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
           </div>
         </div>
+
+        <button onClick={onExpand} className="p-2 text-white/40 hover:text-white transition-all hover:scale-110" title="Full Screen Player">
+          <FiMaximize2 size={16} />
+        </button>
       </div>
     </div>
   </div>

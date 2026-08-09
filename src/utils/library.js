@@ -16,7 +16,7 @@ const sanitizeMediaList = (items) => {
   return items
     .map(item => ({
       quality: clampText(item?.quality),
-      link: safeUrl(item?.link),
+      link: safeUrl(item?.link || item?.url),
     }))
     .filter(item => item.link)
     .slice(0, 8);
@@ -25,10 +25,21 @@ const sanitizeMediaList = (items) => {
 export const sanitizeSong = (song) => {
   if (!song || !song.id) return null;
 
+  let artistStr = '';
+  if (typeof song.primaryArtists === 'string') {
+    artistStr = clampText(song.primaryArtists, '');
+  } else if (Array.isArray(song.primaryArtists)) {
+    artistStr = song.primaryArtists.map(a => typeof a === 'object' ? a.name : a).filter(Boolean).join(', ');
+  } else if (song.artists?.primary) {
+    artistStr = Array.isArray(song.artists.primary)
+      ? song.artists.primary.map(a => typeof a === 'object' ? a.name : a).filter(Boolean).join(', ')
+      : String(song.artists.primary);
+  }
+
   return {
     id: clampText(song.id),
     name: clampText(song.name, 'Unknown Song'),
-    primaryArtists: clampText(song.primaryArtists, ''),
+    primaryArtists: clampText(artistStr, 'Unknown Artist'),
     label: clampText(song.label, ''),
     language: typeof song.language === 'string' ? song.language.slice(0, 30).toLowerCase() : '',
     duration: Number.isFinite(Number(song.duration)) ? Math.max(0, Number(song.duration)) : 0,
@@ -80,7 +91,7 @@ export const sanitizePlaylists = (playlists) => {
 
 export const sanitizeLibrary = (library = {}) => ({
   favorites: sanitizeSongList(library.favorites, MAX_LIST_ITEMS),
-  recentlyPlayed: sanitizeSongList(library.recentlyPlayed, 20),
+  recentlyPlayed: sanitizeSongList(library.recentlyPlayed, 100),
   playlists: sanitizePlaylists(library.playlists),
   autoplay: typeof library.autoplay === 'boolean' ? library.autoplay : true,
   shuffle: typeof library.shuffle === 'boolean' ? library.shuffle : false,
@@ -118,4 +129,3 @@ export const isSongAcceptable = (song, currentLang, allowedLangs) => {
 
   return true;
 };
-

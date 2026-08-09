@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { FiLoader } from 'react-icons/fi';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { sanitizeSongList } from '../utils/library';
+import { getSongById } from '../api/saavn';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const SharedSong = () => {
@@ -24,19 +24,13 @@ const SharedSong = () => {
 
     const fetchSong = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_SAAVN_API_URL || 'https://saavn.dev/api'}/songs?id=${id}`);
-        const data = await response.json();
-        
+        const song = await getSongById(id);
+
         if (isMounted) {
-          if (data?.data?.[0]) {
-            const song = data.data[0];
-            const sanitized = sanitizeSongList([song], 1);
-            
-            if (sanitized.length > 0) {
-              setCurrentVideo(sanitized[0], []);
-              navigate('/');
-              return;
-            }
+          if (song) {
+            setCurrentVideo(song, []);
+            navigate('/');
+            return;
           }
           setError('Song not found or unavailable.');
           setTimeout(() => navigate('/'), 3000);

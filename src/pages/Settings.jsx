@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { renderAvatar } from '../utils/avatar';
-import { FiUser, FiSettings, FiWifi, FiCheck, FiHeadphones, FiCommand } from 'react-icons/fi';
+import { FiSettings, FiWifi, FiCheck, FiHeadphones, FiCommand, FiShield, FiHardDrive } from 'react-icons/fi';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const qualityOptions = [
@@ -40,7 +40,7 @@ const Toggle = ({ active, onToggle, label }) => (
 );
 
 const Settings = () => {
-  const { user } = useAuthStore();
+  const { user, setDisplayName } = useAuthStore();
   const autoplay = usePlayerStore(state => state.autoplay);
   const toggleAutoplay = usePlayerStore(state => state.toggleAutoplay);
   const quality = usePlayerStore(state => state.quality);
@@ -54,7 +54,7 @@ const Settings = () => {
   useDocumentTitle('Settings');
 
   const derivedName = (() => {
-    const name = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Listener');
+    const name = user?.displayName || 'Listener';
     return name.charAt(0).toUpperCase() + name.slice(1);
   })();
 
@@ -65,7 +65,6 @@ const Settings = () => {
     <div className="w-full bg-background text-white">
       <div className="max-w-[1200px] mx-auto px-6 md:px-10 pt-8 md:pt-14 animate-fade-up">
 
-        {/* Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
             <div className="flex items-center gap-2 mb-2 text-orange-500/80">
@@ -76,29 +75,51 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Profile Card */}
         <div className="relative rounded-[32px] overflow-hidden border border-white/[0.08] mb-10 group p-8 md:p-10" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)' }}>
           <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="shrink-0 p-1 rounded-full bg-white/[0.05] border border-white/[0.1]">
-              {renderAvatar(user?.photoURL, derivedName, user?.email, "w-28 h-28 md:w-32 md:h-32 rounded-full shadow-2xl")}
+              {renderAvatar(null, derivedName, null, "w-28 h-28 md:w-32 md:h-32 rounded-full shadow-2xl")}
             </div>
 
             <div className="text-center md:text-left flex-1 flex flex-col justify-center h-full pt-2 md:pt-4">
-              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">{derivedName}</h2>
-              <p className="text-white/40 font-medium text-sm md:text-base flex items-center justify-center md:justify-start gap-2">
-                <FiUser size={14} />
-                {user?.email || 'Authenticated User'}
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Display name</label>
+              <input
+                type="text"
+                defaultValue={derivedName}
+                maxLength={40}
+                onBlur={(e) => setDisplayName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                }}
+                className="bg-transparent border-b border-white/10 focus:border-orange-500/60 outline-none text-3xl md:text-4xl font-black text-white tracking-tight mb-3 pb-1 max-w-md w-full text-center md:text-left"
+              />
+              <p className="text-emerald-400/70 font-medium text-sm flex items-center justify-center md:justify-start gap-2">
+                <FiShield size={14} />
+                Stored only on this device
               </p>
             </div>
           </div>
         </div>
 
-        {/* Settings Grid */}
         <div className="max-w-3xl mx-auto">
 
-          {/* Playback Settings */}
+          <section className={`${sectionClass} mb-8`} style={sectionStyle}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <FiHardDrive size={20} className="text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white tracking-tight">Local Privacy</h2>
+                <p className="text-sm text-white/40 font-medium mt-1">No accounts. Your library never leaves this browser.</p>
+              </div>
+            </div>
+            <p className="text-white/45 text-[13px] font-medium leading-relaxed">
+              Favorites, playlists, recently played, and playback settings are saved in your browser&apos;s local storage. Clear site data to wipe them anytime.
+            </p>
+          </section>
+
           <section className={sectionClass} style={sectionStyle}>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
@@ -139,8 +160,7 @@ const Settings = () => {
             </div>
           </section>
 
-          {/* Audio Tuning Section */}
-          <section className={sectionClass} style={sectionStyle}>
+          <section className={`${sectionClass} mt-8`} style={sectionStyle}>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
                 <FiHeadphones size={20} className="text-orange-400" />
@@ -152,7 +172,6 @@ const Settings = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Equalizer Preset */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.01] px-4 -mx-4 rounded-xl transition-colors">
                 <div>
                   <p className="text-white font-bold text-[15px] leading-snug">Equalizer Preset</p>
@@ -172,12 +191,10 @@ const Settings = () => {
                 </select>
               </div>
 
-              {/* Crossfade Toggle */}
               <SettingRow icon={FiHeadphones} label="Crossfade Tracks" description="Smoothly blend ending tracks into starting tracks.">
                 <Toggle active={crossfade} onToggle={toggleCrossfade} label="Toggle Crossfade" />
               </SettingRow>
 
-              {/* Crossfade Duration Slider */}
               {crossfade && (
                 <div className="py-4 border-b border-white/[0.04]">
                   <div className="flex items-center justify-between text-xs font-bold mb-3">
@@ -197,7 +214,6 @@ const Settings = () => {
             </div>
           </section>
 
-          {/* Keyboard Shortcuts Section */}
           <section className={`${sectionClass} mt-8 mb-12`} style={sectionStyle}>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
@@ -219,8 +235,8 @@ const Settings = () => {
                 { keys: ['P'], action: 'Previous Track' },
                 { keys: ['S'], action: 'Toggle Shuffle' },
                 { keys: ['R'], action: 'Cycle Repeat Mode' },
-                { keys: ['F'], action: 'Toggle Favorite' },
-                { keys: ['Esc'], action: 'Close Full-Screen Overlay' },
+                { keys: ['F'], action: 'Toggle Full-Screen / Compact Player' },
+                { keys: ['Esc'], action: 'Return to Compact Player' },
               ].map((shortcut, idx) => (
                 <div key={idx} className="flex items-center justify-between py-2.5 border-b border-white/[0.03] last:border-0">
                   <span className="text-sm font-semibold text-white/70">{shortcut.action}</span>

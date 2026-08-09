@@ -27,15 +27,14 @@ export const usePlayerStore = create(
       crossfade: false,
       crossfadeDuration: 5,
       eqPreset: 'flat',
-      sleepTimerDuration: null, // in minutes, null means off
-      
+
       setCurrentVideo: (video, contextPlaylist = null) => {
         if (!video) {
           set({
             currentVideo: null,
             isPlaying: false,
             playlist: contextPlaylist || [],
-            currentIndex: -1
+            currentIndex: -1,
           });
           return;
         }
@@ -45,28 +44,30 @@ export const usePlayerStore = create(
         if (!cleanVideo) return;
 
         let newPlaylist = contextPlaylist ? sanitizeSongList(contextPlaylist, 100) : state.playlist;
-        
+
         if (!contextPlaylist && state.playlist.length === 0) {
           newPlaylist = [cleanVideo];
         }
-        
+
         const videoIdToFind = cleanVideo.id;
         const index = newPlaylist.findIndex(v => v.id === videoIdToFind);
-        
-        // Add to recently played (keep max 50)
-        const newRecentlyPlayed = [{ ...cleanVideo, playedAt: Date.now() }, ...state.recentlyPlayed.filter(v => v.id !== cleanVideo.id)].slice(0, 50);
-        
-        set({ 
-          currentVideo: cleanVideo, 
+
+        const newRecentlyPlayed = [
+          { ...cleanVideo, playedAt: Date.now() },
+          ...state.recentlyPlayed.filter(v => v.id !== cleanVideo.id),
+        ].slice(0, 100);
+
+        set({
+          currentVideo: cleanVideo,
           isPlaying: true,
           playlist: newPlaylist,
           currentIndex: index !== -1 ? index : 0,
-          recentlyPlayed: newRecentlyPlayed
+          recentlyPlayed: newRecentlyPlayed,
         });
       },
-      
+
       setIsPlaying: (isPlaying) => set({ isPlaying }),
-      
+
       playNext: () => {
         const state = get();
         if (state.playlist.length === 0) return;
@@ -84,10 +85,13 @@ export const usePlayerStore = create(
         if (nextIndex < 0 || nextIndex >= state.playlist.length) return;
 
         const nextVideo = state.playlist[nextIndex];
-        const newRecentlyPlayed = [{ ...nextVideo, playedAt: Date.now() }, ...state.recentlyPlayed.filter(v => v.id !== nextVideo.id)].slice(0, 50);
+        const newRecentlyPlayed = [
+          { ...nextVideo, playedAt: Date.now() },
+          ...state.recentlyPlayed.filter(v => v.id !== nextVideo.id),
+        ].slice(0, 100);
         set({ currentVideo: nextVideo, currentIndex: nextIndex, isPlaying: true, recentlyPlayed: newRecentlyPlayed });
       },
-      
+
       playPrevious: () => {
         const state = get();
         if (state.playlist.length === 0) return;
@@ -100,7 +104,10 @@ export const usePlayerStore = create(
         if (prevIndex < 0 || prevIndex >= state.playlist.length) return;
 
         const prevVideo = state.playlist[prevIndex];
-        const newRecentlyPlayed = [{ ...prevVideo, playedAt: Date.now() }, ...state.recentlyPlayed.filter(v => v.id !== prevVideo.id)].slice(0, 50);
+        const newRecentlyPlayed = [
+          { ...prevVideo, playedAt: Date.now() },
+          ...state.recentlyPlayed.filter(v => v.id !== prevVideo.id),
+        ].slice(0, 50);
         set({ currentVideo: prevVideo, currentIndex: prevIndex, isPlaying: true, recentlyPlayed: newRecentlyPlayed });
       },
 
@@ -121,7 +128,7 @@ export const usePlayerStore = create(
         const nextQueue = [
           ...filteredQueue.slice(0, insertIndex),
           cleanVideo,
-          ...filteredQueue.slice(insertIndex)
+          ...filteredQueue.slice(insertIndex),
         ];
         set({
           playlist: nextQueue,
@@ -161,7 +168,7 @@ export const usePlayerStore = create(
       reorderQueue: (oldIndex, newIndex) => {
         const state = get();
         if (oldIndex < 0 || oldIndex >= state.playlist.length || newIndex < 0 || newIndex >= state.playlist.length) return;
-        
+
         const nextQueue = [...state.playlist];
         const [movedItem] = nextQueue.splice(oldIndex, 1);
         nextQueue.splice(newIndex, 0, movedItem);
@@ -208,26 +215,12 @@ export const usePlayerStore = create(
       toggleAutoplay: () => set((state) => ({ autoplay: !state.autoplay })),
       toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
       cycleRepeatMode: () => set((state) => ({
-        repeatMode: state.repeatMode === 'off' ? 'all' : state.repeatMode === 'all' ? 'one' : 'off'
+        repeatMode: state.repeatMode === 'off' ? 'all' : state.repeatMode === 'all' ? 'one' : 'off',
       })),
       setQuality: (quality) => set({ quality: sanitizeLibrary({ quality }).quality }),
       toggleCrossfade: () => set((state) => ({ crossfade: !state.crossfade })),
       setCrossfadeDuration: (duration) => set({ crossfadeDuration: Math.min(12, Math.max(0, duration)) }),
       setEqPreset: (eqPreset) => set({ eqPreset }),
-      setSleepTimer: (duration) => set({ sleepTimerDuration: duration }),
-      setLibraryFromCloud: (library) => set((state) => {
-        const sanitized = sanitizeLibrary(library);
-
-        return {
-          favorites: Array.isArray(library?.favorites) ? sanitized.favorites : state.favorites,
-          recentlyPlayed: Array.isArray(library?.recentlyPlayed) ? sanitized.recentlyPlayed : state.recentlyPlayed,
-          playlists: Array.isArray(library?.playlists) ? sanitized.playlists : state.playlists,
-          autoplay: typeof library?.autoplay === 'boolean' ? sanitized.autoplay : state.autoplay,
-          shuffle: typeof library?.shuffle === 'boolean' ? sanitized.shuffle : state.shuffle,
-          repeatMode: typeof library?.repeatMode === 'string' ? sanitized.repeatMode : state.repeatMode,
-          quality: typeof library?.quality === 'string' ? sanitized.quality : state.quality,
-        };
-      }),
 
       createPlaylist: (name) => {
         const id = createPlaylistId();
@@ -236,12 +229,12 @@ export const usePlayerStore = create(
         return id;
       },
 
-      deletePlaylist: (id) => set((state) => ({ 
-        playlists: state.playlists.filter(p => p.id !== id) 
+      deletePlaylist: (id) => set((state) => ({
+        playlists: state.playlists.filter(p => p.id !== id),
       })),
 
       renamePlaylist: (id, name) => set((state) => ({
-        playlists: state.playlists.map(p => p.id === id ? { ...p, name: sanitizePlaylistName(name) } : p)
+        playlists: state.playlists.map(p => (p.id === id ? { ...p, name: sanitizePlaylistName(name) } : p)),
       })),
 
       addToPlaylist: (playlistId, video) => set((state) => ({
@@ -249,31 +242,30 @@ export const usePlayerStore = create(
           const cleanVideo = sanitizeSong(video);
           if (!cleanVideo) return p;
           if (p.id === playlistId) {
-            // Check if already exists
             if (p.songs.some(s => s.id === cleanVideo.id)) return p;
             return { ...p, songs: [...p.songs, cleanVideo].slice(0, 100) };
           }
           return p;
-        })
+        }),
       })),
 
       removeFromPlaylist: (playlistId, videoId) => set((state) => ({
-        playlists: state.playlists.map(p => 
-          p.id === playlistId ? { ...p, songs: p.songs.filter(s => s.id !== videoId) } : p
-        )
+        playlists: state.playlists.map(p =>
+          p.id === playlistId ? { ...p, songs: p.songs.filter(s => s.id !== videoId) } : p,
+        ),
       })),
 
       openAddToPlaylistModal: (song) => set({ isAddToPlaylistModalOpen: true, pendingSong: song }),
-      closeAddToPlaylistModal: () => set({ isAddToPlaylistModalOpen: false, pendingSong: null })
+      closeAddToPlaylistModal: () => set({ isAddToPlaylistModalOpen: false, pendingSong: null }),
     }),
     {
       name: 'melody-player-storage',
       version: 2,
       migrate: (persistedState) => sanitizeLibrary(persistedState),
-      partialize: (state) => ({ 
-        favorites: sanitizeSongList(state.favorites, 50), 
-        recentlyPlayed: sanitizeSongList(state.recentlyPlayed, 20), 
-        autoplay: state.autoplay, 
+      partialize: (state) => ({
+        favorites: sanitizeSongList(state.favorites, 50),
+        recentlyPlayed: sanitizeSongList(state.recentlyPlayed, 100),
+        autoplay: state.autoplay,
         shuffle: state.shuffle,
         repeatMode: state.repeatMode,
         quality: state.quality,
@@ -282,6 +274,6 @@ export const usePlayerStore = create(
         crossfadeDuration: state.crossfadeDuration,
         eqPreset: state.eqPreset,
       }),
-    }
-  )
+    },
+  ),
 );

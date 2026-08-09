@@ -2,7 +2,7 @@ import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { FiPlay, FiPlus, FiSkipForward, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
-import { formatDuration } from '../utils/format';
+import { formatDuration, formatTimeAgo } from '../utils/format';
 import { pickImageUrl } from '../utils/media';
 
 const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
@@ -27,12 +27,12 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
   return (
     <div className="mb-14 relative group/grid">
       {title && (
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-end justify-between mb-6 border-t border-[#f4f1e8]/15 pt-4">
           <div className="flex flex-col gap-1">
-            {horizontal && <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em]">For You</p>}
+            {horizontal && <p className="text-[10px] font-medium text-[#a9a79d] uppercase tracking-[0.18em]">Selected for you</p>}
             <h2
               onClick={onShowAll}
-              className={`text-2xl font-bold text-white tracking-tight ${onShowAll ? 'cursor-pointer hover:text-white/70 transition-colors' : ''}`}
+              className={`text-3xl font-normal text-[#f4f1e8] tracking-tight font-['Instrument_Serif'] ${onShowAll ? 'cursor-pointer hover:text-[#d6ff42] transition-colors' : ''}`}
             >
               {title}
             </h2>
@@ -82,12 +82,12 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
         {videos.map((video, idx) => (
           <div
             key={`${video.id}-${idx}`}
-            className={`group cursor-pointer transition-all duration-300 ${horizontal ? 'min-w-[140px] max-w-[140px] md:min-w-[180px] md:max-w-[180px] snap-start' : ''}`}
+            className={`group cursor-pointer transition-all duration-300 ${horizontal ? 'min-w-[150px] max-w-[150px] md:min-w-[190px] md:max-w-[190px] snap-start' : ''}`}
             onClick={() => setCurrentVideo(video, videos)}
           >
             {/* Thumbnail */}
             <div
-              className="relative aspect-square rounded-2xl overflow-hidden mb-3 md:mb-4 transition-all duration-500 group-hover:shadow-[0_24px_50px_rgba(0,0,0,0.7)] group-hover:translate-y-[-2px] border border-white/[0.08] bg-white/[0.015] shadow-lg"
+              className="relative aspect-[4/5] rounded-none overflow-hidden mb-3 md:mb-4 transition-all duration-500 group-hover:shadow-[0_24px_50px_rgba(0,0,0,0.45)] group-hover:-translate-y-1 border border-[#f4f1e8]/10 bg-white/[0.015]"
             >
               <img
                 src={pickImageUrl(video.image)}
@@ -97,7 +97,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
               />
               {/* Play overlay */}
               <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                <div className="w-12 h-12 md:w-13 md:h-13 rounded-full bg-white text-black flex items-center justify-center shadow-2xl scale-90 group-hover:scale-100 transition-all duration-300 hover:bg-orange-500 hover:text-white">
+                <div className="w-12 h-12 md:w-13 md:h-13 rounded-full bg-[#d6ff42] text-[#10100e] flex items-center justify-center shadow-2xl scale-90 group-hover:scale-100 transition-all duration-300">
                   <FiPlay className="fill-current" size={16} style={{ marginLeft: 2 }} />
                 </div>
               </div>
@@ -125,6 +125,11 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
                   <FiPlus size={13} />
                 </button>
               </div>
+              {video.playedAt && (
+                <span className="absolute left-2 bottom-2 rounded-md bg-black/75 backdrop-blur-md px-1.5 py-0.5 text-[9px] font-mono text-[#d6ff42] border border-white/10">
+                  {formatTimeAgo(video.playedAt)}
+                </span>
+              )}
               {video.duration && (
                 <span className="absolute right-2 bottom-2 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white/80">
                   {formatDuration(video.duration)}
@@ -135,12 +140,12 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
             {/* Meta */}
             <div className="px-1">
               <h3
-                className="text-white font-bold text-[14px] md:text-[15px] truncate leading-tight mb-0.5 md:mb-1 group-hover:text-white/90 transition-colors"
+                className="text-[#f4f1e8] font-semibold text-[14px] md:text-[15px] truncate leading-tight mb-0.5 md:mb-1 group-hover:text-[#d6ff42] transition-colors"
               >
                 {cleanText(video.name, 'Unknown Song')}
               </h3>
               <p
-                className="text-white/30 text-[11px] md:text-[13px] font-medium truncate"
+                className="text-[#a9a79d] text-[11px] md:text-[13px] font-medium truncate"
               >
                 {cleanText(video.primaryArtists || video.label, 'Unknown Artist')}
               </p>

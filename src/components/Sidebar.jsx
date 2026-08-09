@@ -1,12 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiClock, FiHeart, FiHome, FiLogOut, FiMusic, FiSearch, FiSettings, FiX, FiTrendingUp } from 'react-icons/fi';
+import { FiClock, FiHeart, FiHome, FiMusic, FiSearch, FiSettings, FiX, FiTrendingUp } from 'react-icons/fi';
 import { useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { renderAvatar } from '../utils/avatar';
 import logo from '../assets/logo-icon.png';
 
 const navLinks = [
-  { name: 'Home', icon: FiHome, path: '/' },
+  { name: 'Home', icon: FiHome, path: '/home' },
   { name: 'Search', icon: FiSearch, path: '/search' },
   { name: 'Library', icon: FiMusic, path: '/playlists' },
   { name: 'Favorites', icon: FiHeart, path: '/favorites' },
@@ -16,7 +16,7 @@ const navLinks = [
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -34,30 +34,26 @@ const Sidebar = () => {
     navigate('/search');
   };
 
-  const handleLogout = () => {
-    logout();
-    setIsProfileOpen(false);
-    navigate('/login');
-  };
+  const displayName = user?.displayName || 'Listener';
 
   return (
     <header
-      className="fixed top-5 left-1/2 z-50 hidden w-[min(calc(100vw-2.5rem),1140px)] -translate-x-1/2 md:flex items-center gap-4 rounded-2xl px-4 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-3xl transition-all duration-300 border border-white/[0.07] bg-white/[0.02]"
+      className="fixed top-5 left-1/2 z-50 hidden w-[min(calc(100vw-3rem),1360px)] -translate-x-1/2 md:flex items-center gap-4 rounded-full px-3 py-2 shadow-[0_14px_40px_rgba(0,0,0,.24)] backdrop-blur-xl transition-all duration-300 border border-[#f4f1e8]/15 bg-[#171714]/85"
     >
       <div
         onClick={() => navigate('/')}
-        className="flex items-center gap-2.5 cursor-pointer group shrink-0 rounded-xl px-2.5 py-1.5 hover:bg-white/[0.04] transition-all duration-200"
+        className="flex items-center gap-2.5 cursor-pointer group shrink-0 rounded-full px-2.5 py-1.5 hover:bg-white/[0.06] transition-all duration-200"
       >
         <div
-          className="w-8 h-8 rounded-[10px] flex items-center justify-center transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.35)]"
-          style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.22)' }}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+          style={{ background: '#d6ff42' }}
         >
           <img src={logo} alt="Melody" className="w-5 h-5 object-contain" />
         </div>
-        <span className="text-[14px] font-black tracking-tight text-white">Melody</span>
+        <span className="text-[14px] font-bold tracking-tight text-[#f4f1e8]">melody.</span>
       </div>
 
-      <div className="h-6 w-px bg-white/[0.06]" />
+      <div className="h-6 w-px bg-[#f4f1e8]/15" />
 
       <nav className="flex min-w-0 items-center justify-center gap-1.5 overflow-x-auto scrollbar-hide">
         {navLinks.map((link) => (
@@ -67,8 +63,8 @@ const Sidebar = () => {
             end={link.path === '/'}
             className={({ isActive }) =>
               `flex h-9 shrink-0 items-center gap-2 rounded-xl px-3.5 text-[12.5px] font-bold transition-all duration-300 ${isActive
-                ? 'bg-white text-black shadow-[0_8px_20px_rgba(255,255,255,0.12)] hover:scale-[1.02] active:scale-[0.98]'
-                : 'text-white/50 hover:bg-white/[0.05] hover:text-white hover:scale-[1.02] active:scale-[0.98]'
+                ? 'bg-[#d6ff42] text-[#10100e] shadow-none hover:scale-[1.02] active:scale-[0.98]'
+                : 'text-[#f4f1e8]/55 hover:bg-white/[0.05] hover:text-[#f4f1e8] hover:scale-[1.02] active:scale-[0.98]'
               }`
             }
           >
@@ -90,7 +86,7 @@ const Sidebar = () => {
           border: `1px solid ${isFocused ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.06)'}`,
         }}
       >
-        <FiSearch size={14} className={isFocused ? 'text-white' : 'text-white/30'} />
+        <FiSearch size={14} className={isFocused ? 'text-[#f4f1e8]' : 'text-[#f4f1e8]/35'} />
         <input
           type="text"
           value={query}
@@ -98,7 +94,7 @@ const Sidebar = () => {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="Search"
-          className="min-w-0 flex-1 bg-transparent text-[12.5px] font-medium text-white outline-none placeholder:text-white/20"
+          className="min-w-0 flex-1 bg-transparent text-[12.5px] font-medium text-[#f4f1e8] outline-none placeholder:text-[#f4f1e8]/30"
         />
         {query && (
           <button type="button" onClick={clearSearch} className="text-white/20 transition-colors hover:text-white/60" aria-label="Clear search">
@@ -113,7 +109,7 @@ const Sidebar = () => {
           className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-white/10 shadow-lg transition-all hover:border-white/25 active:scale-95"
           aria-label="Open profile menu"
         >
-          {renderAvatar(user?.photoURL, user?.displayName, user?.email, 'w-full h-full')}
+          {renderAvatar(null, displayName, null, 'w-full h-full')}
         </button>
 
         <div
@@ -127,10 +123,8 @@ const Sidebar = () => {
           }}
         >
           <div className="mb-1.5 border-b border-white/[0.05] px-5 py-4">
-            <p className="truncate text-[13.5px] font-extrabold text-white">
-              {user?.displayName || (user?.email ? user.email.split('@')[0] : 'Listener')}
-            </p>
-            <p className="mt-0.5 truncate text-[10.5px] text-white/35 font-medium">{user?.email || ''}</p>
+            <p className="truncate text-[13.5px] font-extrabold text-white">{displayName}</p>
+            <p className="mt-0.5 truncate text-[10.5px] text-emerald-400/70 font-medium">Private · Local only</p>
           </div>
           <button onClick={() => { navigate('/stats'); setIsProfileOpen(false); }} className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-[12.5px] font-bold text-white/50 transition-all hover:bg-white/[0.04] hover:text-white">
             <FiTrendingUp size={13} />
@@ -139,11 +133,6 @@ const Sidebar = () => {
           <button onClick={() => { navigate('/settings'); setIsProfileOpen(false); }} className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-[12.5px] font-bold text-white/50 transition-all hover:bg-white/[0.04] hover:text-white">
             <FiSettings size={13} />
             Settings
-          </button>
-          <div className="mx-5 my-1.5 h-px bg-white/[0.05]" />
-          <button onClick={handleLogout} className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-[12.5px] font-bold text-red-400/50 transition-all hover:bg-red-400/5 hover:text-red-400">
-            <FiLogOut size={13} />
-            Sign Out
           </button>
         </div>
       </div>

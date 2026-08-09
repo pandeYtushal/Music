@@ -43,11 +43,6 @@ export default defineConfig({
       }
     })
   ],
-  server: {
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-    }
-  },
   build: {
     rollupOptions: {
       output: {
@@ -55,9 +50,6 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
               return 'vendor-core';
-            }
-            if (id.includes('firebase')) {
-              return 'vendor-firebase';
             }
             if (id.includes('react-icons') || id.includes('lucide')) {
               return 'vendor-icons';

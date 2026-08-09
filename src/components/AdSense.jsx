@@ -30,12 +30,12 @@ const AdSense = ({ adSlot, adFormat = 'auto', fullWidthResponsive = true, classN
 
   return (
     <div 
-      className={`adsense-container w-full min-h-[90px] overflow-hidden my-4 flex items-center justify-center ${className}`} 
+      className={`adsense-container w-full min-h-[90px] bg-transparent overflow-hidden my-4 flex items-center justify-center ${className}`} 
       ref={adRef}
     >
       <ins
-        className="adsbygoogle w-full"
-        style={{ display: 'block' }}
+        className="adsbygoogle w-full bg-transparent"
+        style={{ display: 'block', background: 'transparent' }}
         data-ad-client="ca-pub-8724734366896266"
         data-ad-slot={adSlot}
         data-ad-format={adFormat}

@@ -19,14 +19,75 @@ const getAllArtists = (song) =>
     .map((a) => a.trim())
     .filter(Boolean);
 
-const getMoodQuery = () => {
+const getMoodPool = () => {
   const h = new Date().getHours();
-  if (h >= 5 && h < 9) return 'morning calm acoustic';
-  if (h >= 9 && h < 12) return 'upbeat energy hindi';
-  if (h >= 12 && h < 15) return 'chill afternoon vibes';
-  if (h >= 15 && h < 18) return 'feel good bollywood';
-  if (h >= 18 && h < 21) return 'evening party hits';
-  return 'late night lofi hindi';
+  if (h >= 5 && h < 9) return ['sunrise acoustic', 'morning chill indie', 'soft coffeehouse'];
+  if (h >= 9 && h < 12) return ['upbeat energy hits', 'feel good pop', 'workout motivation'];
+  if (h >= 12 && h < 15) return ['afternoon chill vibes', 'smooth R&B', 'mellow indie'];
+  if (h >= 15 && h < 18) return ['golden hour bollywood', 'feel good classics', 'drive time hits'];
+  if (h >= 18 && h < 21) return ['evening party anthems', 'dance floor energy', 'club remixes'];
+  return ['late night lofi', 'midnight neo soul', 'dark ambient chill'];
+};
+
+const getVibeQueries = (lang) => {
+  const L = (lang || 'hindi').toLowerCase();
+  const vibes = [
+    `${L} deep cuts`,
+    `${L} underrated gems`,
+    `${L} viral hits 2024`,
+    `${L} radio remixes`,
+    `similar to ${L} hits`,
+  ];
+  return vibes;
+};
+
+const topArtistsFromHistory = (songs, limit = 4) => {
+  const counts = new Map();
+  (songs || []).forEach((song) => {
+    getAllArtists(song).forEach((artist) => {
+      counts.set(artist, (counts.get(artist) || 0) + 1);
+    });
+  });
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([artist]) => artist);
+};
+
+const scoreRecommendation = (song, { currentVideo, favoriteArtists, recentArtists }) => {
+  let score = Math.random() * 0.4; // light shuffle spice
+  const artists = getAllArtists(song).map((a) => a.toLowerCase());
+  const currentArtists = getAllArtists(currentVideo).map((a) => a.toLowerCase());
+
+  if (artists.some((a) => currentArtists.includes(a))) score += 3;
+  if (artists.some((a) => favoriteArtists.has(a))) score += 2.5;
+  if (artists.some((a) => recentArtists.has(a))) score += 1.5;
+  if (song.language && currentVideo?.language &&
+      song.language.toLowerCase() === currentVideo.language.toLowerCase()) score += 1;
+  if (currentVideo?.album?.name && song.album?.name &&
+      song.album.name.toLowerCase() === currentVideo.album.name.toLowerCase()) score += 2;
+  return score;
+};
+
+const interleaveBySource = (buckets, limit) => {
+  const result = [];
+  const seen = new Set();
+  let added = true;
+  while (result.length < limit && added) {
+    added = false;
+    for (const bucket of buckets) {
+      while (bucket.length > 0) {
+        const song = bucket.shift();
+        if (!song?.id || seen.has(song.id)) continue;
+        seen.add(song.id);
+        result.push(song);
+        added = true;
+        break;
+      }
+      if (result.length >= limit) break;
+    }
+  }
+  return result;
 };
 
 const shuffleArray = (arr) => {
@@ -274,8 +335,8 @@ const Player = () => {
         case 'KeyF':
           e.preventDefault();
           if (currentVideo) {
-            toggleFavorite(currentVideo);
-            toast(isFav ? 'Removed from Favorites 🤍' : 'Added to Favorites ❤️');
+            setIsExpanded((expanded) => !expanded);
+            toast(isExpanded ? 'Compact player' : 'Full-screen player');
           }
           break;
         case 'Escape':
@@ -302,8 +363,6 @@ const Player = () => {
     cycleRepeatMode,
     repeatMode,
     currentVideo,
-    isFav,
-    toggleFavorite,
     isExpanded,
     toast,
     volume,
@@ -311,70 +370,62 @@ const Player = () => {
   ]);
 
   // ── Smart recommendation queries ──
-  // Builds a diverse pool from: all co-artists, album names, language+mood,
-  // co-artist discovery from recent history, and time-of-day vibes.
+  // Mix: current artists, album deep-cuts, favorites taste, mood-of-day, vibe discovery
   const recommendationQueries = useMemo(() => {
-    const queries = new Set();
-    const recentSongs = [currentVideo, ...(recentlyPlayed || [])].filter(Boolean);
-
-    // 1. All co-artists from current song (not just lead)
-    //    e.g. "Arijit Singh, Mithoon" → "Arijit Singh songs", "Mithoon songs"
-    if (currentVideo) {
-      getAllArtists(currentVideo).forEach((a) => queries.add(`${a} songs`));
-    }
-
-    // 2. Album-based query — find more from the same album
-    //    e.g. "Aashiqui 2 songs"
-    if (currentVideo?.album?.name) {
-      queries.add(`${cleanText(currentVideo.album.name)} songs`);
-    }
-
-    // 3. Co-artist discovery from recently played
-    //    Grabs unique artists from last 5 songs for variety
-    const recentArtists = new Set();
-    recentSongs.slice(0, 5).forEach((song) => {
-      getAllArtists(song).forEach((a) => recentArtists.add(a));
-    });
-    recentArtists.forEach((a) => queries.add(`${a} songs`));
-
-    // 4. Language-aware popular songs and hits
+    const queries = [];
     const lang = currentVideo?.language || 'hindi';
-    queries.add(`${lang} popular songs`);
-    queries.add(`${lang} hits`);
+    const history = [currentVideo, ...(recentlyPlayed || []), ...(favorites || [])].filter(Boolean);
 
-    // 5. Time-of-day mood query for ambient variety
-    queries.add(getMoodQuery());
+    // Current track artists (highest priority)
+    getAllArtists(currentVideo || {}).slice(0, 2).forEach((a) => {
+      queries.push({ q: `${a} songs`, bucket: 'artist' });
+      queries.push({ q: `${a} best`, bucket: 'artist' });
+    });
 
-    // 6. Fallback if nothing else worked
-    if (queries.size === 0) {
-      queries.add('trending hindi hits');
-      queries.add('top bollywood hits');
+    // Same album / soundtrack
+    if (currentVideo?.album?.name) {
+      queries.push({ q: `${cleanText(currentVideo.album.name)} songs`, bucket: 'album' });
     }
 
-    // Shuffle and cap at 5 queries to keep API calls reasonable
-    // but ensure the current song's artists are always included first
-    const currentArtistQueries = getAllArtists(currentVideo || {}).map((a) => `${a} songs`);
-    const otherQueries = [...queries].filter((q) => !currentArtistQueries.includes(q));
+    // Top artists from listening + favorites taste
+    topArtistsFromHistory(history, 3).forEach((a) => {
+      queries.push({ q: `${a} hits`, bucket: 'taste' });
+    });
 
-    return [
-      ...currentArtistQueries.slice(0, 2),
-      ...shuffleArray(otherQueries),
-    ].slice(0, 5);
-  }, [currentVideo, recentlyPlayed]);
+    // Time-of-day mood + language vibes
+    const mood = shuffleArray(getMoodPool())[0];
+    queries.push({ q: `${mood} ${lang}`, bucket: 'mood' });
+    shuffleArray(getVibeQueries(lang)).slice(0, 2).forEach((q) => {
+      queries.push({ q, bucket: 'vibe' });
+    });
+
+    if (queries.length === 0) {
+      queries.push({ q: 'trending hindi hits', bucket: 'vibe' });
+      queries.push({ q: 'top bollywood hits', bucket: 'vibe' });
+    }
+
+    // Dedupe by query string, keep first 6
+    const seen = new Set();
+    return queries.filter(({ q }) => {
+      if (seen.has(q)) return false;
+      seen.add(q);
+      return true;
+    }).slice(0, 6);
+  }, [currentVideo, recentlyPlayed, favorites]);
 
   const queueIds = useMemo(
     () => new Set([currentVideo?.id, ...playlist.map((song) => song.id)].filter(Boolean)),
     [currentVideo?.id, playlist],
   );
 
-  // ── Debounced recommendation fetches ──
+  // ── Debounced recommendation fetches (scored + interleaved) ──
   useEffect(() => {
     let cancelled = false;
     const debounceTimer = setTimeout(async () => {
       try {
         setIsLoadingRecommendations(true);
         const responses = await Promise.allSettled(
-          recommendationQueries.map((query) => searchSongs(query, { limit: 10 })),
+          recommendationQueries.map(({ q }) => searchSongs(q, { limit: 12 })),
         );
 
         const currentLang = currentVideo?.language;
@@ -382,29 +433,48 @@ const Player = () => {
           [currentLang, ...(recentlyPlayed || []).map(s => s.language)].filter(Boolean).map(l => l.toLowerCase())
         );
 
+        const favoriteArtists = new Set(
+          (favorites || []).flatMap(getAllArtists).map((a) => a.toLowerCase()),
+        );
+        const recentArtists = new Set(
+          (recentlyPlayed || []).slice(0, 12).flatMap(getAllArtists).map((a) => a.toLowerCase()),
+        );
+
         const seen = new Set(queueIds);
-        const merged = [];
-        responses.forEach((response) => {
+        const buckets = { artist: [], album: [], taste: [], mood: [], vibe: [] };
+
+        responses.forEach((response, idx) => {
           if (response.status !== 'fulfilled') return;
+          const bucket = recommendationQueries[idx]?.bucket || 'vibe';
           (response.value || []).forEach((song) => {
             if (!song?.id || seen.has(song.id)) return;
-
-            // Filter out regional and devotional music
             if (!isSongAcceptable(song, currentLang, allowedLangs)) return;
-
             seen.add(song.id);
-            merged.push(song);
+            buckets[bucket].push(song);
           });
         });
-        if (!cancelled) setRecommendedSongs(merged.slice(0, 12));
+
+        // Score within each bucket, then interleave for variety
+        const scoredBuckets = Object.values(buckets).map((list) =>
+          list
+            .map((song) => ({
+              song,
+              score: scoreRecommendation(song, { currentVideo, favoriteArtists, recentArtists }),
+            }))
+            .sort((a, b) => b.score - a.score)
+            .map(({ song }) => song),
+        );
+
+        const ranked = interleaveBySource(scoredBuckets, 16);
+        if (!cancelled) setRecommendedSongs(ranked);
       } catch {
         if (!cancelled) setRecommendedSongs([]);
       } finally {
         if (!cancelled) setIsLoadingRecommendations(false);
       }
-    }, 2000);
+    }, 1600);
     return () => { cancelled = true; clearTimeout(debounceTimer); };
-  }, [recommendationQueries, queueIds, currentVideo?.language, recentlyPlayed]);
+  }, [recommendationQueries, queueIds, currentVideo, recentlyPlayed, favorites]);
 
   // ── Media Session API ──
   useEffect(() => {
@@ -443,15 +513,19 @@ const Player = () => {
   }, [updateSeek]);
 
   const updateVol = useCallback((clientX) => {
-    if (!activeVolumeRef.current) return;
+    if (!activeVolumeRef.current || !Number.isFinite(clientX)) return;
     const rect = activeVolumeRef.current.getBoundingClientRect();
-    setVolume(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)));
+    const nextVolume = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    setVolume(nextVolume);
+    if (nextVolume > 0) setIsMuted(false);
   }, []);
 
   const handleVolStart = useCallback((e, ref) => {
+    if (!ref?.current) return;
+    e.preventDefault();
     setIsDraggingVolume(true);
     activeVolumeRef.current = ref.current;
-    updateVol(e.clientX || e.touches?.[0]?.clientX);
+    updateVol(e.clientX ?? e.touches?.[0]?.clientX);
   }, [updateVol]);
 
   useEffect(() => {

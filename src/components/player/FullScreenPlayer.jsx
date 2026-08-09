@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   FiPlay, FiPause, FiSkipBack, FiSkipForward,
   FiVolume2, FiVolumeX, FiHeart, FiRepeat, FiShuffle,
-  FiChevronDown, FiPlus, FiShare2, FiX, FiMenu, FiMoon, FiMic,
+  FiChevronDown, FiPlus, FiShare2, FiX, FiMenu, FiMic,
 } from 'react-icons/fi';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -91,36 +91,6 @@ const FullScreenPlayer = ({
   onSwipeStart, onSwipeMove, onSwipeEnd,
 }) => {
   const [activeTab, setActiveTab] = useState('queue'); // 'queue' | 'lyrics'
-  const [sleepTimer, setSleepTimer] = useState(null); // in minutes, null = off
-  const [isSleepMenuOpen, setIsSleepMenuOpen] = useState(false);
-  const sleepTimerRef = useRef(null); // holds the timeout id
-  const sleepMenuRef = useRef(null);
-
-  useEffect(() => {
-    if (!isSleepMenuOpen) return;
-    const handleOutsideClick = (e) => {
-      if (sleepMenuRef.current && !sleepMenuRef.current.contains(e.target)) {
-        setIsSleepMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('touchstart', handleOutsideClick);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('touchstart', handleOutsideClick);
-    };
-  }, [isSleepMenuOpen]);
-
-  const handleSleepTimer = (minutes) => {
-    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
-    if (!minutes) { setSleepTimer(null); return; }
-    setSleepTimer(minutes);
-    sleepTimerRef.current = setTimeout(() => {
-      // Pause playback when sleep timer fires
-      if (typeof onTogglePlay === 'function') onTogglePlay(false);
-      setSleepTimer(null);
-    }, minutes * 60 * 1000);
-  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -139,18 +109,16 @@ const FullScreenPlayer = ({
 
   const seekBound = (e, ref) => onSeekStart(e, ref);
 
-  const sleepTimerOptions = [5, 15, 30, 60];
-
   return (
     <div
       className={`fixed top-0 left-0 w-full h-[100dvh] md:h-screen z-[200] flex flex-col transition-all duration-500 ease-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
-      style={{ background: '#08080a' }}
+      style={{ background: '#10100e' }}
     >
       {/* Blurred bg (Apple Music style) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <img src={imageUrl} alt="" className="w-full h-full object-cover scale-150 blur-[90px] opacity-[0.38] transition-all duration-1000" />
-        <div className="absolute inset-0 bg-[#08080a]/60 backdrop-blur-[20px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#08080a] via-transparent to-[#08080a]/80" />
+        <div className="absolute inset-0 bg-[#10100e]/70 backdrop-blur-[20px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#10100e] via-transparent to-[#10100e]/80" />
       </div>
 
       {/* Header */}
@@ -158,53 +126,8 @@ const FullScreenPlayer = ({
         <button onClick={onCollapse} className="w-12 h-12 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
           <FiChevronDown size={26} />
         </button>
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/25">Now Playing</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#a9a79d]">Now playing</p>
         <div className="flex items-center gap-1">
-          {/* Sleep Timer */}
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsSleepMenuOpen(prev => !prev);
-              }}
-              className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${sleepTimer ? 'text-orange-400 bg-orange-500/10' : 'text-white/40 hover:text-white hover:bg-white/[0.07]'}`}
-              title="Sleep Timer"
-            >
-              <FiMoon size={16} />
-            </button>
-            {isSleepMenuOpen && (
-              <div
-                ref={sleepMenuRef}
-                className="absolute right-0 top-full mt-2 z-50 min-w-[130px] rounded-2xl border border-white/10 py-1.5 transition-all duration-200"
-                style={{ background: 'rgba(22,22,28,0.95)', backdropFilter: 'blur(30px)' }}
-              >
-                <p className="text-[9px] uppercase font-black tracking-widest text-white/25 px-4 py-1.5">Sleep Timer</p>
-                {sleepTimerOptions.map(m => (
-                  <button
-                    key={m}
-                    onClick={() => {
-                      handleSleepTimer(sleepTimer === m ? null : m);
-                      setIsSleepMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${sleepTimer === m ? 'text-orange-400' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                  >
-                    {m} min{sleepTimer === m ? ' ✓' : ''}
-                  </button>
-                ))}
-                {sleepTimer && (
-                  <button
-                    onClick={() => {
-                      handleSleepTimer(null);
-                      setIsSleepMenuOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-bold text-red-400/70 hover:text-red-400 hover:bg-red-400/5 transition-colors border-t border-white/5 mt-1"
-                  >
-                    Cancel Timer
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
           <button onClick={() => onAddToPlaylist(currentVideo)} className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
             <FiPlus size={20} />
           </button>
@@ -218,15 +141,15 @@ const FullScreenPlayer = ({
         onTouchMove={onSwipeMove}
         onTouchEnd={onSwipeEnd}
       >
-        <div className="flex flex-col xl:flex-row items-center xl:items-start gap-8 px-6 md:px-10 py-4 md:py-8 mx-auto" style={{ maxWidth: 1200 }}>
+        <div className="flex flex-col xl:flex-row items-center xl:items-start gap-12 px-6 md:px-10 py-4 md:py-8 mx-auto" style={{ maxWidth: 1280 }}>
 
           {/* Left column: album art and controls */}
-          <div className="flex flex-col items-center gap-6 xl:sticky xl:top-0 w-full xl:w-auto shrink-0 max-w-[450px]">
+          <div className="flex flex-col items-center gap-6 xl:sticky xl:top-0 w-full xl:w-auto shrink-0 max-w-[500px]">
             <div className="relative w-full max-w-[340px] md:max-w-full mx-auto aspect-square">
               {/* Dynamic Aura Glow Backdrop */}
               <div className="absolute inset-4 rounded-full album-art-aura pointer-events-none z-0" />
               <div
-                className={`relative z-10 w-full h-full rounded-[32px] md:rounded-[48px] overflow-hidden transition-all duration-700 shadow-[0_40px_100px_rgba(0,0,0,0.85)] border border-white/5 ${isPlaying ? 'scale-100' : 'scale-[0.94] opacity-75'}`}
+                className={`relative z-10 w-full h-full rounded-none overflow-hidden transition-all duration-700 shadow-[0_40px_100px_rgba(0,0,0,.65)] border border-[#f4f1e8]/15 ${isPlaying ? 'scale-100' : 'scale-[0.96] opacity-75'}`}
               >
                 <img src={imageUrl} alt={title} className="w-full h-full object-cover block" />
               </div>
@@ -235,8 +158,8 @@ const FullScreenPlayer = ({
             {/* Track info + heart + share */}
             <div className="flex items-start justify-between gap-4 w-full px-2">
               <div className="min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight line-clamp-1">{title}</h2>
-                <p className="text-white/45 text-sm md:text-base font-medium truncate mt-1">{artist}</p>
+                <h2 className="text-4xl md:text-5xl font-normal text-[#f4f1e8] tracking-[-.04em] leading-none line-clamp-1 font-['Instrument_Serif']">{title}</h2>
+                <p className="text-[#a9a79d] text-sm md:text-base font-medium truncate mt-2">{artist}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={onShare} className="w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all text-white/50 hover:text-white" title="Share Song">
@@ -270,7 +193,7 @@ const FullScreenPlayer = ({
                 </button>
                 <button
                   onClick={onTogglePlay}
-                  className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_12px_40px_rgba(255,255,255,0.25)] hover:bg-white/90"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#d6ff42] text-[#10100e] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-none"
                 >
                   {isPlaying ? <FiPause size={24} className="fill-current md:w-7 md:h-7" /> : <FiPlay size={24} className="fill-current ml-1 md:w-7 md:h-7" />}
                 </button>
@@ -285,7 +208,7 @@ const FullScreenPlayer = ({
             </div>
 
             {/* Volume (hidden on very small screens) */}
-            <div className="hidden md:flex items-center gap-4 w-full px-4 py-2 bg-white/[0.03] rounded-2xl border border-white/5" onClick={(e) => e.stopPropagation()}>
+            <div className="hidden md:flex items-center gap-4 w-full px-4 py-2 bg-[#171714]/75 rounded-full border border-[#f4f1e8]/10" onClick={(e) => e.stopPropagation()}>
               <button onClick={onToggleMute} className="text-white/30 hover:text-white transition-colors shrink-0">
                 {isMuted || volume === 0 ? <FiVolumeX size={16} /> : <FiVolume2 size={16} />}
               </button>
@@ -296,7 +219,7 @@ const FullScreenPlayer = ({
                 onMouseDown={(e) => onVolStart(e, fullVolumeRef)}
                 onTouchStart={(e) => onVolStart(e, fullVolumeRef)}
               >
-                <div className="absolute top-0 left-0 h-full rounded-full bg-white" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
+                <div className="absolute top-0 left-0 h-full rounded-full bg-[#d6ff42]" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
                 <div
                   className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white scale-0 group-hover:scale-100 transition-transform shadow-lg cursor-pointer"
                   style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - 7px)` }}
@@ -309,16 +232,16 @@ const FullScreenPlayer = ({
           {playlist.length > 0 && (
             <div className="flex-1 w-full min-w-0 pb-10">
               {/* Tab bar */}
-              <div className="flex items-center gap-1 mb-6 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
+              <div className="flex items-center gap-1 mb-6 p-1 rounded-full bg-[#171714]/75 border border-[#f4f1e8]/10">
                 <button
                   onClick={() => setActiveTab('queue')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all ${activeTab === 'queue' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold transition-all ${activeTab === 'queue' ? 'bg-[#d6ff42] text-[#10100e] shadow-none' : 'text-white/50 hover:text-white'}`}
                 >
                   <FiMenu size={12} /> Queue
                 </button>
                 <button
                   onClick={() => setActiveTab('lyrics')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all ${activeTab === 'lyrics' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold transition-all ${activeTab === 'lyrics' ? 'bg-[#d6ff42] text-[#10100e] shadow-none' : 'text-white/50 hover:text-white'}`}
                 >
                   <FiMic size={12} /> Lyrics
                 </button>
@@ -379,8 +302,8 @@ const FullScreenPlayer = ({
               {(isLoadingRecommendations || recommendedSongs.length > 0 || autoplay) && (
                 <div className="mt-8">
                   <div className="mb-4 px-1">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20 mb-1">Autoplay</p>
-                    <h3 className="text-lg font-bold text-white tracking-tight">From Your Listening</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20 mb-1">Radar</p>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Because You&apos;re Listening</h3>
                   </div>
                   {isLoadingRecommendations ? (
                     <div className="space-y-2">
