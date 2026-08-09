@@ -36,7 +36,7 @@ const MiniPlayer = ({
       }}
     >
       <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 shadow-md border border-[#f4f1e8]/10">
-        <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+        <img src={imageUrl} alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover" />
       </div>
 
       <div className="min-w-0 flex-1">

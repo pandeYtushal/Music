@@ -66,6 +66,7 @@ const PlaylistDetail = () => {
                 src={pickImageUrl(playlist.songs[0].image)} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 alt={playlist.name} 
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -157,7 +158,7 @@ const PlaylistDetail = () => {
                   
                   <div className="flex-1 flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-md border border-white/5 bg-white/[0.01]">
-                      <img src={pickImageUrl(song.image)} className="w-full h-full object-cover" alt="" loading="lazy" />
+                      <img src={pickImageUrl(song.image)} className="w-full h-full object-cover" alt="" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} />
                     </div>
                     <div className="min-w-0">
                       <p className="font-extrabold text-white text-[14px] truncate leading-snug">{cleanText(song.name, 'Unknown Song')}</p>

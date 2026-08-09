@@ -155,7 +155,7 @@ const StatsDashboard = () => {
               className="flex items-center gap-3.5 p-2.5 rounded-2xl hover:bg-white/[0.035] border border-transparent hover:border-white/[0.05] transition-all duration-300"
             >
               <span className="w-6 text-[11px] font-bold text-white/20 text-center">{idx + 1}</span>
-              <img src={pickImageUrl(song.image)} className="w-10 h-10 rounded-xl object-cover" alt="" />
+              <img src={pickImageUrl(song.image)} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-10 h-10 rounded-xl object-cover" alt="" />
               <div className="min-w-0 flex-1 text-left">
                 <p className="text-xs font-black text-white truncate">{cleanText(song.name)}</p>
                 <p className="text-[10.5px] text-white/40 font-semibold truncate mt-0.5">{cleanText(song.primaryArtists)}</p>

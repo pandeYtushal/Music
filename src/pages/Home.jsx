@@ -220,6 +220,7 @@ const Home = () => {
               <img
                 src={pickImageUrl(featured.image)}
                 alt=""
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
                 className="w-full h-full object-cover rounded-[40px]"
               />
             </div>
@@ -233,6 +234,7 @@ const Home = () => {
                 src={pickImageUrl(featured.image)}
                 alt={featured.name}
                 loading="lazy"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover/hero:scale-[1.03]"
               />
               {/* Overlay shading to focus on the text card */}
@@ -293,7 +295,7 @@ const Home = () => {
                     <div className={`absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-orange-500 to-purple-500 transition-opacity duration-300 ${isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
 
                     <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-[12px] overflow-hidden shrink-0 shadow-sm">
-                      <img src={pickImageUrl(video.image)} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <img src={pickImageUrl(video.image)} alt="" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
                           <div className="flex items-end gap-[2px] h-3.5">

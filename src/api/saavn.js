@@ -6,7 +6,7 @@ import { searchYouTube } from './youtube';
 const ENDPOINTS = [
   import.meta.env.VITE_SAAVN_API_URL,
   'https://saavn.sumit.co/api',
-  'https://saavn.dev/api',
+  'https://saavn-api-murex.vercel.app',
 ].filter(Boolean);
 
 /**
@@ -21,7 +21,7 @@ const fetchWithFallback = async (path, params, signal) => {
         timeout: 7000,
         signal,
       });
-      if (response.data && (response.data.data || response.data.status === 'SUCCESS')) {
+      if (response.data && (response.data.data || response.data.status === 'SUCCESS' || response.data.results)) {
         return response.data;
       }
     } catch (err) {
@@ -57,7 +57,7 @@ export const searchSongs = async (query, { limit = 10, page = 1, signal } = {}) 
   return dedupe(dedupeKey, async () => {
     try {
       const data = await fetchWithFallback('/search/songs', { query: trimmedQuery, limit: clampedLimit, page }, signal);
-      const results = data?.data?.results || data?.data || [];
+      const results = data?.data?.results || data?.data || data?.results || [];
       return sanitizeSongList(Array.isArray(results) ? results : [], clampedLimit);
     } catch (err) {
       if (axios.isCancel(err)) throw err;

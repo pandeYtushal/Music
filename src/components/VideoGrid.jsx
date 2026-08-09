@@ -93,6 +93,7 @@ const VideoGrid = ({ videos, title, horizontal = false, onShowAll }) => {
                 src={pickImageUrl(video.image)}
                 alt={cleanText(video.name, 'Song cover')}
                 loading="lazy"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               {/* Play overlay */}

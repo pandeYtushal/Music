@@ -37,7 +37,7 @@ const DesktopPlayerBar = ({
           className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-[0_8px_20px_rgba(0,0,0,0.6)] border border-white/10 cursor-pointer hover:scale-105 transition-transform duration-300 relative group"
           onClick={onExpand}
         >
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+          <img src={imageUrl} alt={title} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <FiMaximize2 size={16} className="text-white" />
           </div>

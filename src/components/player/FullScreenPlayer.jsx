@@ -33,7 +33,7 @@ const SortableSongItem = ({ song, isCurrentSong, isPlaying, onPlay, onRemove }) 
         <FiMenu size={16} />
       </div>
       <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg cursor-pointer" onClick={onPlay}>
-        <img src={pickImageUrl(song.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+        <img src={pickImageUrl(song.image)} alt="" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover" />
       </div>
       <div className="min-w-0 flex-1 cursor-pointer" onClick={onPlay}>
         <p className={`text-[14px] font-bold truncate ${isCurrentSong ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
@@ -116,7 +116,7 @@ const FullScreenPlayer = ({
     >
       {/* Blurred bg (Apple Music style) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img src={imageUrl} alt="" className="w-full h-full object-cover scale-150 blur-[90px] opacity-[0.38] transition-all duration-1000" />
+        <img src={imageUrl} alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover scale-150 blur-[90px] opacity-[0.38] transition-all duration-1000" />
         <div className="absolute inset-0 bg-[#10100e]/70 backdrop-blur-[20px]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#10100e] via-transparent to-[#10100e]/80" />
       </div>
@@ -151,7 +151,7 @@ const FullScreenPlayer = ({
               <div
                 className={`relative z-10 w-full h-full rounded-none overflow-hidden transition-all duration-700 shadow-[0_40px_100px_rgba(0,0,0,.65)] border border-[#f4f1e8]/15 ${isPlaying ? 'scale-100' : 'scale-[0.96] opacity-75'}`}
               >
-                <img src={imageUrl} alt={title} className="w-full h-full object-cover block" />
+                <img src={imageUrl} alt={title} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover block" />
               </div>
             </div>
 
@@ -327,7 +327,7 @@ const FullScreenPlayer = ({
                         >
                           <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
                           <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                            <img src={pickImageUrl(song.image)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                            <img src={pickImageUrl(song.image)} alt="" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[14px] font-bold truncate text-white/80 group-hover:text-white">

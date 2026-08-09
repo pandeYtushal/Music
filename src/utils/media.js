@@ -13,7 +13,7 @@ export const safeUrl = (value, fallback = '') => {
   }
 };
 
-export const pickImageUrl = (images, fallback = '') => {
+export const pickImageUrl = (images, fallback = '/icon-192.png') => {
   if (!images) return fallback;
 
   if (typeof images === 'string') {
