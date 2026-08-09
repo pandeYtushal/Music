@@ -6,9 +6,16 @@ on:
   pull_request:
     branches: [ main, master ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   verify:
-    name: Code Quality & Compilation Check
+    name: Code Quality & Build Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +32,8 @@ jobs:
         run: npm ci
 
       - name: Run ESLint Checks
-        run: npx eslint .
+        run: npm run lint
 
       - name: Run Production Compilation Build
         run: npm run build
+

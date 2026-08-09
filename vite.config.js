@@ -18,7 +18,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png', 'og-image.png'],
       manifest: {
         name: 'Melody - Premium Music Streaming',
         short_name: 'Melody',

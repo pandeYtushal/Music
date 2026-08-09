@@ -76,6 +76,9 @@ const Home = () => {
     return `${greet}, ${firstName}`;
   }, [user]);
 
+  const favFirstId = favorites?.[0]?.id || '';
+  const recentSecondId = recentlyPlayed?.[1]?.id || '';
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -115,7 +118,7 @@ const Home = () => {
       controller.abort();
       clearInterval(interval);
     };
-  }, [recentArtist, activeFilter, favorites?.[0]?.id, recentlyPlayed?.[1]?.id]);
+  }, [recentArtist, activeFilter, favFirstId, recentSecondId, favorites, recentlyPlayed]);
 
   const currentLang = currentVideo?.language || 'hindi';
   const allowedLangs = useMemo(() => new Set(
