@@ -1,5 +1,12 @@
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 
+/**
+ * Returns true if the given string looks like a YouTube video ID.
+ * YouTube IDs are exactly 11 characters: [A-Za-z0-9_-]
+ * Used to decide whether to use the YT IFrame player vs. the <audio> element.
+ */
+export const isYouTubeId = (id) => /^[a-zA-Z0-9_-]{11}$/.test(id ?? '');
+
 export const safeUrl = (value, fallback = '') => {
   if (!value) return fallback;
 

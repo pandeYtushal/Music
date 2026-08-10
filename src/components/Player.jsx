@@ -3,8 +3,9 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { useToast } from '../hooks/useToast';
 import { cleanText } from '../utils/text';
 import { searchSongs } from '../api/saavn';
-import { pickAudioUrl, pickImageUrl } from '../utils/media';
+import { pickAudioUrl, pickImageUrl, isYouTubeId } from '../utils/media';
 import { isSongAcceptable } from '../utils/library';
+import { ytPlayer, YT_STATE } from '../utils/youtube-player';
 
 // Sub-components
 import MiniPlayer from './player/MiniPlayer';
@@ -164,11 +165,70 @@ const Player = () => {
   const artist = cleanText(currentVideo?.primaryArtists || currentVideo?.label, 'Unknown Artist');
   const isFav = favorites.some((v) => v.id === currentVideo?.id);
 
+  // isYTSource: song has no Saavn stream URL but ID looks like a YouTube video ID
+  const isYTSource = !audioUrl && isYouTubeId(currentVideo?.id);
+
+  // ── YouTube player refs ──
+  const ytPlayerRef = useRef(null);       // tracks the current YT video ID loaded
+  const ytDurationRef = useRef(0);        // caches YT duration to avoid repeated IPC calls
+
   // ── Haptic pulse helper ──
   const pulse = useCallback((type = 'tap') => {
     setMiniFeedback(type);
     window.setTimeout(() => setMiniFeedback(''), 180);
     if (navigator.vibrate) navigator.vibrate(type === 'swipe' ? 18 : 8);
+  }, []);
+
+  // ── Init YouTube IFrame API on mount ──────────────────────────
+  // Pre-load the YT IFrame API eagerly (no callbacks yet) so the script
+  // is already fetched and the player is warm before any YT song plays.
+  useEffect(() => {
+    // Kick off API load immediately — no callbacks needed at this stage
+    ytPlayer.init({});
+
+    // Re-init with actual callbacks once the component is ready
+    ytPlayer.init({
+      onStateChange: (state) => {
+        if (state === YT_STATE.PLAYING) {
+          setIsPlaying(true);
+          // capture duration once we know it
+          const dur = ytPlayer.getDuration();
+          if (dur > 0) {
+            ytDurationRef.current = dur;
+            setDuration(dur);
+          }
+        } else if (state === YT_STATE.PAUSED) {
+          setIsPlaying(false);
+        } else if (state === YT_STATE.ENDED) {
+          handleEnded();
+        }
+      },
+      onProgress: ({ current, total }) => {
+        if (total > 0) {
+          if (ytDurationRef.current !== total) {
+            ytDurationRef.current = total;
+            setDuration(total);
+          }
+          setPlayed(current / total);
+          // trigger prefetch near end
+          if (total - current < 20 || current / total > 0.85) {
+            setShouldPrefetch(true);
+          } else if (current / total < 0.80) {
+            setShouldPrefetch(false);
+          }
+        }
+      },
+      onError: (code) => {
+        console.warn('[YT IFrame] playback error, code:', code);
+        // Auto-advance on unplayable video errors (101, 150)
+        if (code === 101 || code === 150 || code === 5 || code === 2) {
+          handleEnded();
+        }
+      },
+    });
+    // Cleanup on unmount
+    return () => ytPlayer.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Next handler (with recommendation fallback) ──
@@ -186,30 +246,73 @@ const Player = () => {
 
   // ── Audio ended handler ──
   const handleEnded = useCallback(() => {
-    if (repeatMode === 'one' && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(console.error);
+    if (repeatMode === 'one') {
+      if (isYTSource) {
+        ytPlayer.seekTo(0);
+        ytPlayer.resume();
+      } else if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(console.error);
+      }
       return;
     }
     if (autoplay || repeatMode === 'all' || shuffle) handleNext();
     else setIsPlaying(false);
-  }, [repeatMode, autoplay, shuffle, handleNext, setIsPlaying]);
+  }, [repeatMode, autoplay, shuffle, handleNext, setIsPlaying, isYTSource]);
+
+  // ── Load YouTube video when current song changes (YT source) ──
+  useEffect(() => {
+    if (!isYTSource || !currentVideo?.id) {
+      // Switching AWAY from a YT source — stop the YT player so its ENDED
+      // event doesn't fire later and trigger an unexpected handleNext()
+      if (!isYTSource) ytPlayer.pause();
+      return;
+    }
+    // Only reload if the video actually changed
+    if (ytPlayerRef.current === currentVideo.id) return;
+    ytPlayerRef.current = currentVideo.id;
+    ytDurationRef.current = 0;
+    setPlayed(0);
+    setDuration(0);
+    // Always autoplay on song change — the store always sets isPlaying=true on setCurrentVideo
+    ytPlayer.play(currentVideo.id, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentVideo?.id, isYTSource]);
 
   // ── Sync play/pause with isPlaying state ──
   useEffect(() => {
+    if (isYTSource) {
+      // YouTube engine
+      if (isPlaying) {
+        ytPlayer.resume();
+      } else {
+        ytPlayer.pause();
+      }
+      return;
+    }
+    // Saavn <audio> engine
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.play().catch(console.error);
     } else {
       audioRef.current.pause();
     }
-  }, [isPlaying]);
+  }, [isPlaying, isYTSource]);
 
   // ── Sync volume and mute ──
   useEffect(() => {
+    if (isYTSource) {
+      if (isMuted) {
+        ytPlayer.mute();
+      } else {
+        ytPlayer.unMute();
+        ytPlayer.setVolume(Math.round(volume * 100));
+      }
+      return;
+    }
     if (!audioRef.current) return;
     audioRef.current.volume = isMuted ? 0 : volume;
-  }, [volume, isMuted]);
+  }, [volume, isMuted, isYTSource]);
 
 
   // ── Helper to determine the next song to prefetch ──
@@ -370,47 +473,35 @@ const Player = () => {
   ]);
 
   // ── Smart recommendation queries ──
-  // Mix: current artists, album deep-cuts, favorites taste, mood-of-day, vibe discovery
+  // Lean set: 3 queries max to keep background traffic minimal
   const recommendationQueries = useMemo(() => {
     const queries = [];
     const lang = currentVideo?.language || 'hindi';
     const history = [currentVideo, ...(recentlyPlayed || []), ...(favorites || [])].filter(Boolean);
 
-    // Current track artists (highest priority)
-    getAllArtists(currentVideo || {}).slice(0, 2).forEach((a) => {
-      queries.push({ q: `${a} songs`, bucket: 'artist' });
-      queries.push({ q: `${a} best`, bucket: 'artist' });
-    });
-
-    // Same album / soundtrack
-    if (currentVideo?.album?.name) {
-      queries.push({ q: `${cleanText(currentVideo.album.name)} songs`, bucket: 'album' });
+    // Current track — top artist (highest relevance)
+    const topArtist = getAllArtists(currentVideo || {})[0];
+    if (topArtist) {
+      queries.push({ q: `${topArtist} songs`, bucket: 'artist' });
     }
 
-    // Top artists from listening + favorites taste
-    topArtistsFromHistory(history, 3).forEach((a) => {
-      queries.push({ q: `${a} hits`, bucket: 'taste' });
-    });
+    // Taste: top artist from listening history
+    const tasteArtist = topArtistsFromHistory(history, 2).find(a => a !== topArtist);
+    if (tasteArtist) {
+      queries.push({ q: `${tasteArtist} hits`, bucket: 'taste' });
+    }
 
-    // Time-of-day mood + language vibes
+    // Mood of the moment
     const mood = shuffleArray(getMoodPool())[0];
     queries.push({ q: `${mood} ${lang}`, bucket: 'mood' });
-    shuffleArray(getVibeQueries(lang)).slice(0, 2).forEach((q) => {
-      queries.push({ q, bucket: 'vibe' });
-    });
 
-    if (queries.length === 0) {
-      queries.push({ q: 'trending hindi hits', bucket: 'vibe' });
-      queries.push({ q: 'top bollywood hits', bucket: 'vibe' });
-    }
-
-    // Dedupe by query string, keep first 6
+    // Dedupe by query string
     const seen = new Set();
     return queries.filter(({ q }) => {
       if (seen.has(q)) return false;
       seen.add(q);
       return true;
-    }).slice(0, 6);
+    }).slice(0, 3);
   }, [currentVideo, recentlyPlayed, favorites]);
 
   const queueIds = useMemo(
@@ -425,7 +516,7 @@ const Player = () => {
       try {
         setIsLoadingRecommendations(true);
         const responses = await Promise.allSettled(
-          recommendationQueries.map(({ q }) => searchSongs(q, { limit: 12 })),
+          recommendationQueries.map(({ q }) => searchSongs(q, { limit: 8 })),
         );
 
         const currentLang = currentVideo?.language;
@@ -472,7 +563,7 @@ const Player = () => {
       } finally {
         if (!cancelled) setIsLoadingRecommendations(false);
       }
-    }, 1600);
+    }, 2500); // longer debounce = fewer wasted requests when skipping songs quickly
     return () => { cancelled = true; clearTimeout(debounceTimer); };
   }, [recommendationQueries, queueIds, currentVideo, recentlyPlayed, favorites]);
 
@@ -502,9 +593,13 @@ const Player = () => {
     const rect = activeProgressRef.current.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setPlayed(pct);
-    if (audioRef.current && !isNaN(audioRef.current.duration))
+    if (isYTSource) {
+      const dur = ytDurationRef.current || ytPlayer.getDuration();
+      if (dur > 0) ytPlayer.seekTo(pct * dur);
+    } else if (audioRef.current && !isNaN(audioRef.current.duration)) {
       audioRef.current.currentTime = pct * audioRef.current.duration;
-  }, []);
+    }
+  }, [isYTSource]);
 
   const handleSeekStart = useCallback((e, ref) => {
     setIsSeeking(true);
@@ -604,8 +699,8 @@ const Player = () => {
 
   return (
     <>
-      {/* Audio element — keyed by URL so it fully remounts on song change */}
-      {audioUrl && (
+      {/* Audio element — only for Saavn songs (keyed by URL so it remounts on song change) */}
+      {!isYTSource && audioUrl && (
         <audio
           key={audioUrl}
           ref={audioRef}
@@ -631,7 +726,6 @@ const Player = () => {
             setDuration(audioRef.current.duration);
             if (isPlaying) audioRef.current.play().catch(console.error);
           }}
-
           onEnded={handleEnded}
         />
       )}
