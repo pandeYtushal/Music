@@ -37,7 +37,7 @@ let _player = null;
 let _ready = false;
 let _pendingVideoId = null;
 let _pendingAutoplay = false;
-let _switching = false; // true while a new video is being loaded — suppresses stale events
+let _switching = false; 
 let _callbacks = {
   onReady: null,
   onStateChange: null,

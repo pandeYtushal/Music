@@ -1,63 +1,89 @@
+import { useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import VideoGrid from '../components/VideoGrid';
-import { FiHeart, FiPlay } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiPlay, FiCompass } from 'react-icons/fi';
+import { formatTotalDuration, formatDuration } from '../utils/format';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { cleanText } from '../utils/text';
 
-const Favorites = () => {
-  const favorites = usePlayerStore(state => state.favorites);
-  const setCurrentVideo = usePlayerStore(state => state.setCurrentVideo);
-  useDocumentTitle('Favorites');
+function TrackRow({ song, index, playlist }) {
+  const setCurrentVideo = usePlayerStore((s) => s.setCurrentVideo);
+  const currentVideo = usePlayerStore((s) => s.currentVideo);
+  const isCurrent = currentVideo?.id === song.id;
 
   return (
-    <div className="page-wrap animate-fade-up">
-      {/* Hero Header */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-end gap-7 mb-10 mt-4">
-        <div
-          className="w-40 h-40 sm:w-48 sm:h-48 shrink-0 rounded-[32px] flex items-center justify-center shadow-lg border border-white/10"
-          style={{
-            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(236, 72, 153, 0.25) 100%)',
-            boxShadow: '0 20px 40px rgba(236, 72, 153, 0.1)',
-          }}
-        >
-          <FiHeart
-            size={56}
-            className="text-pink-500 fill-current"
-          />
-        </div>
+    <div 
+      className={`group flex items-baseline gap-4 py-4 md:py-6 border-b border-border/30 cursor-pointer transition-colors ${isCurrent ? 'bg-surface/30' : 'hover:bg-surface/10'}`}
+      onClick={() => setCurrentVideo(song, playlist)}
+    >
+      <span className="text-xs font-mono font-bold text-secondary w-8 md:w-12 shrink-0">{String(index + 1).padStart(2, '0')}</span>
+      <div className="min-w-0 flex-1 flex flex-col md:flex-row md:items-baseline md:gap-6">
+        <span className={`font-display font-bold text-3xl md:text-5xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
+          {cleanText(song.name)}
+        </span>
+        <span className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase">
+          {cleanText(song.album?.name, 'Single')}
+        </span>
+      </div>
+      <div className="text-xs font-bold tracking-[0.2em] text-secondary tabular-nums ml-4 shrink-0">
+        {formatDuration(song.duration)}
+      </div>
+    </div>
+  );
+}
 
-        <div className="text-center sm:text-left">
-          <p className="section-overline">Collection</p>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black bg-gradient-to-r from-white via-white/90 to-pink-400 bg-clip-text text-transparent tracking-tight leading-tight mb-3">
+const Favorites = () => {
+  const navigate = useNavigate();
+  const favorites = usePlayerStore((state) => state.favorites);
+  const setCurrentVideo = usePlayerStore((state) => state.setCurrentVideo);
+  useDocumentTitle('Liked Songs — MELDMUSIC');
+
+  const totalDurationStr = useMemo(() => {
+    if (!favorites || favorites.length === 0) return '';
+    return formatTotalDuration(favorites);
+  }, [favorites]);
+
+  return (
+    <div className="w-full pt-32 pb-32 px-6 md:px-12 animate-fade-in">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-24 md:mb-32">
+        <div>
+          <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Favorites</p>
+          <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight">
             Liked Songs
           </h1>
-          <p className="text-white/40 text-sm font-medium mb-5">
-            Your Library &nbsp;·&nbsp; {favorites.length} {favorites.length === 1 ? 'song' : 'songs'}
+          <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mt-8">
+            {favorites.length} {favorites.length === 1 ? 'Track' : 'Tracks'}
+            {totalDurationStr ? ` • ${totalDurationStr} RUNTIME` : ''}
           </p>
-          {favorites.length > 0 && (
-            <button
-              onClick={() => setCurrentVideo(favorites[0], favorites)}
-              className="btn-primary flex items-center gap-2.5 px-6 py-3 text-sm mx-auto sm:mx-0"
-            >
-              <FiPlay size={15} className="fill-current" />
-              Play All
-            </button>
-          )}
         </div>
-      </div>
-
-      <div className="divider mb-8" />
+        {favorites.length > 0 && (
+          <button
+            onClick={() => setCurrentVideo(favorites[0], favorites)}
+            className="flex items-center gap-3 px-8 py-4 bg-primary text-background text-sm font-bold tracking-[0.2em] uppercase hover:bg-accent transition-colors self-start md:self-auto active:scale-95"
+          >
+            <FiPlay size={20} className="fill-current" />
+            PLAY ALL
+          </button>
+        )}
+      </header>
 
       {favorites.length > 0 ? (
-        <VideoGrid videos={favorites} />
+        <div className="flex flex-col">
+          {favorites.map((song, i) => (
+            <TrackRow key={song.id} song={song} index={i} playlist={favorites} />
+          ))}
+        </div>
       ) : (
-        <div
-          className="flex flex-col items-center justify-center py-28 rounded-3xl border border-white/[0.06] bg-white/[0.015]"
-        >
-          <FiHeart size={44} className="text-white/10 mb-5" />
-          <h2 className="text-xl font-bold text-white mb-2 tracking-tight">No liked songs yet</h2>
-          <p className="text-white/35 text-sm font-medium text-center max-w-xs">
-            Tap the heart icon on any track to add it to your collection.
-          </p>
+        <div className="py-32 text-center">
+          <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No liked songs yet</p>
+          <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mb-12">Tap the heart icon to save tracks.</p>
+          <button
+            onClick={() => navigate('/home')}
+            className="inline-flex items-center gap-3 px-8 py-4 border border-primary text-primary text-sm font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-background transition-colors active:scale-95"
+          >
+            <FiCompass size={20} />
+            EXPLORE MUSIC
+          </button>
         </div>
       )}
     </div>

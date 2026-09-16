@@ -2,95 +2,70 @@ import { useState } from 'react';
 import {
   FiPlay, FiPause, FiSkipBack, FiSkipForward,
   FiVolume2, FiVolumeX, FiHeart, FiRepeat, FiShuffle,
-  FiChevronDown, FiPlus, FiShare2, FiX, FiMenu, FiMic,
+  FiChevronDown, FiPlus, FiX, FiMenu, FiList,
 } from 'react-icons/fi';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { motion, AnimatePresence } from 'motion/react';
 import { SeekBar, ControlButton } from './SeekBar';
 import { formatDuration as fmt } from '../../utils/format';
 import { cleanText } from '../../utils/text';
-import { pickImageUrl } from '../../utils/media';
 
-// ── Sortable queue item ──
-const SortableSongItem = ({ song, isCurrentSong, isPlaying, onPlay, onRemove }) => {
+const SortableSongItem = ({ song, isCurrentSong, onPlay, onRemove, index }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: song.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 20 : 1,
+    opacity: isDragging ? 0.7 : 1,
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-4 p-3.5 rounded-2xl transition-all group ${isCurrentSong ? 'bg-white/[0.07] border border-white/5' : 'hover:bg-white/[0.04] border border-transparent'}`}
+      className={`group flex items-baseline gap-4 py-4 border-b border-border/20 cursor-pointer relative transition-colors ${
+        isCurrentSong ? 'bg-surface/30' : 'hover:bg-surface/10'
+      }`}
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-white/30 hover:text-white/60">
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 text-secondary hover:text-primary transition-colors shrink-0">
         <FiMenu size={16} />
       </div>
-      <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg cursor-pointer" onClick={onPlay}>
-        <img src={pickImageUrl(song.image)} alt="" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover" />
+      <span className="text-xs font-mono font-bold text-secondary w-6 shrink-0">{String(index + 1).padStart(2, '0')}</span>
+      <div className="min-w-0 flex-1 flex flex-col md:flex-row md:items-baseline md:gap-4 cursor-pointer" onClick={onPlay}>
+        <span className={`font-display text-2xl group-hover:text-primary transition-colors truncate ${isCurrentSong ? 'text-primary font-bold' : 'text-secondary'}`}>
+          {cleanText(song.name)}
+        </span>
+        <span className="text-sm font-bold tracking-widest text-secondary truncate uppercase">
+          {cleanText(song.primaryArtists)}
+        </span>
       </div>
-      <div className="min-w-0 flex-1 cursor-pointer" onClick={onPlay}>
-        <p className={`text-[14px] font-bold truncate ${isCurrentSong ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
-          {cleanText(song.name, 'Unknown Song')}
-        </p>
-        <p className="text-[12px] text-white/30 truncate mt-0.5 font-medium">
-          {cleanText(song.primaryArtists, 'Unknown Artist')}
-        </p>
-      </div>
-      {isCurrentSong && isPlaying && (
-        <div className="flex items-end gap-[3px] h-4 shrink-0 mx-2">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="w-[3px] bg-white rounded-full animate-[bounce_1s_infinite]"
-              style={{ height: `${[10, 14, 8][i - 1]}px`, animationDelay: `${i * 0.15}s` }}
-            />
-          ))}
-        </div>
-      )}
-      <span className="text-white/20 text-[12px] font-bold tabular-nums shrink-0 ml-2">
+      <span className="text-xs font-bold tracking-widest text-secondary tabular-nums shrink-0 ml-4">
         {fmt((song.duration || 0) * 1)}
       </span>
-      <button
-        onClick={onRemove}
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-white/18 hover:text-red-400 hover:bg-red-400/5 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
-        title="Remove from queue"
-      >
-        <FiX size={16} />
-      </button>
+      <div className="absolute right-0 top-0 bottom-0 flex items-center bg-gradient-to-l from-background via-background to-transparent pl-8 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={onRemove} className="p-2 text-secondary hover:text-accent transition-colors">
+          <FiX size={20} />
+        </button>
+      </div>
     </div>
   );
 };
 
-/**
- * Full-screen player overlay — album art, controls, queue, recommendations.
- */
 const FullScreenPlayer = ({
-  // Track data
   title, artist, imageUrl, currentVideo,
-  // Playback state
-  isPlaying, isFav, played, duration, volume, isMuted,
+  isFav, isPlaying, played, duration, volume, isMuted,
   shuffle, repeatMode, isExpanded,
-  // Queue data
-  playlist, recommendedSongs, isLoadingRecommendations, autoplay,
-  // Callbacks
-  onTogglePlay, onToggleFav, onNext, onPrev,
+  playlist, onTogglePlay, onToggleFav, onNext, onPrev,
   onToggleShuffle, onCycleRepeat, onToggleMute,
-  onCollapse, onShare, onAddToPlaylist,
+  onCollapse, onAddToPlaylist,
   onSetCurrentVideo, onRemoveFromQueue, onClearQueue, onReorderQueue,
-  onPlayNextInQueue, onAddToQueue,
-  // Seek / volume
   fullSeekRef, fullVolumeRef, onSeekStart, onVolStart,
-  // Touch gesture handlers for swipe skip
   onSwipeStart, onSwipeMove, onSwipeEnd,
 }) => {
-  const [activeTab, setActiveTab] = useState('queue'); // 'queue' | 'lyrics'
+  const [activeTab, setActiveTab] = useState('none');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -111,265 +86,164 @@ const FullScreenPlayer = ({
 
   return (
     <div
-      className={`fixed top-0 left-0 w-full h-[100dvh] md:h-screen z-[200] flex flex-col transition-all duration-500 ease-out ${isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
-      style={{ background: '#10100e' }}
+      className={`fixed inset-0 w-full h-[100dvh] md:h-screen z-[200] flex flex-col bg-background/60 backdrop-blur-[60px] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+        isExpanded ? 'translate-y-0 opacity-100' : 'translate-y-[20%] opacity-0 pointer-events-none'
+      }`}
     >
-      {/* Blurred bg (Apple Music style) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img src={imageUrl} alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover scale-150 blur-[90px] opacity-[0.38] transition-all duration-1000" />
-        <div className="absolute inset-0 bg-[#10100e]/70 backdrop-blur-[20px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#10100e] via-transparent to-[#10100e]/80" />
-      </div>
-
-      {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-6 pt-6 md:pt-8 pb-3 shrink-0">
-        <button onClick={onCollapse} className="w-12 h-12 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
-          <FiChevronDown size={26} />
+      <div className="flex items-center justify-between px-6 md:px-12 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 shrink-0 absolute top-0 left-0 right-0 z-10 pointer-events-auto">
+        <button
+          onClick={onCollapse}
+          className="uppercase tracking-[0.2em] text-xs font-bold text-primary transition-colors flex items-center gap-2 drop-shadow-md hover:text-secondary"
+        >
+          <FiChevronDown size={24} />
+          CLOSE
         </button>
-        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#a9a79d]">Now playing</p>
-        <div className="flex items-center gap-1">
-          <button onClick={() => onAddToPlaylist(currentVideo)} className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.07] active:scale-95 transition-all">
-            <FiPlus size={20} />
-          </button>
-        </div>
       </div>
 
-      {/* Body */}
       <div
-        className="relative z-10 flex-1 overflow-y-auto scrollbar-hide"
+        className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(8rem+env(safe-area-inset-bottom))] px-6 md:px-16 flex flex-col items-center relative"
         onTouchStart={onSwipeStart}
         onTouchMove={onSwipeMove}
         onTouchEnd={onSwipeEnd}
       >
-        <div className="flex flex-col xl:flex-row items-center xl:items-start gap-12 px-6 md:px-10 py-4 md:py-8 mx-auto" style={{ maxWidth: 1280 }}>
-
-          {/* Left column: album art and controls */}
-          <div className="flex flex-col items-center gap-6 xl:sticky xl:top-0 w-full xl:w-auto shrink-0 max-w-[500px]">
-            <div className="relative w-full max-w-[340px] md:max-w-full mx-auto aspect-square">
-              {/* Dynamic Aura Glow Backdrop */}
-              <div className="absolute inset-4 rounded-full album-art-aura pointer-events-none z-0" />
-              <div
-                className={`relative z-10 w-full h-full rounded-none overflow-hidden transition-all duration-700 shadow-[0_40px_100px_rgba(0,0,0,.65)] border border-[#f4f1e8]/15 ${isPlaying ? 'scale-100' : 'scale-[0.96] opacity-75'}`}
-              >
-                <img src={imageUrl} alt={title} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover block" />
-              </div>
-            </div>
-
-            {/* Track info + heart + share */}
-            <div className="flex items-start justify-between gap-4 w-full px-2">
-              <div className="min-w-0">
-                <h2 className="text-4xl md:text-5xl font-normal text-[#f4f1e8] tracking-[-.04em] leading-none line-clamp-1 font-['Instrument_Serif']">{title}</h2>
-                <p className="text-[#a9a79d] text-sm md:text-base font-medium truncate mt-2">{artist}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={onShare} className="w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all text-white/50 hover:text-white" title="Share Song">
-                  <FiShare2 size={22} />
-                </button>
-                <button onClick={onToggleFav} className={`w-14 h-14 md:w-12 md:h-12 flex items-center justify-center rounded-2xl active:scale-95 transition-all ${isFav ? 'text-white bg-white/10' : 'text-white/50 hover:text-white'}`}>
-                  <FiHeart size={22} className={isFav ? 'fill-current' : ''} />
-                </button>
-              </div>
-            </div>
-
-            {/* Progress bar */}
-            <div className="w-full px-2">
-              <div className="flex items-center gap-4 w-full">
-                <span className="text-[11px] font-bold text-white/25 w-10 text-right tabular-nums">{fmt(played * duration)}</span>
-                <div className="flex-1 h-[6px] relative">
-                  <SeekBar refEl={fullSeekRef} played={played} onSeekStart={seekBound} />
-                </div>
-                <span className="text-[11px] font-bold text-white/25 w-10 tabular-nums">{fmt(duration)}</span>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center justify-between w-full px-4 mb-2">
-              <ControlButton active={shuffle} onClick={onToggleShuffle} className="w-12 h-12 md:w-10 md:h-10 flex items-center justify-center active:scale-95">
-                <FiShuffle size={18} />
-              </ControlButton>
-              <div className="flex items-center gap-5 md:gap-12">
-                <button onClick={onPrev} className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90">
-                  <FiSkipBack size={28} className="md:w-8 md:h-8" />
-                </button>
-                <button
-                  onClick={onTogglePlay}
-                  className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#d6ff42] text-[#10100e] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-none"
-                >
-                  {isPlaying ? <FiPause size={24} className="fill-current md:w-7 md:h-7" /> : <FiPlay size={24} className="fill-current ml-1 md:w-7 md:h-7" />}
-                </button>
-                <button onClick={onNext} className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center text-white/80 hover:text-white transition-colors active:scale-90">
-                  <FiSkipForward size={28} className="md:w-8 md:h-8" />
-                </button>
-              </div>
-              <ControlButton active={repeatMode !== 'off'} onClick={onCycleRepeat} className="w-12 h-12 md:w-10 md:h-10 flex items-center justify-center active:scale-95">
-                <FiRepeat size={18} />
-                {repeatMode === 'one' && <span className="absolute right-1 top-1 text-[8px] font-black leading-none">1</span>}
-              </ControlButton>
-            </div>
-
-            {/* Volume (hidden on very small screens) */}
-            <div className="hidden md:flex items-center gap-4 w-full px-4 py-2 bg-[#171714]/75 rounded-full border border-[#f4f1e8]/10" onClick={(e) => e.stopPropagation()}>
-              <button onClick={onToggleMute} className="text-white/30 hover:text-white transition-colors shrink-0">
-                {isMuted || volume === 0 ? <FiVolumeX size={16} /> : <FiVolume2 size={16} />}
-              </button>
-              <div
-                ref={fullVolumeRef}
-                className="flex-1 h-1 rounded-full cursor-pointer relative group"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
-                onMouseDown={(e) => onVolStart(e, fullVolumeRef)}
-                onTouchStart={(e) => onVolStart(e, fullVolumeRef)}
-              >
-                <div className="absolute top-0 left-0 h-full rounded-full bg-[#d6ff42]" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white scale-0 group-hover:scale-100 transition-transform shadow-lg cursor-pointer"
-                  style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - 7px)` }}
-                />
-              </div>
+        <div className="flex flex-col xl:flex-row items-center justify-start xl:justify-center gap-8 md:gap-12 xl:gap-24 w-full max-w-[1600px] my-auto shrink-0 py-4">
+          {/* Left: MASSIVE ARTWORK */}
+          <div className="w-full xl:w-1/2 flex items-center justify-center max-w-[320px] md:max-w-[500px] xl:max-w-[700px]">
+            <div className="w-full aspect-square bg-surface/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+              <motion.img
+                src={imageUrl}
+                alt={title}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
+                className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02]"
+              />
             </div>
           </div>
 
-          {/* Right column: Tabs (Queue / Lyrics) */}
-          {playlist.length > 0 && (
-            <div className="flex-1 w-full min-w-0 pb-10">
-              {/* Tab bar */}
-              <div className="flex items-center gap-1 mb-6 p-1 rounded-full bg-[#171714]/75 border border-[#f4f1e8]/10">
-                <button
-                  onClick={() => setActiveTab('queue')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold transition-all ${activeTab === 'queue' ? 'bg-[#d6ff42] text-[#10100e] shadow-none' : 'text-white/50 hover:text-white'}`}
-                >
-                  <FiMenu size={12} /> Queue
+          {/* Right: INFO & CONTROLS */}
+          <div className="w-full xl:w-1/2 flex flex-col items-center xl:items-start text-center xl:text-left max-w-[600px]">
+            <div className="w-full mb-8 md:mb-10">
+              <h2 
+                className="text-2xl sm:text-4xl md:text-5xl xl:text-7xl font-display font-bold text-primary leading-[1.1] md:leading-[1.1] xl:leading-[1.1] tracking-tight mb-3 line-clamp-2 md:line-clamp-3 xl:line-clamp-none"
+                title={cleanText(title)}
+              >
+                {cleanText(title)}
+              </h2>
+              <p className="text-sm sm:text-lg md:text-2xl text-secondary tracking-widest uppercase font-medium line-clamp-1">
+                {cleanText(artist)}
+              </p>
+            </div>
+
+            {/* Progress */}
+            <div className="flex items-center gap-4 w-full mb-10">
+              <span className="text-xs font-bold tracking-widest text-secondary w-12 text-right">
+                {fmt(played * duration)}
+              </span>
+              <SeekBar refEl={fullSeekRef} played={played} onSeekStart={seekBound} />
+              <span className="text-xs font-bold tracking-widest text-secondary w-12">
+                {fmt(duration)}
+              </span>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center justify-center xl:justify-start gap-6 md:gap-10 w-full mb-12">
+              <ControlButton active={shuffle} onClick={onToggleShuffle}>
+                <FiShuffle size={20} />
+              </ControlButton>
+
+              <button onClick={onPrev} className="text-primary hover:text-accent transition-colors active:scale-90">
+                <FiSkipBack size={32} />
+              </button>
+              <button
+                onClick={onTogglePlay}
+                className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center text-background bg-primary rounded-full hover:scale-105 transition-all active:scale-95 shadow-xl"
+              >
+                {isPlaying ? <FiPause size={36} className="fill-current" /> : <FiPlay size={36} className="fill-current ml-2" />}
+              </button>
+              <button onClick={onNext} className="text-primary hover:text-accent transition-colors active:scale-90">
+                <FiSkipForward size={32} />
+              </button>
+
+              <ControlButton active={repeatMode !== 'off'} onClick={onCycleRepeat}>
+                <FiRepeat size={20} />
+                {repeatMode === 'one' && (
+                  <span className="absolute -right-2 -top-2 text-[10px] font-bold text-primary">1</span>
+                )}
+              </ControlButton>
+            </div>
+
+            {/* Extra Actions */}
+            <div className="flex items-center justify-center xl:justify-start gap-8 w-full border-t border-white/10 pt-8">
+              <button onClick={onToggleFav} className={`p-2 transition-colors active:scale-90 ${isFav ? 'text-primary' : 'text-secondary hover:text-primary'}`}>
+                <FiHeart size={24} className={isFav ? 'fill-current' : ''} />
+              </button>
+              <button onClick={() => onAddToPlaylist(currentVideo)} className="p-2 text-secondary hover:text-primary transition-colors active:scale-90">
+                <FiPlus size={24} />
+              </button>
+              <button onClick={() => setActiveTab(t => t === 'queue' ? 'none' : 'queue')} className={`p-2 transition-colors active:scale-90 ${activeTab === 'queue' ? 'text-primary' : 'text-secondary hover:text-primary'}`}>
+                <FiList size={24} />
+              </button>
+              <div className="hidden md:flex items-center gap-4 flex-1 max-w-[200px] ml-auto">
+                <button onClick={onToggleMute} className="text-secondary hover:text-primary transition-colors">
+                  {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
                 </button>
-                <button
-                  onClick={() => setActiveTab('lyrics')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold transition-all ${activeTab === 'lyrics' ? 'bg-[#d6ff42] text-[#10100e] shadow-none' : 'text-white/50 hover:text-white'}`}
+                <div
+                  ref={fullVolumeRef}
+                  className="flex-1 h-1 bg-white/20 cursor-pointer relative group transition-all hover:h-2"
+                  onMouseDown={(e) => onVolStart(e, fullVolumeRef)}
+                  onTouchStart={(e) => onVolStart(e, fullVolumeRef)}
                 >
-                  <FiMic size={12} /> Lyrics
-                </button>
+                  <div className="absolute top-0 left-0 h-full bg-primary group-hover:bg-accent transition-colors flex items-center justify-end" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}>
+                    <div className="w-3 h-3 bg-white rounded-full shadow-md translate-x-1/2 scale-100 group-hover:scale-125 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Up Next / Queue Overlay */}
+        <AnimatePresence>
+          {activeTab === 'queue' && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="w-full max-w-[1200px] mx-auto border-t border-border/20 pt-16 mt-8"
+            >
+              <div className="flex items-center justify-between mb-12">
+                <h3 className="font-display font-bold text-4xl text-primary uppercase">Up Next</h3>
+                {playlist.length > 0 && (
+                  <button onClick={onClearQueue} className="text-sm tracking-[0.2em] uppercase font-bold text-secondary hover:text-primary transition-colors">
+                    Clear Queue
+                  </button>
+                )}
               </div>
 
-              {/* Queue Tab Content */}
-              {activeTab === 'queue' && (
-                <>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <p className="text-sm font-black text-white/60">Up Next — {playlist.length} tracks</p>
-                    <button onClick={onClearQueue} className="text-[11px] font-bold text-white/25 hover:text-white transition-colors uppercase tracking-widest">
-                      Clear
-                    </button>
-                  </div>
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={playlist.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                      <div className="space-y-1">
-                        {playlist.map((song, idx) => (
-                          <SortableSongItem
-                            key={`${song.id}-${idx}`}
-                            song={song}
-                            isCurrentSong={song.id === currentVideo.id}
-                            isPlaying={isPlaying}
-                            onPlay={() => onSetCurrentVideo(song, playlist)}
-                            onRemove={(e) => { e.stopPropagation(); onRemoveFromQueue(song.id, idx); }}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                </>
-              )}
-
-              {/* Lyrics Tab Content */}
-              {activeTab === 'lyrics' && (
-                <div className="px-1 py-4 text-center">
-                  <div className="w-12 h-12 mx-auto mb-5 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                    <FiMic size={20} className="text-white/40" />
-                  </div>
-                  <p className="text-sm font-black text-white/60 mb-2">Now Playing</p>
-                  <p className="text-2xl font-black text-white mb-1 leading-tight">{title}</p>
-                  <p className="text-white/45 text-sm font-semibold mb-8">{artist}</p>
-                  <div className="space-y-4 text-center max-w-sm mx-auto">
-                    <p className="text-base font-bold text-white/80 leading-relaxed">Lyrics are coming soon.</p>
-                    <p className="text-xs font-semibold text-white/35 leading-relaxed">
-                      Synced timed lyrics with word-level highlighting will be available in a future update.
-                    </p>
-                    <div className="flex items-end justify-center gap-1 mt-6 h-8">
-                      {[8, 14, 6, 12, 10, 16, 8].map((h, i) => (
-                        <span key={i} className="w-1 rounded-full bg-orange-500/60 animate-[bounce_1s_infinite]" style={{ height: h, animationDelay: `${i * 0.1}s` }} />
+              {playlist.length > 0 ? (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={playlist.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-2">
+                      {playlist.map((song, idx) => (
+                        <SortableSongItem
+                          key={`${song.id}-${idx}`}
+                          song={song}
+                          index={idx}
+                          isCurrentSong={song.id === currentVideo?.id}
+                          isPlaying={isPlaying}
+                          onPlay={() => onSetCurrentVideo(song, playlist)}
+                          onRemove={(e) => { e.stopPropagation(); onRemoveFromQueue(song.id, idx); }}
+                        />
                       ))}
                     </div>
-                  </div>
-                </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <p className="text-secondary tracking-widest uppercase font-bold text-center py-12">Queue is empty</p>
               )}
-
-              {/* Recommendations section */}
-              {(isLoadingRecommendations || recommendedSongs.length > 0 || autoplay) && (
-                <div className="mt-8">
-                  <div className="mb-4 px-1">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20 mb-1">Radar</p>
-                    <h3 className="text-lg font-bold text-white tracking-tight">Because You&apos;re Listening</h3>
-                  </div>
-                  {isLoadingRecommendations ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3].map((item) => (
-                        <div key={item} className="flex items-center gap-4 p-3.5 rounded-2xl border border-white/[0.04] bg-white/[0.015]">
-                          <div className="w-11 h-11 rounded-xl skeleton shrink-0" />
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="h-3 rounded-full skeleton w-2/3" />
-                            <div className="h-2.5 rounded-full skeleton w-1/3" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : recommendedSongs.length > 0 ? (
-                    <div className="space-y-1">
-                      {recommendedSongs.slice(0, 8).map((song, idx) => (
-                        <div
-                          key={`${song.id}-recommended-${idx}`}
-                          onClick={() => onSetCurrentVideo(song, [...playlist, ...recommendedSongs])}
-                          className="flex items-center gap-4 p-3.5 rounded-2xl transition-all group cursor-pointer hover:bg-white/[0.04] border border-transparent"
-                        >
-                          <span className="text-white/10 font-bold text-xs w-6 text-right tabular-nums shrink-0">{idx + 1}</span>
-                          <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-lg">
-                            <img src={pickImageUrl(song.image)} alt="" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[14px] font-bold truncate text-white/80 group-hover:text-white">
-                              {cleanText(song.name, 'Unknown Song')}
-                            </p>
-                            <p className="text-[12px] text-white/30 truncate mt-0.5 font-medium">
-                              {cleanText(song.primaryArtists, 'Unknown Artist')}
-                            </p>
-                          </div>
-                          <span className="text-white/20 text-[12px] font-bold tabular-nums shrink-0 ml-2">
-                            {fmt((song.duration || 0) * 1)}
-                          </span>
-                          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onPlayNextInQueue(song); }}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.05] transition-all"
-                              title="Play next"
-                            >
-                              <FiSkipForward size={15} />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onAddToQueue(song); }}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/25 hover:text-white hover:bg-white/[0.05] transition-all"
-                              title="Add to queue"
-                            >
-                              <FiPlus size={15} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
-                      <p className="text-sm font-bold text-white/70">Recommendations are warming up</p>
-                      <p className="text-xs text-white/32 mt-1">Play a few more songs and Melody will build a better autoplay queue.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
+
       </div>
     </div>
   );

@@ -1,149 +1,201 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiPlus, FiMusic, FiFolder, FiPlay, FiX } from 'react-icons/fi';
+import { FiPlus, FiHeart, FiClock, FiTrendingUp, FiX, FiRadio, FiPlay } from 'react-icons/fi';
 import { pickImageUrl } from '../utils/media';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Playlists = () => {
   const navigate = useNavigate();
-  const playlists = usePlayerStore(state => state.playlists);
-  const createPlaylist = usePlayerStore(state => state.createPlaylist);
+  const playlists = usePlayerStore((state) => state.playlists);
+  const favorites = usePlayerStore((state) => state.favorites);
+  const recentlyPlayed = usePlayerStore((state) => state.recentlyPlayed);
+  const createPlaylist = usePlayerStore((state) => state.createPlaylist);
+  const setCurrentVideo = usePlayerStore((state) => state.setCurrentVideo);
+
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
-  useDocumentTitle('Playlists');
+  useDocumentTitle('Library & Playlists — MELDMUSIC');
 
   const handleCreate = (e) => {
     e.preventDefault();
     if (name.trim()) {
-      createPlaylist(name.trim());
+      const newId = createPlaylist(name.trim());
       setName('');
       setShowModal(false);
+      navigate(`/playlists/${newId}`);
     }
   };
 
   return (
-    <div className="page-wrap animate-fade-up">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
+    <div className="w-full pt-32 pb-32 px-6 md:px-12 animate-fade-in">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-24 md:mb-32">
         <div>
-          <p className="section-overline">Your Vault</p>
-          <h1 className="section-heading">Library</h1>
+          <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Personal Library</p>
+          <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight">
+            Library
+          </h1>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center gap-2 px-5 py-2.5 text-sm self-start sm:self-auto"
+          className="flex items-center gap-3 px-8 py-4 bg-primary text-background text-sm font-bold tracking-[0.2em] uppercase hover:bg-accent transition-colors self-start md:self-auto active:scale-95"
         >
-          <FiPlus size={16} />
-          New Playlist
+          <FiPlus size={20} />
+          NEW PLAYLIST
         </button>
-      </div>
+      </header>
 
-      {playlists.length === 0 ? (
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-0 border-y border-border/30 mb-32 md:mb-48 divide-y md:divide-y-0 md:divide-x divide-border/30">
         <div
-          className="flex flex-col items-center justify-center py-36 rounded-3xl text-center"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+          onClick={() => navigate('/favorites')}
+          className="group py-8 md:py-12 px-6 md:px-12 hover:bg-surface/10 transition-colors cursor-pointer flex flex-col items-start justify-between min-h-[240px]"
         >
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
-          >
-            <FiFolder size={28} className="text-white/30" />
+          <FiHeart size={32} className="text-secondary group-hover:text-primary transition-colors mb-auto" />
+          <div className="mt-8">
+            <h3 className="font-display font-bold text-4xl text-primary group-hover:text-accent transition-colors mb-4">Liked Songs</h3>
+            <p className="text-xs font-bold text-secondary uppercase tracking-[0.2em]">
+              {favorites.length} {favorites.length === 1 ? 'Track' : 'Tracks'}
+            </p>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Library is empty</h3>
-          <p className="text-white/35 text-sm font-medium mb-8 max-w-xs">
-            Organize your music by creating curated playlists.
-          </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="text-white/50 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
-          >
-            <FiPlus size={14} /> Create your first playlist
-          </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-          {playlists.map((playlist) => (
-            <div
-              key={playlist.id}
-              onClick={() => navigate(`/playlist/${playlist.id}`)}
-              className="group cursor-pointer"
-            >
-              <div
-                className="relative aspect-square rounded-[24px] overflow-hidden mb-3 md:mb-3.5 transition-all duration-500 shadow-md group-hover:shadow-[0_20px_48px_rgba(0,0,0,0.6)] group-hover:translate-y-[-2px] border border-white/[0.08] bg-white/[0.015]"
-              >
-                {playlist.songs.length > 0 ? (
-                  <img
-                    src={pickImageUrl(playlist.songs[0].image)}
-                    alt={playlist.name}
-                    loading="lazy"
-                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <FiMusic size={32} className="text-white/10" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                  <div
-                    className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lift scale-90 group-hover:scale-100 transition-transform duration-300 hover:bg-orange-500 hover:text-white"
-                  >
-                    <FiPlay size={18} className="fill-current ml-0.5" />
-                  </div>
-                </div>
-              </div>
-              <h3 className="font-bold text-white text-sm truncate group-hover:text-white/70 transition-colors">{playlist.name}</h3>
-              <p className="text-white/35 text-xs font-medium mt-0.5">{playlist.songs.length} tracks</p>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* Create Modal */}
+        <div
+          onClick={() => navigate('/recently-played')}
+          className="group py-8 md:py-12 px-6 md:px-12 hover:bg-surface/10 transition-colors cursor-pointer flex flex-col items-start justify-between min-h-[240px]"
+        >
+          <FiClock size={32} className="text-secondary group-hover:text-primary transition-colors mb-auto" />
+          <div className="mt-8">
+            <h3 className="font-display font-bold text-4xl text-primary group-hover:text-accent transition-colors mb-4">History</h3>
+            <p className="text-xs font-bold text-secondary uppercase tracking-[0.2em]">
+              {recentlyPlayed.length} Recent Tracks
+            </p>
+          </div>
+        </div>
+
+        <div
+          onClick={() => navigate('/stats')}
+          className="group py-8 md:py-12 px-6 md:px-12 hover:bg-surface/10 transition-colors cursor-pointer flex flex-col items-start justify-between min-h-[240px]"
+        >
+          <FiTrendingUp size={32} className="text-secondary group-hover:text-primary transition-colors mb-auto" />
+          <div className="mt-8">
+            <h3 className="font-display font-bold text-4xl text-primary group-hover:text-accent transition-colors mb-4">Stats</h3>
+            <p className="text-xs font-bold text-secondary uppercase tracking-[0.2em]">
+              Playback Dossier
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-border/30 pb-6 mb-12 gap-4">
+          <h2 className="font-display font-bold text-4xl text-primary uppercase">Your Playlists</h2>
+          <span className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">
+            {playlists.length} {playlists.length === 1 ? 'Playlist' : 'Playlists'}
+          </span>
+        </div>
+
+        {playlists.length === 0 ? (
+          <div className="py-32 text-center">
+            <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No playlists yet</p>
+            <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mb-12">Create playlists to organize your favorite music.</p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-3 px-8 py-4 border border-primary text-primary text-sm font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-background transition-colors active:scale-95"
+            >
+              <FiPlus size={20} />
+              CREATE FIRST PLAYLIST
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {playlists.map((playlist) => (
+              <div 
+                key={playlist.id}
+                className="group flex items-center gap-6 md:gap-8 py-6 md:py-10 border-b border-border/20 cursor-pointer hover:bg-surface/10 transition-colors"
+                onClick={() => navigate(`/playlists/${playlist.id}`)}
+              >
+                <div className="w-20 h-20 md:w-32 md:h-32 bg-surface shrink-0 overflow-hidden shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+                  {playlist.songs.length > 0 ? (
+                    <img 
+                      src={pickImageUrl(playlist.songs[0].image, '150x150')} 
+                      alt={playlist.name}
+                      className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000 ease-out group-hover:scale-[1.05]"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-surface/30">
+                      <FiRadio size={32} className="text-secondary opacity-50" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display font-bold text-4xl md:text-6xl lg:text-7xl text-secondary group-hover:text-primary transition-colors truncate tracking-tighter">
+                    {playlist.name}
+                  </p>
+                  <p className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase mt-2">
+                    {playlist.songs.length} {playlist.songs.length === 1 ? 'TRACK' : 'TRACKS'}
+                  </p>
+                </div>
+                {playlist.songs.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentVideo(playlist.songs[0], playlist.songs);
+                    }}
+                    className="hidden md:flex w-16 h-16 rounded-full border border-primary items-center justify-center text-primary hover:bg-primary hover:text-background transition-all duration-300 mr-4 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                  >
+                    <FiPlay size={24} className="fill-current ml-1" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {showModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5 bg-black/45 backdrop-blur-md transition-all duration-300"
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-background/90 backdrop-blur-sm animate-fade-in"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="w-full max-w-sm rounded-[24px] p-8 animate-scale-in border border-white/10"
-            style={{
-              background: 'rgba(22,22,25,0.85)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              boxShadow: '0 30px 80px rgba(0,0,0,0.65)'
-            }}
+            className="w-full max-w-lg p-8 md:p-12 border border-border/30 bg-background shadow-[0_30px_60px_rgba(0,0,0,0.8)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white tracking-tight">New Playlist</h2>
-              <button onClick={() => setShowModal(false)} className="text-white/30 hover:text-white transition-colors">
-                <FiX size={20} />
+            <div className="flex items-center justify-between mb-8 border-b border-border/30 pb-6">
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-primary uppercase">New Playlist</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-secondary hover:text-primary transition-colors"
+              >
+                <FiX size={32} />
               </button>
             </div>
             <form onSubmit={handleCreate}>
-              <div className="space-y-2 mb-7">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Playlist Name</label>
+              <div className="mb-12">
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-secondary mb-4">
+                  Playlist Title
+                </label>
                 <input
                   autoFocus
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Morning Vibes"
-                  className="w-full input-field rounded-xl px-4 py-3 text-sm font-medium"
+                  placeholder="e.g. LATE NIGHT DRIVES"
+                  className="w-full bg-transparent border-b-2 border-border/30 py-4 text-2xl md:text-3xl font-display font-bold text-primary placeholder:text-border/50 focus:outline-none focus:border-primary transition-colors uppercase tracking-tight"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-6">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="btn-ghost flex-1 py-3 text-sm"
+                  className="flex-1 py-4 border border-primary/50 text-primary text-sm font-bold tracking-[0.2em] uppercase hover:bg-surface transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary flex-1 py-3 text-sm"
+                  disabled={!name.trim()}
+                  className="flex-1 py-4 bg-primary text-background text-sm font-bold tracking-[0.2em] uppercase hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create
                 </button>

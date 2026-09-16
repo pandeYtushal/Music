@@ -10,8 +10,10 @@ import { ytPlayer, YT_STATE } from '../utils/youtube-player';
 // Sub-components
 import MiniPlayer from './player/MiniPlayer';
 import DesktopPlayerBar from './player/DesktopPlayerBar';
+import ArtworkAtmosphere from './ArtworkAtmosphere';
 
 const FullScreenPlayer = lazy(() => import('./player/FullScreenPlayer'));
+
 
 // ── Helpers for smart recommendations ──
 const getAllArtists = (song) =>
@@ -30,17 +32,7 @@ const getMoodPool = () => {
   return ['late night lofi', 'midnight neo soul', 'dark ambient chill'];
 };
 
-const getVibeQueries = (lang) => {
-  const L = (lang || 'hindi').toLowerCase();
-  const vibes = [
-    `${L} deep cuts`,
-    `${L} underrated gems`,
-    `${L} viral hits 2024`,
-    `${L} radio remixes`,
-    `similar to ${L} hits`,
-  ];
-  return vibes;
-};
+
 
 const topArtistsFromHistory = (songs, limit = 4) => {
   const counts = new Map();
@@ -150,10 +142,10 @@ const Player = () => {
 
   // ── Refs ──
   const audioRef = useRef(null);
-  const seekRef = useRef(null);
   const fullSeekRef = useRef(null);
-  const barVolumeRef = useRef(null);
   const fullVolumeRef = useRef(null);
+  const desktopSeekRef = useRef(null);
+  const desktopVolumeRef = useRef(null);
   const activeProgressRef = useRef(null);
   const activeVolumeRef = useRef(null);
   const miniGestureRef = useRef(false);
@@ -179,58 +171,6 @@ const Player = () => {
     if (navigator.vibrate) navigator.vibrate(type === 'swipe' ? 18 : 8);
   }, []);
 
-  // ── Init YouTube IFrame API on mount ──────────────────────────
-  // Pre-load the YT IFrame API eagerly (no callbacks yet) so the script
-  // is already fetched and the player is warm before any YT song plays.
-  useEffect(() => {
-    // Kick off API load immediately — no callbacks needed at this stage
-    ytPlayer.init({});
-
-    // Re-init with actual callbacks once the component is ready
-    ytPlayer.init({
-      onStateChange: (state) => {
-        if (state === YT_STATE.PLAYING) {
-          setIsPlaying(true);
-          // capture duration once we know it
-          const dur = ytPlayer.getDuration();
-          if (dur > 0) {
-            ytDurationRef.current = dur;
-            setDuration(dur);
-          }
-        } else if (state === YT_STATE.PAUSED) {
-          setIsPlaying(false);
-        } else if (state === YT_STATE.ENDED) {
-          handleEnded();
-        }
-      },
-      onProgress: ({ current, total }) => {
-        if (total > 0) {
-          if (ytDurationRef.current !== total) {
-            ytDurationRef.current = total;
-            setDuration(total);
-          }
-          setPlayed(current / total);
-          // trigger prefetch near end
-          if (total - current < 20 || current / total > 0.85) {
-            setShouldPrefetch(true);
-          } else if (current / total < 0.80) {
-            setShouldPrefetch(false);
-          }
-        }
-      },
-      onError: (code) => {
-        console.warn('[YT IFrame] playback error, code:', code);
-        // Auto-advance on unplayable video errors (101, 150)
-        if (code === 101 || code === 150 || code === 5 || code === 2) {
-          handleEnded();
-        }
-      },
-    });
-    // Cleanup on unmount
-    return () => ytPlayer.destroy();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // ── Next handler (with recommendation fallback) ──
   const handleNext = useCallback(() => {
     if (shuffle && playlist.length > 1) playNext();
@@ -245,7 +185,7 @@ const Player = () => {
   }, [shuffle, playlist, currentIndex, repeatMode, recommendedSongs, playNext, setCurrentVideo]);
 
   // ── Audio ended handler ──
-  const handleEnded = useCallback(() => {
+  const handleEnded = () => {
     if (repeatMode === 'one') {
       if (isYTSource) {
         ytPlayer.seekTo(0);
@@ -258,7 +198,64 @@ const Player = () => {
     }
     if (autoplay || repeatMode === 'all' || shuffle) handleNext();
     else setIsPlaying(false);
-  }, [repeatMode, autoplay, shuffle, handleNext, setIsPlaying, isYTSource]);
+  };
+
+  // ── YouTube Engine Callbacks (Ref to avoid stale closures) ──
+  const ytCallbacks = useRef({ setIsPlaying, setDuration, setPlayed, setShouldPrefetch, handleEnded });
+  useEffect(() => {
+    ytCallbacks.current = { setIsPlaying, setDuration, setPlayed, setShouldPrefetch, handleEnded };
+  });
+
+  // ── Init YouTube IFrame API on mount ──────────────────────────
+  // Pre-load the YT IFrame API eagerly (no callbacks yet) so the script
+  // is already fetched and the player is warm before any YT song plays.
+  useEffect(() => {
+    // Kick off API load immediately — no callbacks needed at this stage
+    ytPlayer.init({});
+
+    // Re-init with actual callbacks once the component is ready
+    ytPlayer.init({
+      onStateChange: (state) => {
+        if (state === YT_STATE.PLAYING) {
+          ytCallbacks.current.setIsPlaying(true);
+          // capture duration once we know it
+          const dur = ytPlayer.getDuration();
+          if (dur > 0) {
+            ytDurationRef.current = dur;
+            ytCallbacks.current.setDuration(dur);
+          }
+        } else if (state === YT_STATE.PAUSED) {
+          ytCallbacks.current.setIsPlaying(false);
+        } else if (state === YT_STATE.ENDED) {
+          ytCallbacks.current.handleEnded();
+        }
+      },
+      onProgress: ({ current, total }) => {
+        if (total > 0) {
+          if (ytDurationRef.current !== total) {
+            ytDurationRef.current = total;
+            ytCallbacks.current.setDuration(total);
+          }
+          ytCallbacks.current.setPlayed(current / total);
+          // trigger prefetch near end
+          if (total - current < 20 || current / total > 0.85) {
+            ytCallbacks.current.setShouldPrefetch(true);
+          } else if (current / total < 0.80) {
+            ytCallbacks.current.setShouldPrefetch(false);
+          }
+        }
+      },
+      onError: (code) => {
+        console.warn('[YT IFrame] playback error, code:', code);
+        // Auto-advance on unplayable video errors (101, 150)
+        if (code === 101 || code === 150 || code === 5 || code === 2) {
+          ytCallbacks.current.handleEnded();
+        }
+      },
+    });
+    // Cleanup on unmount
+    return () => ytPlayer.destroy();
+  }, []);
 
   // ── Load YouTube video when current song changes (YT source) ──
   useEffect(() => {
@@ -276,8 +273,7 @@ const Player = () => {
     setDuration(0);
     // Always autoplay on song change — the store always sets isPlaying=true on setCurrentVideo
     ytPlayer.play(currentVideo.id, true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentVideo?.id, isYTSource]);
+    }, [currentVideo?.id, isYTSource]);
 
   // ── Sync play/pause with isPlaying state ──
   useEffect(() => {
@@ -699,6 +695,8 @@ const Player = () => {
 
   return (
     <>
+      <ArtworkAtmosphere image={imageUrl} isActive={true} />
+      
       {/* Audio element — only for Saavn songs (keyed by URL so it remounts on song change) */}
       {!isYTSource && audioUrl && (
         <audio
@@ -735,14 +733,12 @@ const Player = () => {
         title={title}
         artist={artist}
         imageUrl={imageUrl}
+        trackId={currentVideo?.id}
         isPlaying={isPlaying}
-        isFav={isFav}
         played={played}
         isExpanded={isExpanded}
         miniFeedback={miniFeedback}
         onTogglePlay={onTogglePlay}
-        onToggleFav={onToggleFav}
-        onNext={handleNext}
         onExpand={() => setIsExpanded(true)}
         onTouchStart={handleMiniTouchStart}
         onTouchEnd={handleMiniTouchEnd}
@@ -755,27 +751,26 @@ const Player = () => {
         title={title}
         artist={artist}
         imageUrl={imageUrl}
+        trackId={currentVideo?.id}
         isPlaying={isPlaying}
-        isFav={isFav}
         played={played}
         duration={duration}
-        volume={volume}
-        isMuted={isMuted}
-        shuffle={shuffle}
-        repeatMode={repeatMode}
         isExpanded={isExpanded}
         onTogglePlay={onTogglePlay}
-        onToggleFav={onToggleFav}
+        onExpand={() => setIsExpanded(true)}
         onNext={handleNext}
         onPrev={playPrevious}
-        onToggleShuffle={toggleShuffle}
-        onCycleRepeat={cycleRepeatMode}
-        onExpand={() => setIsExpanded(true)}
-        onToggleMute={onToggleMute}
-        seekRef={seekRef}
-        barVolumeRef={barVolumeRef}
+        volume={volume}
+        isMuted={isMuted}
+        onToggleMute={() => setIsMuted(!isMuted)}
         onSeekStart={handleSeekStart}
         onVolStart={handleVolStart}
+        seekRef={desktopSeekRef}
+        volRef={desktopVolumeRef}
+        shuffle={shuffle}
+        repeatMode={repeatMode}
+        onToggleShuffle={toggleShuffle}
+        onCycleRepeat={cycleRepeatMode}
       />
 
       {/* Full-screen player overlay */}

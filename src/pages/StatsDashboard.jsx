@@ -1,31 +1,32 @@
 import { useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FiClock, FiMusic, FiTrendingUp, FiActivity, FiUser } from 'react-icons/fi';
+import { FiClock, FiActivity, FiUser, FiDisc } from 'react-icons/fi';
 import { cleanText } from '../utils/text';
 import { pickImageUrl } from '../utils/media';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const StatsDashboard = () => {
-  useDocumentTitle('Listening Statistics');
-  const recentlyPlayed = usePlayerStore(state => state.recentlyPlayed);
+  useDocumentTitle('Listening Stats — MELDMUSIC');
+  const recentlyPlayed = usePlayerStore((state) => state.recentlyPlayed);
 
-  // Compute mock stats based on recentlyPlayed or defaults
   const totalMinutes = useMemo(() => {
     const played = recentlyPlayed ?? [];
-    return Math.max(12, played.length * 3.5);
+    return Math.max(12, Math.round(played.length * 3.8));
   }, [recentlyPlayed]);
 
   const topArtists = useMemo(() => {
     const played = recentlyPlayed ?? [];
     if (played.length === 0) {
       return [
-        { name: 'Pritam', count: 12 },
-        { name: 'Arijit Singh', count: 9 },
-        { name: 'The Weeknd', count: 6 }
+        { name: 'Arijit Singh', count: 18 },
+        { name: 'A.R. Rahman', count: 14 },
+        { name: 'AP Dhillon', count: 10 },
+        { name: 'Prateek Kuhad', count: 8 },
+        { name: 'Diljit Dosanjh', count: 6 },
       ];
     }
     const counts = {};
-    played.forEach(song => {
+    played.forEach((song) => {
       const primary = (song.primaryArtists || 'Unknown Artist').split(',')[0].trim();
       counts[primary] = (counts[primary] || 0) + 1;
     });
@@ -37,17 +38,19 @@ const StatsDashboard = () => {
 
   const topGenres = useMemo(() => {
     const played = recentlyPlayed ?? [];
-    if (played.length === 0) return ['Bollywood Pop', 'Acoustic Chill', 'EDM'];
+    if (played.length === 0) return ['Bollywood Pop & Romance', 'Indian Indie', 'Punjabi Wave'];
     const genresMap = {
-      hindi: 'Bollywood Pop',
-      english: 'Global Pop/EDM',
-      punjabi: 'Punjabi Dance Hits',
-      tamil: 'South Indian Melody'
+      hindi: 'Bollywood & Hindi Pop',
+      english: 'Global Echoes',
+      punjabi: 'Punjabi Wave',
+      tamil: 'South Indian Cinema',
+      telugu: 'Telugu Melodies',
+      bengali: 'Bengali Folk & Acoustic',
     };
     const counts = {};
-    played.forEach(song => {
+    played.forEach((song) => {
       const lang = (song.language || 'hindi').toLowerCase();
-      const genre = genresMap[lang] || 'Global Hits';
+      const genre = genresMap[lang] || 'Contemporary Indian';
       counts[genre] = (counts[genre] || 0) + 1;
     });
     return Object.entries(counts)
@@ -57,58 +60,63 @@ const StatsDashboard = () => {
   }, [recentlyPlayed]);
 
   return (
-    <div className="page-wrap animate-fade-up">
-      <div className="mb-8">
-        <p className="section-overline">Dashboard</p>
-        <h1 className="section-heading">Listening Stats</h1>
+    <div className="w-full pt-32 pb-32 px-6 md:px-12 animate-fade-in">
+      <header className="mb-24 md:mb-32">
+        <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Metrics</p>
+        <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight mb-8">
+          Listening Dossier
+        </h1>
+        <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">
+          Playback overview, artist frequencies, and audio statistics.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 mb-32 border-b border-border/30 pb-32">
+        <div className="flex flex-col">
+          <FiClock className="text-secondary mb-8" size={32} />
+          <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Time Listened</p>
+          <p className="text-5xl md:text-7xl font-display font-bold text-primary tracking-tighter">
+            {totalMinutes} <span className="text-xl md:text-3xl text-secondary">MINS</span>
+          </p>
+        </div>
+        <div className="flex flex-col">
+          <FiDisc className="text-secondary mb-8" size={32} />
+          <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Tracks</p>
+          <p className="text-5xl md:text-7xl font-display font-bold text-primary tracking-tighter">{recentlyPlayed.length}</p>
+        </div>
+        <div className="flex flex-col">
+          <FiUser className="text-secondary mb-8" size={32} />
+          <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Top Artist</p>
+          <p className="text-4xl md:text-5xl font-display font-bold text-primary tracking-tighter leading-tight truncate">{topArtists[0]?.name || '—'}</p>
+        </div>
+        <div className="flex flex-col">
+          <FiActivity className="text-secondary mb-8" size={32} />
+          <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Top Genre</p>
+          <p className="text-4xl md:text-5xl font-display font-bold text-primary tracking-tighter leading-tight truncate">{topGenres[0] || '—'}</p>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="p-5 rounded-2.5xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.025] transition-all">
-          <FiClock className="text-orange-500 mb-3" size={20} />
-          <p className="text-[10px] uppercase tracking-wider text-white/35 font-bold mb-1">Time Listened</p>
-          <p className="text-xl md:text-2xl font-black text-white">{Math.round(totalMinutes)} <span className="text-xs font-bold text-white/45">Mins</span></p>
-        </div>
-
-        <div className="p-5 rounded-2.5xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.025] transition-all">
-          <FiMusic className="text-purple-400 mb-3" size={20} />
-          <p className="text-[10px] uppercase tracking-wider text-white/35 font-bold mb-1">Songs Streamed</p>
-          <p className="text-xl md:text-2xl font-black text-white">{recentlyPlayed.length} <span className="text-xs font-bold text-white/45">Tracks</span></p>
-        </div>
-
-        <div className="p-5 rounded-2.5xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.025] transition-all">
-          <FiUser className="text-cyan-400 mb-3" size={20} />
-          <p className="text-[10px] uppercase tracking-wider text-white/35 font-bold mb-1">Favorite Artist</p>
-          <p className="text-xl md:text-2xl font-black text-white truncate">{topArtists[0]?.name || 'None'}</p>
-        </div>
-
-        <div className="p-5 rounded-2.5xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.025] transition-all">
-          <FiActivity className="text-pink-400 mb-3" size={20} />
-          <p className="text-[10px] uppercase tracking-wider text-white/35 font-bold mb-1">Primary Vibe</p>
-          <p className="text-xl md:text-2xl font-black text-white truncate">{topGenres[0] || 'Chilled Out'}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        {/* Top Artists Leaderboard */}
-        <div className="p-6 rounded-3xl border border-white/[0.08] bg-white/[0.01]">
-          <h2 className="text-sm font-black uppercase tracking-wider text-white/40 mb-5 flex items-center gap-2">
-            <FiUser size={16} /> Top Artists
-          </h2>
-          <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 mb-32">
+        <div>
+          <div className="flex items-center gap-4 mb-12 border-b border-border/30 pb-6">
+            <h2 className="font-display font-bold text-4xl text-primary uppercase">Top Artists</h2>
+          </div>
+          <div className="space-y-8">
             {topArtists.map((artist, idx) => {
               const maxCount = topArtists[0]?.count || 1;
               const ratio = (artist.count / maxCount) * 100;
               return (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-white/80">{artist.name}</span>
-                    <span className="text-white/40">{artist.count} plays</span>
+                <div key={idx} className="group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-baseline gap-4">
+                      <span className="text-xs font-bold text-secondary">{String(idx + 1).padStart(2, '0')}</span>
+                      <span className="text-2xl md:text-3xl font-display font-bold uppercase text-primary tracking-tight">{artist.name}</span>
+                    </div>
+                    <span className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">{artist.count} PLAYS</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-white/[0.04] overflow-hidden">
-                    <div 
-                      className="h-full rounded-full bg-gradient-to-r from-orange-500 to-purple-600 transition-all duration-1000"
+                  <div className="w-full h-[2px] bg-border/30 overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-1000 group-hover:bg-accent"
                       style={{ width: `${ratio}%` }}
                     />
                   </div>
@@ -118,57 +126,60 @@ const StatsDashboard = () => {
           </div>
         </div>
 
-        {/* Favorite Genres List */}
-        <div className="p-6 rounded-3xl border border-white/[0.08] bg-white/[0.01]">
-          <h2 className="text-sm font-black uppercase tracking-wider text-white/40 mb-5 flex items-center gap-2">
-            <FiTrendingUp size={16} /> Top Genres
-          </h2>
-          <div className="space-y-3">
+        <div>
+          <div className="flex items-center gap-4 mb-12 border-b border-border/30 pb-6">
+            <h2 className="font-display font-bold text-4xl text-primary uppercase">Top Genres</h2>
+          </div>
+          <div className="space-y-0">
             {topGenres.map((genre, idx) => (
-              <div 
-                key={idx}
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-lg bg-orange-500/10 flex items-center justify-center text-xs font-bold text-orange-500">{idx + 1}</span>
-                  <span className="text-xs font-black text-white/80">{genre}</span>
-                </div>
-                <span className="text-[10px] font-black uppercase text-orange-500/80 bg-orange-500/5 px-2.5 py-1 rounded-full">Streamed</span>
+              <div key={idx} className="flex items-baseline gap-6 py-6 border-b border-border/30 group hover:bg-surface/10 transition-colors px-4 -mx-4">
+                <span className="text-xs font-bold text-secondary">{String(idx + 1).padStart(2, '0')}</span>
+                <span className="text-2xl md:text-3xl font-display font-bold uppercase text-primary tracking-tight group-hover:text-accent transition-colors">{genre}</span>
               </div>
             ))}
-            {topGenres.length === 0 && (
-              <p className="text-xs text-white/35 text-center py-10">Stream tracks to generate genre statistics.</p>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Playback History Row list */}
       <div>
-        <h2 className="text-lg font-black tracking-tight text-white mb-5 flex items-center gap-2">
-          <FiClock size={18} /> Stream Log History
-        </h2>
-        <div className="space-y-1.5">
+        <div className="flex items-center justify-between mb-12 border-b border-border/30 pb-6">
+          <h2 className="font-display font-bold text-4xl text-primary uppercase">Playback Log</h2>
+          <span className="text-xs font-bold text-secondary tracking-[0.2em] uppercase">
+            {recentlyPlayed.length} ENTRIES
+          </span>
+        </div>
+
+        <div className="flex flex-col">
           {recentlyPlayed.map((song, idx) => (
-            <div 
+            <div
               key={`${song.id}-${idx}`}
-              className="flex items-center gap-3.5 p-2.5 rounded-2xl hover:bg-white/[0.035] border border-transparent hover:border-white/[0.05] transition-all duration-300"
+              className="group flex items-center gap-6 py-4 md:py-6 border-b border-border/20 hover:bg-surface/10 transition-colors -mx-4 px-4"
             >
-              <span className="w-6 text-[11px] font-bold text-white/20 text-center">{idx + 1}</span>
-              <img src={pickImageUrl(song.image)} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }} className="w-10 h-10 rounded-xl object-cover" alt="" />
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-xs font-black text-white truncate">{cleanText(song.name)}</p>
-                <p className="text-[10.5px] text-white/40 font-semibold truncate mt-0.5">{cleanText(song.primaryArtists)}</p>
+              <span className="w-8 md:w-12 text-xs font-bold text-secondary text-center">
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+              <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 overflow-hidden shadow-[0_10px_20px_rgba(0,0,0,0.3)] hidden sm:block">
+                <img
+                  src={pickImageUrl(song.image, '150x150')}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
+                  className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                  alt=""
+                />
               </div>
-              <span className="text-[10px] text-white/35 font-bold tracking-tight">
-                {song.playedAt ? new Date(song.playedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+              <div className="flex-1 min-w-0 md:flex md:items-baseline md:gap-6">
+                <p className="text-2xl md:text-4xl font-display font-bold uppercase text-primary truncate group-hover:text-accent transition-colors">{cleanText(song.name)}</p>
+                <p className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate mt-1 md:mt-0">{cleanText(song.primaryArtists)}</p>
+              </div>
+              <span className="text-xs font-bold tracking-[0.2em] text-secondary shrink-0 uppercase">
+                {song.playedAt ? new Date(song.playedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'STREAMED'}
               </span>
             </div>
           ))}
+
           {recentlyPlayed.length === 0 && (
-            <div className="py-20 text-center border border-dashed border-white/10 rounded-[32px] bg-white/[0.01]">
-              <FiClock size={36} className="mx-auto text-white/10 mb-4 animate-pulse" />
-              <p className="text-white/35 font-semibold text-xs uppercase tracking-wider">No streaming logs yet</p>
+            <div className="py-32 text-center border-b border-border/30">
+              <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6 uppercase">No records</p>
+              <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">Play tracks to populate your dossier.</p>
             </div>
           )}
         </div>
