@@ -204,7 +204,7 @@ const Player = () => {
   const ytCallbacks = useRef({ setIsPlaying, setDuration, setPlayed, setShouldPrefetch, handleEnded });
   useEffect(() => {
     ytCallbacks.current = { setIsPlaying, setDuration, setPlayed, setShouldPrefetch, handleEnded };
-  });
+  }, [setIsPlaying, setDuration, setPlayed, setShouldPrefetch, handleEnded]);
 
   // ── Init YouTube IFrame API on mount ──────────────────────────
   // Pre-load the YT IFrame API eagerly (no callbacks yet) so the script

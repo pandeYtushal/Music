@@ -12,15 +12,14 @@ const DesktopPlayerBar = ({
 }) => {
   return (
     <div
-      className={`hidden md:grid grid-cols-[1fr_auto_1fr] fixed bottom-0 left-0 right-0 z-50 h-[84px] transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-background border-t border-border/20 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] ${
-        isExpanded ? 'translate-y-full pointer-events-none' : 'translate-y-0'
+      className={`hidden md:flex justify-between items-center fixed bottom-6 left-0 right-0 mx-auto w-[95%] max-w-[1000px] z-[150] h-[88px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] bg-black/60 backdrop-blur-3xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-[2.5rem] px-3 ${
+        isExpanded ? 'translate-y-[150%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
       }`}
-      style={{ transform: isExpanded ? 'translateY(100%)' : 'translateY(0)' }}
     >
       {/* LEFT PANE - NOW PLAYING */}
-      <div className="flex items-center gap-4 px-6 min-w-0 justify-self-start w-full max-w-[420px]">
+      <div className="flex items-center gap-4 px-4 w-[30%] min-w-[200px]">
         <div 
-          className="w-14 h-14 shrink-0 bg-surface rounded-md overflow-hidden relative shadow-md cursor-pointer group/art border border-white/5"
+          className="w-[3.25rem] h-[3.25rem] shrink-0 bg-black rounded-xl overflow-hidden relative shadow-lg cursor-pointer group/art border border-white/10"
           onClick={onExpand}
         >
           <motion.img
@@ -34,13 +33,13 @@ const DesktopPlayerBar = ({
 
         <div className="min-w-0 flex flex-col justify-center">
           <p 
-            className="text-sm font-medium text-primary truncate cursor-pointer hover:underline"
+            className="text-sm font-bold text-white truncate cursor-pointer hover:underline tracking-wide"
             onClick={onExpand}
           >
             {cleanText(title)}
           </p>
           <p 
-            className="text-xs text-secondary truncate mt-0.5"
+            className="text-[11px] text-white/60 truncate mt-0.5 uppercase tracking-widest font-medium"
           >
             {cleanText(artist)}
           </p>
@@ -48,8 +47,8 @@ const DesktopPlayerBar = ({
       </div>
 
       {/* CENTER PANE - PLAYBACK & PROGRESS */}
-      <div className="flex flex-col items-center justify-center w-full min-w-[400px] max-w-[600px] px-4 justify-self-center">
-        <div className="flex items-center gap-6 mb-2">
+      <div className="flex flex-col items-center justify-center w-[40%] max-w-[600px] px-4">
+        <div className="flex items-center gap-6 mb-1.5">
           <button 
             onClick={onToggleShuffle} 
             className={`transition-colors active:scale-95 ${shuffle ? 'text-primary' : 'text-secondary hover:text-primary'}`}
@@ -68,10 +67,10 @@ const DesktopPlayerBar = ({
 
           <button
             onClick={onTogglePlay}
-            className="w-11 h-11 rounded-full bg-primary text-background flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md"
+            className="w-[2.75rem] h-[2.75rem] rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
             aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <FiPause size={20} className="fill-current" /> : <FiPlay size={20} className="fill-current ml-1" />}
+            {isPlaying ? <FiPause size={22} className="fill-current" /> : <FiPlay size={22} className="fill-current ml-1" />}
           </button>
 
           <button 
@@ -124,7 +123,7 @@ const DesktopPlayerBar = ({
       </div>
 
       {/* RIGHT PANE - VOLUME & EXTRAS */}
-      <div className="flex items-center justify-end gap-3 px-6 justify-self-end w-full max-w-[240px]">
+      <div className="flex items-center justify-end gap-4 px-4 w-[30%] min-w-[200px]">
         <button 
           onClick={onToggleMute} 
           className="text-secondary hover:text-primary transition-colors"

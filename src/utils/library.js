@@ -123,7 +123,7 @@ export const sanitizeLibrary = (library = {}) => ({
   quality: VALID_QUALITIES.has(library.quality) ? library.quality : '320kbps',
 });
 
-export const isSongAcceptable = (song, currentLang, allowedLangs) => {
+export const isSongAcceptable = (song) => {
   if (!song) return false;
 
   const name = (song.name || '').toLowerCase();
@@ -141,15 +141,7 @@ export const isSongAcceptable = (song, currentLang, allowedLangs) => {
     return false;
   }
 
-  if (song.language && currentLang) {
-    const songLang = song.language.toLowerCase();
-    const targetLang = currentLang.toLowerCase();
-
-    // Allow if language matches current language or is in the allowed languages set
-    if (songLang !== targetLang && allowedLangs && !allowedLangs.has(songLang)) {
-      return false;
-    }
-  }
+  // Removed strict language filtering to allow regional songs to flow freely into recommendations
 
   return true;
 };

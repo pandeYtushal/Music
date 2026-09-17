@@ -40,7 +40,7 @@ function AlbumArtwork({ song, playlist }) {
 }
 
 export default function Home() {
-  const [data, setData] = useState({ newReleases: [], trending: [], charts: [] });
+  const [data, setData] = useState({ newReleases: [], trending: [], charts: [], punjabi: [], haryanvi: [] });
   const [loading, setLoading] = useState(true);
   
   const setCurrentVideo = usePlayerStore((s) => s.setCurrentVideo);
@@ -54,12 +54,20 @@ export default function Home() {
     (async () => {
       try {
         setLoading(true);
-        const [nr, tr, ch] = await Promise.all([
+        const [nr, tr, ch, pj, hr] = await Promise.all([
           searchSongs('new releases', { limit: 12, signal: ctrl.signal }),
           searchSongs('trending hits', { limit: 12, signal: ctrl.signal }),
           searchSongs('global top 50', { limit: 12, signal: ctrl.signal }),
+          searchSongs('punjabi hits', { limit: 12, signal: ctrl.signal }),
+          searchSongs('haryanvi hits', { limit: 12, signal: ctrl.signal }),
         ]);
-        setData({ newReleases: nr || [], trending: tr || [], charts: ch || [] });
+        setData({ 
+          newReleases: nr || [], 
+          trending: tr || [], 
+          charts: ch || [],
+          punjabi: pj || [],
+          haryanvi: hr || []
+        });
       } catch (e) {
         if (e.name !== 'CanceledError' && e.code !== 'ERR_CANCELED') console.warn(e);
       } finally {
@@ -182,6 +190,30 @@ export default function Home() {
             renderItem={(song) => <AlbumArtwork song={song} playlist={data.charts} />}
           />
         </section>
+
+        {data.punjabi.length > 0 && (
+          <section>
+            <h3 className="font-display font-bold text-2xl md:text-3xl text-primary mb-6 uppercase tracking-tight">
+              Punjabi Hits
+            </h3>
+            <HorizontalGallery 
+              items={data.punjabi}
+              renderItem={(song) => <AlbumArtwork song={song} playlist={data.punjabi} />}
+            />
+          </section>
+        )}
+
+        {data.haryanvi.length > 0 && (
+          <section>
+            <h3 className="font-display font-bold text-2xl md:text-3xl text-primary mb-6 uppercase tracking-tight">
+              Haryanvi Trending
+            </h3>
+            <HorizontalGallery 
+              items={data.haryanvi}
+              renderItem={(song) => <AlbumArtwork song={song} playlist={data.haryanvi} />}
+            />
+          </section>
+        )}
       </div>
     </motion.div>
   );

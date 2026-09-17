@@ -84,6 +84,41 @@ const FullScreenPlayer = ({
 
   const seekBound = (e, ref) => onSeekStart(e, ref);
 
+  const renderQueueList = () => (
+    <>
+      <div className="flex items-center justify-between mb-8 xl:sticky xl:top-0 xl:bg-background/80 xl:backdrop-blur-xl xl:py-4 xl:z-10 xl:-mt-8 xl:pt-8 border-b border-white/5 pb-4">
+        <h3 className="font-display font-bold text-2xl xl:text-4xl text-primary uppercase">Up Next</h3>
+        {playlist.length > 0 && (
+          <button onClick={onClearQueue} className="text-xs xl:text-sm tracking-[0.2em] uppercase font-bold text-secondary hover:text-primary transition-colors">
+            Clear Queue
+          </button>
+        )}
+      </div>
+
+      {playlist.length > 0 ? (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={playlist.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            <div className="flex flex-col gap-2">
+              {playlist.map((song, idx) => (
+                <SortableSongItem
+                  key={`${song.id}-${idx}`}
+                  song={song}
+                  index={idx}
+                  isCurrentSong={song.id === currentVideo?.id}
+                  isPlaying={isPlaying}
+                  onPlay={() => onSetCurrentVideo(song, playlist)}
+                  onRemove={(e) => { e.stopPropagation(); onRemoveFromQueue(song.id, idx); }}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <p className="text-secondary tracking-widest uppercase font-bold text-center py-12">Queue is empty</p>
+      )}
+    </>
+  );
+
   return (
     <div
       className={`fixed inset-0 w-full h-[100dvh] md:h-screen z-[200] flex flex-col bg-background/60 backdrop-blur-[60px] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
@@ -106,140 +141,122 @@ const FullScreenPlayer = ({
         onTouchMove={onSwipeMove}
         onTouchEnd={onSwipeEnd}
       >
-        <div className="flex flex-col xl:flex-row items-center justify-start xl:justify-center gap-8 md:gap-12 xl:gap-24 w-full max-w-[1600px] my-auto shrink-0 py-4">
-          {/* Left: MASSIVE ARTWORK */}
-          <div className="w-full xl:w-1/2 flex items-center justify-center max-w-[320px] md:max-w-[500px] xl:max-w-[700px]">
-            <div className="w-full aspect-square bg-surface/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-              <motion.img
-                src={imageUrl}
-                alt={title}
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
-                className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02]"
-              />
+        <div className="flex flex-col xl:flex-row items-center xl:items-start justify-center gap-8 md:gap-12 xl:gap-16 w-full max-w-[1800px] my-auto shrink-0 py-4 xl:h-[80vh]">
+          
+          {/* LEFT COLUMN: Player Hub (Artwork + Info + Controls) */}
+          <div className="w-full xl:w-1/2 flex flex-col items-center justify-between max-w-[600px] xl:max-w-[700px] shrink-0 xl:h-full xl:overflow-hidden xl:pr-8 py-4">
+            
+            {/* Artwork Container - Flexes to fill available space but shrinks if needed */}
+            <div className="w-full flex-1 min-h-0 flex items-center justify-center mb-6 xl:mb-8">
+              <div className="w-full max-w-[320px] md:max-w-[500px] xl:max-h-[100%] aspect-square bg-black shadow-[0_0_40px_rgba(255,255,255,0.05),0_20px_50px_rgba(0,0,0,0.6)] relative overflow-hidden group rounded-2xl md:rounded-3xl border border-white/5">
+                <motion.img
+                  src={imageUrl}
+                  alt={title}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/icon-192.png'; }}
+                  className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02]"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Right: INFO & CONTROLS */}
-          <div className="w-full xl:w-1/2 flex flex-col items-center xl:items-start text-center xl:text-left max-w-[600px]">
-            <div className="w-full mb-8 md:mb-10">
-              <h2 
-                className="text-2xl sm:text-4xl md:text-5xl xl:text-7xl font-display font-bold text-primary leading-[1.1] md:leading-[1.1] xl:leading-[1.1] tracking-tight mb-3 line-clamp-2 md:line-clamp-3 xl:line-clamp-none"
-                title={cleanText(title)}
-              >
-                {cleanText(title)}
-              </h2>
-              <p className="text-sm sm:text-lg md:text-2xl text-secondary tracking-widest uppercase font-medium line-clamp-1">
-                {cleanText(artist)}
-              </p>
-            </div>
-
-            {/* Progress */}
-            <div className="flex items-center gap-4 w-full mb-10">
-              <span className="text-xs font-bold tracking-widest text-secondary w-12 text-right">
-                {fmt(played * duration)}
-              </span>
-              <SeekBar refEl={fullSeekRef} played={played} onSeekStart={seekBound} />
-              <span className="text-xs font-bold tracking-widest text-secondary w-12">
-                {fmt(duration)}
-              </span>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center justify-center xl:justify-start gap-6 md:gap-10 w-full mb-12">
-              <ControlButton active={shuffle} onClick={onToggleShuffle}>
-                <FiShuffle size={20} />
-              </ControlButton>
-
-              <button onClick={onPrev} className="text-primary hover:text-accent transition-colors active:scale-90">
-                <FiSkipBack size={32} />
-              </button>
-              <button
-                onClick={onTogglePlay}
-                className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center text-background bg-primary rounded-full hover:scale-105 transition-all active:scale-95 shadow-xl"
-              >
-                {isPlaying ? <FiPause size={36} className="fill-current" /> : <FiPlay size={36} className="fill-current ml-2" />}
-              </button>
-              <button onClick={onNext} className="text-primary hover:text-accent transition-colors active:scale-90">
-                <FiSkipForward size={32} />
-              </button>
-
-              <ControlButton active={repeatMode !== 'off'} onClick={onCycleRepeat}>
-                <FiRepeat size={20} />
-                {repeatMode === 'one' && (
-                  <span className="absolute -right-2 -top-2 text-[10px] font-bold text-primary">1</span>
-                )}
-              </ControlButton>
-            </div>
-
-            {/* Extra Actions */}
-            <div className="flex items-center justify-center xl:justify-start gap-8 w-full border-t border-white/10 pt-8">
-              <button onClick={onToggleFav} className={`p-2 transition-colors active:scale-90 ${isFav ? 'text-primary' : 'text-secondary hover:text-primary'}`}>
-                <FiHeart size={24} className={isFav ? 'fill-current' : ''} />
-              </button>
-              <button onClick={() => onAddToPlaylist(currentVideo)} className="p-2 text-secondary hover:text-primary transition-colors active:scale-90">
-                <FiPlus size={24} />
-              </button>
-              <button onClick={() => setActiveTab(t => t === 'queue' ? 'none' : 'queue')} className={`p-2 transition-colors active:scale-90 ${activeTab === 'queue' ? 'text-primary' : 'text-secondary hover:text-primary'}`}>
-                <FiList size={24} />
-              </button>
-              <div className="hidden md:flex items-center gap-4 flex-1 max-w-[200px] ml-auto">
-                <button onClick={onToggleMute} className="text-secondary hover:text-primary transition-colors">
-                  {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
-                </button>
-                <div
-                  ref={fullVolumeRef}
-                  className="flex-1 h-1 bg-white/20 cursor-pointer relative group transition-all hover:h-2"
-                  onMouseDown={(e) => onVolStart(e, fullVolumeRef)}
-                  onTouchStart={(e) => onVolStart(e, fullVolumeRef)}
+            
+            {/* Info & Controls Wrapper */}
+            <div className="w-full flex flex-col items-center text-center max-w-[500px] shrink-0">
+              {/* Title & Artist */}
+              <div className="w-full mb-8 px-4">
+                <h2 
+                  className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary leading-tight tracking-tight mb-2 line-clamp-2 drop-shadow-md"
+                  title={cleanText(title)}
                 >
-                  <div className="absolute top-0 left-0 h-full bg-primary group-hover:bg-accent transition-colors flex items-center justify-end" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}>
-                    <div className="w-3 h-3 bg-white rounded-full shadow-md translate-x-1/2 scale-100 group-hover:scale-125 transition-transform" />
+                  {cleanText(title)}
+                </h2>
+                <p className="text-sm sm:text-base md:text-lg text-secondary tracking-[0.2em] uppercase font-medium line-clamp-1">
+                  {cleanText(artist)}
+                </p>
+              </div>
+
+              {/* Progress */}
+              <div className="flex items-center gap-4 w-full mb-10">
+                <span className="text-xs font-bold tracking-widest text-secondary w-12 text-right">
+                  {fmt(played * duration)}
+                </span>
+                <SeekBar refEl={fullSeekRef} played={played} onSeekStart={seekBound} />
+                <span className="text-xs font-bold tracking-widest text-secondary w-12">
+                  {fmt(duration)}
+                </span>
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-6 md:gap-10 w-full mb-12">
+                <ControlButton active={shuffle} onClick={onToggleShuffle}>
+                  <FiShuffle size={20} />
+                </ControlButton>
+
+                <button onClick={onPrev} className="text-primary hover:text-accent transition-colors active:scale-90">
+                  <FiSkipBack size={32} />
+                </button>
+                <button
+                  onClick={onTogglePlay}
+                  className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center text-background bg-primary rounded-full hover:scale-105 transition-all active:scale-95 shadow-xl shrink-0"
+                >
+                  {isPlaying ? <FiPause size={36} className="fill-current" /> : <FiPlay size={36} className="fill-current ml-2" />}
+                </button>
+                <button onClick={onNext} className="text-primary hover:text-accent transition-colors active:scale-90">
+                  <FiSkipForward size={32} />
+                </button>
+
+                <ControlButton active={repeatMode !== 'off'} onClick={onCycleRepeat}>
+                  <FiRepeat size={20} />
+                  {repeatMode === 'one' && (
+                    <span className="absolute -right-2 -top-2 text-[10px] font-bold text-primary">1</span>
+                  )}
+                </ControlButton>
+              </div>
+
+              {/* Extra Actions */}
+              <div className="flex items-center justify-center gap-8 w-full border-t border-white/10 pt-8">
+                <button onClick={onToggleFav} className={`p-2 transition-colors active:scale-90 ${isFav ? 'text-primary' : 'text-secondary hover:text-primary'}`}>
+                  <FiHeart size={24} className={isFav ? 'fill-current' : ''} />
+                </button>
+                <button onClick={() => onAddToPlaylist(currentVideo)} className="p-2 text-secondary hover:text-primary transition-colors active:scale-90">
+                  <FiPlus size={24} />
+                </button>
+                <button onClick={() => setActiveTab(t => t === 'queue' ? 'none' : 'queue')} className={`p-2 transition-colors active:scale-90 xl:hidden ${activeTab === 'queue' ? 'text-primary' : 'text-secondary hover:text-primary'}`}>
+                  <FiList size={24} />
+                </button>
+                <div className="hidden md:flex items-center gap-4 flex-1 max-w-[200px] ml-auto">
+                  <button onClick={onToggleMute} className="text-secondary hover:text-primary transition-colors">
+                    {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
+                  </button>
+                  <div
+                    ref={fullVolumeRef}
+                    className="flex-1 h-1 bg-white/20 cursor-pointer relative group transition-all hover:h-2"
+                    onMouseDown={(e) => onVolStart(e, fullVolumeRef)}
+                    onTouchStart={(e) => onVolStart(e, fullVolumeRef)}
+                  >
+                    <div className="absolute top-0 left-0 h-full bg-primary group-hover:bg-accent transition-colors flex items-center justify-end" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}>
+                      <div className="w-3 h-3 bg-white rounded-full shadow-md translate-x-1/2 scale-100 group-hover:scale-125 transition-transform" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* RIGHT COLUMN: Permanent Queue (Desktop Only) */}
+          <div className="hidden xl:flex w-full xl:w-1/2 flex-col h-full bg-black/40 backdrop-blur-3xl rounded-[2rem] p-8 overflow-y-auto scrollbar-hide border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_20px_40px_rgba(0,0,0,0.5)] relative">
+            {renderQueueList()}
+          </div>
         </div>
 
-        {/* Up Next / Queue Overlay */}
+        {/* Up Next / Queue Overlay (Mobile Only) */}
         <AnimatePresence>
           {activeTab === 'queue' && (
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
-              className="w-full max-w-[1200px] mx-auto border-t border-border/20 pt-16 mt-8"
+              className="xl:hidden w-full max-w-[1200px] mx-auto border-t border-border/20 pt-16 mt-8 bg-black/80 backdrop-blur-2xl rounded-t-[2rem] px-6"
             >
-              <div className="flex items-center justify-between mb-12">
-                <h3 className="font-display font-bold text-4xl text-primary uppercase">Up Next</h3>
-                {playlist.length > 0 && (
-                  <button onClick={onClearQueue} className="text-sm tracking-[0.2em] uppercase font-bold text-secondary hover:text-primary transition-colors">
-                    Clear Queue
-                  </button>
-                )}
-              </div>
-
-              {playlist.length > 0 ? (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={playlist.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                    <div className="flex flex-col gap-2">
-                      {playlist.map((song, idx) => (
-                        <SortableSongItem
-                          key={`${song.id}-${idx}`}
-                          song={song}
-                          index={idx}
-                          isCurrentSong={song.id === currentVideo?.id}
-                          isPlaying={isPlaying}
-                          onPlay={() => onSetCurrentVideo(song, playlist)}
-                          onRemove={(e) => { e.stopPropagation(); onRemoveFromQueue(song.id, idx); }}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              ) : (
-                <p className="text-secondary tracking-widest uppercase font-bold text-center py-12">Queue is empty</p>
-              )}
+              {renderQueueList()}
             </motion.div>
           )}
         </AnimatePresence>

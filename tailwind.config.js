@@ -15,11 +15,19 @@ export default {
         secondary: '#96969B',
         muted: '#5F6065',
         
+        accent: '#00F0FF', // Cyan accent
+        'accent-hover': '#00C8D6',
+        
         border: 'rgba(255,255,255,0.08)',
       },
       fontFamily: {
         sans:    ['Inter', '-apple-system', 'system-ui', 'sans-serif'],
         display: ['"Space Grotesk"', 'sans-serif'],
+      },
+      backdropBlur: {
+        'xs': '2px',
+        '2xl': '40px',
+        '3xl': '64px',
       },
       borderRadius: {
         'sm': '4px',

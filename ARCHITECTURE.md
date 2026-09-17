@@ -14,8 +14,6 @@ graph TD
     UI --> |Data Queries| Cache[TanStack React Query Cache]
     Store --> |Audio Element| Audio[Native Audio Coordinator]
     Cache --> |Axios Requests| API[Saavn REST API]
-    UI --> |Auth Listener| Auth[useAuthStore / Firebase Auth]
-    Store --> |Cloud Sync| DB[Firestore Sync Layer]
 ```
 
 ### State Management Strategy
@@ -59,11 +57,10 @@ The application themes are permanently set to a premium glassmorphic dark mode l
 ## 4. Security Policy & Audits
 
 We maintain strict security guardrails across the platform:
-- **Content-Security-Policy (CSP)**: Placed inside `vercel.json` headers to deny clickjacking (`X-Frame-Options: DENY`) and restrict script execution, font references, API domains, and media source streams to verified JioSaavn CDN and Firebase domains.
+- **Content-Security-Policy (CSP)**: Placed inside `vercel.json` headers to deny clickjacking (`X-Frame-Options: DENY`) and restrict script execution, font references, API domains, and media source streams to verified JioSaavn CDN domains.
 - **Data Validation & Sanitization**: 
   - Text fields from API responses are clamped to a max length of `180` characters.
   - Special strings are HTML-decoded and stripped of potential injection markers.
-  - Database schema shapes are validated inside backend `firestore.rules` against a default deny-all fallback.
 - **Token Shielding Logger**: console messages go through `src/utils/logger.js`, which strips API keys/JWTs and hides debug details in production builds.
 
 ---

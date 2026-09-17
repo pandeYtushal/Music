@@ -65,6 +65,13 @@
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 
+.glass-surface {
+  background: rgba(25, 25, 28, 0.6);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* ── AdSense ────────────────────────────────────────── */
 .adsense-container { overflow: hidden !important; background: transparent !important; }
 .adsense-container iframe { background: transparent !important; background-color: transparent !important; color-scheme: dark !important; }
