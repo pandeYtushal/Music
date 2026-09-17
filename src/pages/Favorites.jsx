@@ -18,7 +18,7 @@ function TrackRow({ song, index, playlist }) {
     >
       <span className="text-xs font-mono font-bold text-secondary w-8 md:w-12 shrink-0">{String(index + 1).padStart(2, '0')}</span>
       <div className="min-w-0 flex-1 flex flex-col md:flex-row md:items-baseline md:gap-6">
-        <span className={`font-display font-bold text-3xl md:text-5xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
+        <span className={`font-display font-bold text-2xl md:text-3xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
           {cleanText(song.name)}
         </span>
         <span className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase">
@@ -48,7 +48,7 @@ const Favorites = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-24 md:mb-32">
         <div>
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Favorites</p>
-          <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight">
+          <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl text-primary leading-none uppercase tracking-tight">
             Liked Songs
           </h1>
           <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mt-8">
@@ -75,7 +75,7 @@ const Favorites = () => {
         </div>
       ) : (
         <div className="py-32 text-center">
-          <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No liked songs yet</p>
+          <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6">No liked songs yet</p>
           <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mb-12">Tap the heart icon to save tracks.</p>
           <button
             onClick={() => navigate('/home')}

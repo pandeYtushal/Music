@@ -55,7 +55,7 @@ function TrackRow({ song, playlist }) {
          <img src={pickImageUrl(song.image, '150x150')} alt={song.name} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
       </div>
       <div className="min-w-0 flex-1 flex flex-col md:flex-row md:items-baseline md:gap-6 sm:ml-4">
-        <span className={`font-display font-bold text-3xl md:text-5xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
+        <span className={`font-display font-bold text-2xl md:text-3xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
           {cleanText(song.name)}
         </span>
         <span className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase">
@@ -110,7 +110,7 @@ const RecentlyPlayed = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-24 md:mb-32">
         <div>
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">History</p>
-          <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight">
+          <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl text-primary leading-none uppercase tracking-tight">
             Recently Played
           </h1>
           <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mt-8">
@@ -174,7 +174,7 @@ const RecentlyPlayed = () => {
             return (
               <div key={groupTitle}>
                 <div className="flex items-center justify-between border-b border-border/30 pb-6 mb-12">
-                  <h2 className="font-display font-bold text-4xl text-primary uppercase">{groupTitle}</h2>
+                  <h2 className="font-display font-bold text-3xl text-primary uppercase">{groupTitle}</h2>
                   <span className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">
                     {videos.length} {videos.length === 1 ? 'track' : 'tracks'}
                   </span>
@@ -190,7 +190,7 @@ const RecentlyPlayed = () => {
         </div>
       ) : recentlyPlayed.length > 0 ? (
         <div className="py-32 text-center">
-          <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No matching history</p>
+          <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6">No matching history</p>
           <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mb-12">No tracks match "{searchQuery}"</p>
           <button
             onClick={() => setSearchQuery('')}
@@ -201,7 +201,7 @@ const RecentlyPlayed = () => {
         </div>
       ) : (
         <div className="py-32 text-center">
-          <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No playback history yet</p>
+          <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6">No playback history yet</p>
           <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mb-12">Start listening to build your history.</p>
           <button
             onClick={() => navigate('/home')}

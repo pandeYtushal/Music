@@ -20,7 +20,7 @@ const SettingRow = ({ icon: Icon, label, description, children }) => (
         </div>
       )}
       <div>
-        <p className="text-primary font-display font-bold text-2xl md:text-3xl uppercase tracking-tight">{label}</p>
+        <p className="text-primary font-display font-bold text-xl md:text-2xl uppercase tracking-tight">{label}</p>
         {description && <p className="text-secondary text-xs font-bold tracking-[0.2em] mt-2 uppercase">{description}</p>}
       </div>
     </div>
@@ -68,7 +68,7 @@ const Settings = () => {
     <div className="w-full pt-32 pb-32 px-6 md:px-12 animate-fade-in">
       <header className="mb-24 md:mb-32">
         <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Preferences</p>
-        <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight mb-8">
+        <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl text-primary leading-none uppercase tracking-tight mb-8">
           Settings
         </h1>
         <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">
@@ -93,7 +93,7 @@ const Settings = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') e.currentTarget.blur();
             }}
-            className="bg-transparent border-b-4 border-transparent focus:border-primary outline-none text-4xl md:text-6xl font-display font-bold text-primary tracking-tighter mb-8 pb-4 w-full md:max-w-2xl text-center md:text-left transition-all uppercase placeholder:text-border"
+            className="bg-transparent border-b-4 border-transparent focus:border-primary outline-none text-3xl md:text-5xl font-display font-bold text-primary tracking-tighter mb-8 pb-4 w-full md:max-w-2xl text-center md:text-left transition-all uppercase placeholder:text-border"
           />
           <p className="text-secondary font-bold text-xs flex items-center justify-center md:justify-start gap-3 uppercase tracking-[0.2em]">
             <FiShield size={18} />
@@ -106,7 +106,7 @@ const Settings = () => {
         <section>
           <div className="flex items-center gap-6 mb-12 border-b border-border/30 pb-6">
             <FiWifi size={40} className="text-primary" />
-            <h2 className="font-display font-bold text-4xl md:text-5xl text-primary uppercase">Streaming Bitrate</h2>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-primary uppercase">Streaming Bitrate</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {qualityOptions.map((option) => {
@@ -123,7 +123,7 @@ const Settings = () => {
                   }`}
                 >
                   <div className="text-left">
-                    <p className={`font-display font-bold text-3xl tracking-tight uppercase mb-4 ${active ? 'text-background' : 'text-primary'}`}>
+                    <p className={`font-display font-bold text-2xl tracking-tight uppercase mb-4 ${active ? 'text-background' : 'text-primary'}`}>
                       {option.label}
                     </p>
                     <p className={`text-xs font-bold uppercase tracking-[0.2em] ${active ? 'text-background/80' : 'text-secondary'}`}>
@@ -146,13 +146,13 @@ const Settings = () => {
         <section>
           <div className="flex items-center gap-6 mb-12 border-b border-border/30 pb-6">
             <FiSliders size={40} className="text-primary" />
-            <h2 className="font-display font-bold text-4xl md:text-5xl text-primary uppercase">Audio Control</h2>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-primary uppercase">Audio Control</h2>
           </div>
           
           <div className="flex flex-col">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-6 md:py-8 border-b border-border/30 hover:bg-surface/10 transition-colors px-4 -mx-4 group">
               <div className="flex flex-col gap-2">
-                <p className="text-primary font-display font-bold text-2xl md:text-3xl uppercase tracking-tight">Equalizer Profile</p>
+                <p className="text-primary font-display font-bold text-xl md:text-2xl uppercase tracking-tight">Equalizer Profile</p>
                 <p className="text-secondary text-xs font-bold tracking-[0.2em] mt-2 uppercase">Shape your sound</p>
               </div>
               <select
@@ -207,7 +207,7 @@ const Settings = () => {
         <section>
           <div className="flex items-center gap-6 mb-12 border-b border-border/30 pb-6">
             <FiCommand size={40} className="text-primary" />
-            <h2 className="font-display font-bold text-4xl md:text-5xl text-primary uppercase">Shortcuts</h2>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-primary uppercase">Shortcuts</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4">

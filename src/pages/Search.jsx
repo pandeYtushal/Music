@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams, } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { FiSearch, FiX } from 'react-icons/fi';
@@ -34,10 +34,12 @@ function TrackRow({ song, playlist }) {
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display font-bold text-3xl md:text-5xl text-primary group-hover:text-accent transition-colors truncate">
+        <p className="font-display font-bold text-2xl md:text-3xl text-primary group-hover:text-accent transition-colors truncate">
           {cleanText(song.name)}
         </p>
-        <p className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase mt-1">
+        <p 
+          className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase mt-1"
+        >
           {cleanText(song.primaryArtists)}
         </p>
       </div>
@@ -76,7 +78,7 @@ export default function Search() {
       className="w-full pt-32 pb-32 px-6 md:px-12"
     >
       <header className="mb-24 md:mb-32">
-        <h1 className="font-display font-bold text-5xl sm:text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none mb-6 uppercase tracking-tight">
+        <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-primary leading-none mb-6 uppercase tracking-tight">
           Search
         </h1>
         <p className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-secondary uppercase">
@@ -94,7 +96,7 @@ export default function Search() {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             placeholder="TYPE TO SEARCH..."
-            className="w-full py-6 md:py-8 bg-transparent font-display font-bold text-4xl md:text-6xl text-primary outline-none placeholder:text-border/50 uppercase tracking-tight"
+            className="w-full py-6 md:py-8 bg-transparent font-display font-bold text-3xl md:text-5xl text-primary outline-none placeholder:text-border/50 uppercase tracking-tight"
           />
           {input && (
             <button type="button" onClick={() => { setInput(''); setParams({}); }} className="p-4 text-secondary hover:text-primary transition-colors">
@@ -119,7 +121,7 @@ export default function Search() {
                 <span className="text-xs font-mono font-bold text-secondary w-8 md:w-12 shrink-0">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className="font-display font-bold text-3xl sm:text-4xl md:text-6xl lg:text-8xl text-secondary group-hover:text-primary transition-colors leading-none tracking-tighter">
+                <span className="font-display font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-secondary group-hover:text-primary transition-colors leading-none tracking-tighter">
                   {s.label}
                 </span>
                 <span className="ml-auto text-[10px] md:text-xs font-bold tracking-[0.2em] md:tracking-[0.3em] text-secondary uppercase group-hover:text-accent transition-colors">
@@ -151,7 +153,7 @@ export default function Search() {
 
       {!isLoading && query && songs.length === 0 && (
         <div className="py-32 text-center">
-          <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No tracks found</p>
+          <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6">No tracks found</p>
           <p className="text-secondary uppercase tracking-[0.2em] text-xs font-bold">Try a different search term.</p>
         </div>
       )}

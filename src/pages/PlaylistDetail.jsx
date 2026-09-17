@@ -27,10 +27,12 @@ function TrackRow({ song, playlist, onRemove }) {
          <img src={pickImageUrl(song.image, '150x150')} alt={song.name} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
       </div>
       <div className="min-w-0 flex-1 flex flex-col md:flex-row md:items-baseline md:gap-6 sm:ml-4">
-        <span className={`font-display font-bold text-3xl md:text-5xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
+        <span className={`font-display font-bold text-2xl md:text-3xl group-hover:text-primary transition-colors truncate ${isCurrent ? 'text-primary' : 'text-secondary'}`}>
           {cleanText(song.name)}
         </span>
-        <span className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase">
+        <span 
+          className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase"
+        >
           {cleanText(song.primaryArtists, 'Unknown Artist')}
         </span>
       </div>
@@ -92,7 +94,7 @@ export default function PlaylistDetail() {
   if (!playlist) {
     return (
       <div className="w-full pt-48 pb-32 px-6 md:px-12 text-center text-primary">
-        <h2 className="font-display font-bold text-6xl mb-8 uppercase">Playlist not found</h2>
+        <h2 className="font-display font-bold text-5xl mb-8 uppercase">Playlist not found</h2>
         <button
           onClick={() => navigate('/playlists')}
           className="inline-flex items-center gap-3 px-8 py-4 border border-primary text-primary text-sm font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-background transition-colors active:scale-95"
@@ -152,7 +154,7 @@ export default function PlaylistDetail() {
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full bg-transparent font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary outline-none uppercase tracking-tight"
+              className="w-full bg-transparent font-display font-bold text-5xl md:text-6xl lg:text-7xl text-primary outline-none uppercase tracking-tight"
               onKeyDown={(e) => e.key === 'Enter' && handleRename()}
             />
             <button onClick={handleRename} className="p-4 text-primary hover:text-accent transition-colors">
@@ -160,7 +162,7 @@ export default function PlaylistDetail() {
             </button>
           </div>
         ) : (
-          <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] leading-[0.85] text-primary mb-8 uppercase break-words tracking-tighter">
+          <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl leading-[0.85] text-primary mb-8 uppercase break-words tracking-tighter">
             {playlist.name}
           </h1>
         )}
@@ -192,7 +194,7 @@ export default function PlaylistDetail() {
 
       <section className="mb-24">
         <div className="flex items-center justify-between border-b border-border/30 pb-6 mb-12">
-          <h2 className="font-display font-bold text-4xl text-primary uppercase">Tracklist</h2>
+          <h2 className="font-display font-bold text-3xl text-primary uppercase">Tracklist</h2>
         </div>
         
         {playlist.songs.length > 0 ? (
@@ -209,7 +211,7 @@ export default function PlaylistDetail() {
           </div>
         ) : (
           <div className="py-32 text-center border-t border-b border-border/30">
-            <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6 uppercase">No tracks yet</p>
+            <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6 uppercase">No tracks yet</p>
             <button
               onClick={() => navigate('/search')}
               className="inline-flex items-center gap-3 px-8 py-4 border border-primary text-primary text-sm font-bold tracking-[0.2em] uppercase hover:bg-primary hover:text-background transition-colors active:scale-95 mt-8"

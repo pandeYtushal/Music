@@ -32,7 +32,7 @@ const Playlists = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-24 md:mb-32">
         <div>
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Personal Library</p>
-          <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight">
+          <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl text-primary leading-none uppercase tracking-tight">
             Library
           </h1>
         </div>
@@ -52,7 +52,7 @@ const Playlists = () => {
         >
           <FiHeart size={32} className="text-secondary group-hover:text-primary transition-colors mb-auto" />
           <div className="mt-8">
-            <h3 className="font-display font-bold text-4xl text-primary group-hover:text-accent transition-colors mb-4">Liked Songs</h3>
+            <h3 className="font-display font-bold text-2xl md:text-3xl text-primary group-hover:text-accent transition-colors mb-4">Liked Songs</h3>
             <p className="text-xs font-bold text-secondary uppercase tracking-[0.2em]">
               {favorites.length} {favorites.length === 1 ? 'Track' : 'Tracks'}
             </p>
@@ -65,7 +65,7 @@ const Playlists = () => {
         >
           <FiClock size={32} className="text-secondary group-hover:text-primary transition-colors mb-auto" />
           <div className="mt-8">
-            <h3 className="font-display font-bold text-4xl text-primary group-hover:text-accent transition-colors mb-4">History</h3>
+            <h3 className="font-display font-bold text-2xl md:text-3xl text-primary group-hover:text-accent transition-colors mb-4">History</h3>
             <p className="text-xs font-bold text-secondary uppercase tracking-[0.2em]">
               {recentlyPlayed.length} Recent Tracks
             </p>
@@ -78,7 +78,7 @@ const Playlists = () => {
         >
           <FiTrendingUp size={32} className="text-secondary group-hover:text-primary transition-colors mb-auto" />
           <div className="mt-8">
-            <h3 className="font-display font-bold text-4xl text-primary group-hover:text-accent transition-colors mb-4">Stats</h3>
+            <h3 className="font-display font-bold text-2xl md:text-3xl text-primary group-hover:text-accent transition-colors mb-4">Stats</h3>
             <p className="text-xs font-bold text-secondary uppercase tracking-[0.2em]">
               Playback Dossier
             </p>
@@ -96,7 +96,7 @@ const Playlists = () => {
 
         {playlists.length === 0 ? (
           <div className="py-32 text-center">
-            <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6">No playlists yet</p>
+            <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6">No playlists yet</p>
             <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase mb-12">Create playlists to organize your favorite music.</p>
             <button
               onClick={() => setShowModal(true)}
@@ -128,7 +128,7 @@ const Playlists = () => {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-display font-bold text-4xl md:text-6xl lg:text-7xl text-secondary group-hover:text-primary transition-colors truncate tracking-tighter">
+                  <p className="font-display font-bold text-2xl md:text-4xl lg:text-5xl text-secondary group-hover:text-primary transition-colors truncate tracking-tighter">
                     {playlist.name}
                   </p>
                   <p className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate uppercase mt-2">

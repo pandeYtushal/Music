@@ -32,11 +32,16 @@ const DesktopPlayerBar = ({
           />
         </div>
 
-        <div className="min-w-0 flex flex-col justify-center cursor-pointer" onClick={onExpand}>
-          <p className="text-sm font-medium text-primary truncate">
+        <div className="min-w-0 flex flex-col justify-center">
+          <p 
+            className="text-sm font-medium text-primary truncate cursor-pointer hover:underline"
+            onClick={onExpand}
+          >
             {cleanText(title)}
           </p>
-          <p className="text-xs text-secondary truncate mt-0.5">
+          <p 
+            className="text-xs text-secondary truncate mt-0.5"
+          >
             {cleanText(artist)}
           </p>
         </div>

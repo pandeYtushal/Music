@@ -21,7 +21,7 @@ const Welcome = () => {
           A Cinematic Audio Experience
         </span>
 
-        <h1 className="text-6xl md:text-9xl lg:text-[10rem] font-display font-bold text-primary leading-[0.85] uppercase mb-12 tracking-tighter text-balance">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-primary leading-[0.85] uppercase mb-12 tracking-tighter text-balance">
           Sound <br /> As Space
         </h1>
 

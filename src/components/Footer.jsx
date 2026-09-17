@@ -16,7 +16,7 @@ export default function Footer() {
         
         {/* Massive Brand Name */}
         <div className="w-full text-center mb-16 md:mb-24">
-          <h1 className="font-display font-bold text-[12vw] sm:text-7xl lg:text-[10rem] text-primary leading-none tracking-tighter opacity-90">
+          <h1 className="font-display font-bold text-5xl sm:text-6xl md:text-7xl text-primary leading-none tracking-tighter opacity-90">
             MELDMUSIC
           </h1>
           <p className="text-secondary font-bold text-xs md:text-sm tracking-[0.4em] uppercase mt-6 md:mt-8">
@@ -70,10 +70,6 @@ export default function Footer() {
           <div className="flex flex-wrap justify-center md:justify-end items-center gap-6 md:gap-10">
             <a href="#" className="hover:text-primary transition-colors">PRIVACY</a>
             <a href="#" className="hover:text-primary transition-colors">TERMS</a>
-            <span className="flex items-center gap-3 text-primary/80">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/80 animate-pulse" />
-              SYSTEM ONLINE
-            </span>
           </div>
         </div>
       </div>

@@ -63,7 +63,7 @@ const StatsDashboard = () => {
     <div className="w-full pt-32 pb-32 px-6 md:px-12 animate-fade-in">
       <header className="mb-24 md:mb-32">
         <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-8">Metrics</p>
-        <h1 className="font-display font-bold text-6xl md:text-8xl lg:text-[8rem] text-primary leading-none uppercase tracking-tight mb-8">
+        <h1 className="font-display font-bold text-5xl md:text-6xl lg:text-7xl text-primary leading-none uppercase tracking-tight mb-8">
           Listening Dossier
         </h1>
         <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">
@@ -75,31 +75,31 @@ const StatsDashboard = () => {
         <div className="flex flex-col">
           <FiClock className="text-secondary mb-8" size={32} />
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Time Listened</p>
-          <p className="text-5xl md:text-7xl font-display font-bold text-primary tracking-tighter">
+          <p className="text-4xl md:text-5xl font-display font-bold text-primary tracking-tighter">
             {totalMinutes} <span className="text-xl md:text-3xl text-secondary">MINS</span>
           </p>
         </div>
         <div className="flex flex-col">
           <FiDisc className="text-secondary mb-8" size={32} />
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Tracks</p>
-          <p className="text-5xl md:text-7xl font-display font-bold text-primary tracking-tighter">{recentlyPlayed.length}</p>
+          <p className="text-4xl md:text-5xl font-display font-bold text-primary tracking-tighter">{recentlyPlayed.length}</p>
         </div>
         <div className="flex flex-col">
           <FiUser className="text-secondary mb-8" size={32} />
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Top Artist</p>
-          <p className="text-4xl md:text-5xl font-display font-bold text-primary tracking-tighter leading-tight truncate">{topArtists[0]?.name || '—'}</p>
+          <p className="text-3xl md:text-4xl font-display font-bold text-primary tracking-tighter leading-tight truncate">{topArtists[0]?.name || '—'}</p>
         </div>
         <div className="flex flex-col">
           <FiActivity className="text-secondary mb-8" size={32} />
           <p className="text-[10px] font-bold tracking-[0.4em] text-secondary uppercase mb-4">Top Genre</p>
-          <p className="text-4xl md:text-5xl font-display font-bold text-primary tracking-tighter leading-tight truncate">{topGenres[0] || '—'}</p>
+          <p className="text-3xl md:text-4xl font-display font-bold text-primary tracking-tighter leading-tight truncate">{topGenres[0] || '—'}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 mb-32">
         <div>
           <div className="flex items-center gap-4 mb-12 border-b border-border/30 pb-6">
-            <h2 className="font-display font-bold text-4xl text-primary uppercase">Top Artists</h2>
+            <h2 className="font-display font-bold text-3xl text-primary uppercase">Top Artists</h2>
           </div>
           <div className="space-y-8">
             {topArtists.map((artist, idx) => {
@@ -128,7 +128,7 @@ const StatsDashboard = () => {
 
         <div>
           <div className="flex items-center gap-4 mb-12 border-b border-border/30 pb-6">
-            <h2 className="font-display font-bold text-4xl text-primary uppercase">Top Genres</h2>
+            <h2 className="font-display font-bold text-3xl text-primary uppercase">Top Genres</h2>
           </div>
           <div className="space-y-0">
             {topGenres.map((genre, idx) => (
@@ -143,7 +143,7 @@ const StatsDashboard = () => {
 
       <div>
         <div className="flex items-center justify-between mb-12 border-b border-border/30 pb-6">
-          <h2 className="font-display font-bold text-4xl text-primary uppercase">Playback Log</h2>
+          <h2 className="font-display font-bold text-3xl text-primary uppercase">Playback Log</h2>
           <span className="text-xs font-bold text-secondary tracking-[0.2em] uppercase">
             {recentlyPlayed.length} ENTRIES
           </span>
@@ -167,7 +167,7 @@ const StatsDashboard = () => {
                 />
               </div>
               <div className="flex-1 min-w-0 md:flex md:items-baseline md:gap-6">
-                <p className="text-2xl md:text-4xl font-display font-bold uppercase text-primary truncate group-hover:text-accent transition-colors">{cleanText(song.name)}</p>
+                <p className="text-xl md:text-3xl font-display font-bold uppercase text-primary truncate group-hover:text-accent transition-colors">{cleanText(song.name)}</p>
                 <p className="text-xs md:text-sm font-bold tracking-[0.2em] text-secondary truncate mt-1 md:mt-0">{cleanText(song.primaryArtists)}</p>
               </div>
               <span className="text-xs font-bold tracking-[0.2em] text-secondary shrink-0 uppercase">
@@ -178,7 +178,7 @@ const StatsDashboard = () => {
 
           {recentlyPlayed.length === 0 && (
             <div className="py-32 text-center border-b border-border/30">
-              <p className="font-display font-bold text-4xl md:text-6xl text-primary mb-6 uppercase">No records</p>
+              <p className="font-display font-bold text-3xl md:text-5xl text-primary mb-6 uppercase">No records</p>
               <p className="text-xs font-bold tracking-[0.2em] text-secondary uppercase">Play tracks to populate your dossier.</p>
             </div>
           )}
