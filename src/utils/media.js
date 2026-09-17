@@ -14,6 +14,12 @@ export const safeUrl = (value, fallback = '') => {
     const str = String(value).trim();
     if (!str) return fallback;
     const url = new URL(str);
+    
+    // Upgrade http to https to avoid mixed-content issues in production
+    if (url.protocol === 'http:') {
+      url.protocol = 'https:';
+    }
+
     return ALLOWED_PROTOCOLS.has(url.protocol) ? url.href : fallback;
   } catch {
     return fallback;
