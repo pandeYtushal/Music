@@ -107,7 +107,7 @@ const fetchWithFallback = async (path, params, callerSignal) => {
         const d = res.data;
         if (
           d &&
-          (d.data || d.status === 'SUCCESS' || d.results)
+          (d.data || d.status === 'SUCCESS' || d.results || Array.isArray(d))
         ) {
           return d;
         }
@@ -163,7 +163,7 @@ export const searchSongs = async (query, { limit = 10, page = 1, signal } = {}) 
         { query: q, limit: clampedLimit, page },
         signal,
       );
-      const results   = data?.data?.results || data?.data || data?.results || [];
+      const results   = Array.isArray(data) ? data : (data?.data?.results || data?.data || data?.results || []);
       const sanitized = sanitizeSongList(Array.isArray(results) ? results : [], clampedLimit);
       if (sanitized.length) cacheSet(dedupeKey, sanitized);
       return sanitized;
@@ -199,7 +199,7 @@ export const getSongById = async (id, { signal } = {}) => {
   return dedupe(cacheKey, async () => {
     try {
       const data = await fetchWithFallback('/songs', { id: cleanId }, signal);
-      const raw  = data?.data?.[0] ?? (Array.isArray(data?.data) ? data.data[0] : data?.data);
+      const raw  = Array.isArray(data) ? data[0] : (data?.data?.[0] ?? (Array.isArray(data?.data) ? data.data[0] : data?.data));
       const song = raw ? sanitizeSong(raw) : null;
       if (song) cacheSet(cacheKey, song);
       return song;
@@ -228,7 +228,7 @@ export const getLyrics = async (id, { signal } = {}) => {
   return dedupe(cacheKey, async () => {
     try {
       const data   = await fetchWithFallback('/lyrics', { id: cleanId }, signal);
-      const lyrics = data?.data?.lyrics || data?.data?.snippet || null;
+      const lyrics = Array.isArray(data) ? (data[0]?.lyrics || data[0]?.snippet) : (data?.data?.lyrics || data?.data?.snippet || data?.lyrics || null);
       if (lyrics) cacheSet(cacheKey, lyrics);
       return lyrics;
     } catch {

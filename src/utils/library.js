@@ -49,6 +49,8 @@ export const sanitizeSong = (song) => {
   let artistStr = '';
   if (typeof song.primaryArtists === 'string') {
     artistStr = clampText(song.primaryArtists, '');
+  } else if (typeof song.artists === 'string') {
+    artistStr = clampText(song.artists, '');
   } else if (Array.isArray(song.primaryArtists)) {
     artistStr = song.primaryArtists.map(a => typeof a === 'object' ? a.name : a).filter(Boolean).join(', ');
   } else if (song.artists?.primary) {
@@ -58,16 +60,16 @@ export const sanitizeSong = (song) => {
   }
 
   const rawImage = song.image || song.images || song.album?.image;
-  const rawDownloadUrl = song.downloadUrl || song.download_url || song.downloadUrls;
+  const rawDownloadUrl = song.downloadUrl || song.download_url || song.downloadUrls || song.url || song.media_url;
 
   return {
     id: clampText(song.id),
-    name: clampText(song.name, 'Unknown Song'),
+    name: clampText(song.name || song.title, 'Unknown Song'),
     primaryArtists: clampText(artistStr, 'Unknown Artist'),
     label: clampText(song.label, ''),
     language: typeof song.language === 'string' ? song.language.slice(0, 30).toLowerCase() : '',
     duration: Number.isFinite(Number(song.duration)) ? Math.max(0, Number(song.duration)) : 0,
-    album: song.album?.name ? { name: clampText(song.album.name) } : null,
+    album: song.album?.name ? { name: clampText(song.album.name) } : (typeof song.album === 'string' ? { name: clampText(song.album) } : null),
     image: sanitizeMediaList(rawImage),
     downloadUrl: sanitizeMediaList(rawDownloadUrl),
   };
